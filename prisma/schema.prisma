@@ -1,0 +1,430 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  emailVerified     DateTime?
+  password          String?
+  name              String
+  age               Int
+  role              UserRole  @default(MENTEE)
+  isAdmin           Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  profile           Profile?
+  sentRequests      InterestRequest[]  @relation("SentRequests")
+  receivedRequests  InterestRequest[]  @relation("ReceivedRequests")
+  matches1          Match[]            @relation("User1Matches")
+  matches2          Match[]            @relation("User2Matches")
+  sentMessages      Message[]          @relation("SentMessages")
+  receivedMessages  Message[]          @relation("ReceivedMessages")
+  sessions1         Session[]          @relation("Session1")
+  sessions2         Session[]          @relation("Session2")
+  reviewsGiven      Review[]           @relation("ReviewsGiven")
+  reviewsReceived   Review[]           @relation("ReviewsReceived")
+  savedProfiles     SavedProfile[]
+  notifications     Notification[]
+  reports           Report[]           @relation("Reporter")
+  reportsAbout      Report[]           @relation("Reported")
+  blockedUsers      Block[]            @relation("Blocker")
+  blockedBy         Block[]            @relation("Blocked")
+  blogPosts         BlogPost[]
+  ageVerification   AgeVerification?
+
+  @@index([email])
+  @@index([role])
+}
+
+enum UserRole {
+  MENTOR
+  MENTEE
+}
+
+// Extended profile information
+model Profile {
+  id                    String              @id @default(cuid())
+  userId                String              @unique
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile fields
+  bio                   String?             @db.Text
+  profilePicture        String?
+  cvUrl                 String?
+  workExperience        String?             @db.Text
+  yearsOfExperience     ExperienceLevel?
+  currentSituation      String?
+  goals                 String?             @db.Text
+  preferredFrequency    MeetingFrequency?
+  availableHours        Int?                // Hours per month
+  responseTime          ResponseTime?
+
+  // Social media
+  linkedIn              String?
+  twitter               String?
+  instagram             String?
+
+  // Mentorship preferences
+  helpsWith             String?             @db.Text
+  lookingFor            String?             @db.Text
+  minMenteeAge          Int?
+  maxMenteeAge          Int?
+
+  // Status
+  status                ProfileStatus       @default(ACTIVE)
+  isVerified            Boolean             @default(false)
+  completionPercentage  Int                 @default(0)
+
+  // Location
+  country               String?
+  city                  String?
+  timezone              String?
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  industries            Industry[]          @relation("ProfileIndustries")
+  interests             Interest[]          @relation("ProfileInterests")
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum ExperienceLevel {
+  ENTRY      // 0-3 years
+  MID        // 3-7 years
+  SENIOR     // 7-15 years
+  EXECUTIVE  // 15+ years
+}
+
+enum MeetingFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  FLEXIBLE
+}
+
+enum ResponseTime {
+  WITHIN_24H
+  TWO_THREE_DAYS
+  WEEKLY
+  FLEXIBLE
+}
+
+enum ProfileStatus {
+  ACTIVE
+  NOT_ACCEPTING
+  PAUSED
+  PRIVATE
+}
+
+// Industries
+model Industry {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  profiles    Profile[] @relation("ProfileIndustries")
+
+  @@index([slug])
+}
+
+// Interests/Skills
+model Interest {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  profiles    Profile[] @relation("ProfileInterests")
+
+  @@index([slug])
+}
+
+// Interest requests between users
+model InterestRequest {
+  id            String              @id @default(cuid())
+  fromUserId    String
+  toUserId      String
+  message       String              @db.Text
+  status        InterestRequestStatus @default(PENDING)
+  createdAt     DateTime            @default(now())
+  respondedAt   DateTime?
+
+  fromUser      User                @relation("SentRequests", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser        User                @relation("ReceivedRequests", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([status])
+}
+
+enum InterestRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// Matches between users
+model Match {
+  id            String      @id @default(cuid())
+  user1Id       String
+  user2Id       String
+  matchedAt     DateTime    @default(now())
+  endedAt       DateTime?
+  status        MatchStatus @default(ACTIVE)
+  endedByUserId String?
+
+  user1         User        @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2         User        @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([status])
+}
+
+enum MatchStatus {
+  ACTIVE
+  ENDED
+  UNMATCHED
+}
+
+// Chat messages
+model Message {
+  id          String    @id @default(cuid())
+  senderId    String
+  receiverId  String
+  content     String    @db.Text
+  read        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId])
+  @@index([createdAt])
+}
+
+// Scheduled sessions
+model Session {
+  id          String        @id @default(cuid())
+  mentorId    String
+  menteeId    String
+  title       String?
+  notes       String?       @db.Text
+  scheduledAt DateTime
+  duration    Int           // in minutes
+  status      SessionStatus @default(SCHEDULED)
+  createdAt   DateTime      @default(now())
+
+  mentor      User          @relation("Session1", fields: [mentorId], references: [id], onDelete: Cascade)
+  mentee      User          @relation("Session2", fields: [menteeId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId, menteeId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// Reviews
+model Review {
+  id           String    @id @default(cuid())
+  reviewerId   String
+  reviewedId   String
+  rating       Int       // 1-5
+  comment      String?   @db.Text
+  createdAt    DateTime  @default(now())
+
+  reviewer     User      @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewed     User      @relation("ReviewsReceived", fields: [reviewedId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, reviewedId])
+  @@index([reviewedId])
+  @@index([rating])
+}
+
+// Saved/Bookmarked profiles
+model SavedProfile {
+  id          String    @id @default(cuid())
+  userId      String
+  savedUserId String
+  savedAt     DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, savedUserId])
+  @@index([userId])
+}
+
+// Notifications
+model Notification {
+  id          String            @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?
+  read        Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  INTEREST_REQUEST
+  MATCH
+  MESSAGE
+  SESSION_REMINDER
+  SESSION_CONFIRMED
+  REVIEW_RECEIVED
+  PROFILE_VIEW
+  NEW_MENTOR
+  SYSTEM
+}
+
+// Blog posts
+model BlogPost {
+  id              String        @id @default(cuid())
+  authorId        String
+  title           String
+  slug            String        @unique
+  metaTitle       String?
+  metaDescription String?
+  excerpt         String?       @db.Text
+  content         String        @db.Text
+  featuredImage   String?
+  imageAlt        String?
+  status          PostStatus    @default(DRAFT)
+  publishedAt     DateTime?
+  views           Int           @default(0)
+  seoKeyword      String?
+  tags            String[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  author          User          @relation(fields: [authorId], references: [id])
+  category        BlogCategory? @relation(fields: [categoryId], references: [id])
+  categoryId      String?
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+// Blog categories
+model BlogCategory {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  posts       BlogPost[]
+
+  @@index([slug])
+}
+
+// Reports for moderation
+model Report {
+  id            String        @id @default(cuid())
+  reporterId    String
+  reportedId    String
+  reason        ReportReason
+  description   String?       @db.Text
+  status        ReportStatus  @default(PENDING)
+  resolvedAt    DateTime?
+  resolvedNote  String?
+  createdAt     DateTime      @default(now())
+
+  reporter      User          @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported      User          @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ReportReason {
+  INAPPROPRIATE_BEHAVIOR
+  HARASSMENT
+  SPAM
+  FAKE_PROFILE
+  SAFETY_CONCERN
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+// Block list
+model Block {
+  id          String    @id @default(cuid())
+  blockerId   String
+  blockedId   String
+  blockedAt   DateTime  @default(now())
+
+  blocker     User      @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked     User      @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+// Age verification for users under 18
+model AgeVerification {
+  id              String                  @id @default(cuid())
+  userId          String                  @unique
+  idType          IdType
+  idImageUrl      String
+  status          AgeVerificationStatus   @default(PENDING)
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  rejectionReason String?
+  createdAt       DateTime                @default(now())
+
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+enum IdType {
+  DRIVERS_LICENSE
+  PROVISIONAL_LICENSE
+  PASSPORT
+  STUDENT_ID
+}
+
+enum AgeVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
