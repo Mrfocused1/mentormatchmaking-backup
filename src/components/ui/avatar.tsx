@@ -63,6 +63,24 @@ export function Avatar({ src, alt = 'Avatar', fallback, size, className, verifie
 
   const textSize = sizeClasses[size || 'md']
 
+  // Size mapping for placeholder images
+  const pixelSizes = {
+    xs: 32,
+    sm: 40,
+    md: 48,
+    lg: 64,
+    xl: 80,
+    '2xl': 96,
+    '3xl': 128,
+  }
+
+  const pixelSize = pixelSizes[size || 'md']
+
+  // Generate placeholder image URL using ui-avatars.com
+  const placeholderUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    fallback || 'User'
+  )}&size=${pixelSize}&background=FFA726&color=1A1A2E&bold=true&format=png`
+
   return (
     <div className={cn(avatarVariants({ size }), className)}>
       {src && !imageError ? (
@@ -74,11 +92,13 @@ export function Avatar({ src, alt = 'Avatar', fallback, size, className, verifie
           onError={() => setImageError(true)}
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-soft-accent">
-          <span className={cn('font-montserrat font-semibold text-primary-dark', textSize)}>
-            {initials}
-          </span>
-        </div>
+        <Image
+          src={placeholderUrl}
+          alt={alt}
+          fill
+          className="object-cover"
+          unoptimized
+        />
       )}
 
       {/* Verified Badge */}
