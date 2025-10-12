@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -10,13 +9,7 @@ import {
   Star,
   Briefcase,
   Users,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  Linkedin,
-  Twitter,
-  Instagram,
-  Globe
+  Clock
 } from 'lucide-react'
 
 interface Mentor {
@@ -45,7 +38,6 @@ interface SwipeCardProps {
 }
 
 export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-25, 25])
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
@@ -67,63 +59,41 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
         opacity: isTop ? opacity : 0.7,
         scale: isTop ? 1 : 0.95,
       }}
-      drag={isTop && !isExpanded ? 'x' : false}
+      drag={isTop ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={handleDragEnd}
       animate={isTop ? {} : { scale: 0.95 }}
     >
-      <Card
-        className={`h-full shadow-2xl border-2 border-neutral-200 overflow-hidden transition-all duration-300 ${
-          isExpanded ? 'overflow-y-auto' : 'overflow-hidden'
-        }`}
-      >
+      <Card className="h-full shadow-2xl border-2 border-neutral-200 overflow-hidden">
         <CardContent className="p-0 h-full flex flex-col">
           {/* Hero Section with Background */}
-          <div className="relative h-48 bg-primary-dark flex-shrink-0">
-            <div className="absolute inset-0 bg-black/60" />
-
-            {/* Avatar positioned at bottom left */}
-            <div className="absolute bottom-4 left-4 flex items-end gap-3">
-              <div className="relative">
+          <div className="relative bg-white flex-shrink-0 pt-8 pb-6">
+            {/* Centered Avatar and Info */}
+            <div className="flex flex-col items-center text-center px-4">
+              <div className="relative mb-4">
                 <Avatar
                   fallback={mentor.name}
-                  size="xl"
-                  className="border-4 border-white shadow-xl"
+                  size="3xl"
+                  className="shadow-xl"
                 />
                 {/* Online Status Indicator */}
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-success border-2 border-white rounded-full" />
+                <div className="absolute bottom-2 right-2 w-5 h-5 bg-success border-4 border-white rounded-full" />
               </div>
 
-              <div className="pb-1">
-                <h3 className="text-xl font-bold font-montserrat text-white drop-shadow-lg">
-                  {mentor.name}
-                </h3>
-                <p className="text-sm font-semibold text-white/90 font-montserrat drop-shadow">
-                  {mentor.title}
-                </p>
-                <p className="text-xs text-white/80 font-montserrat drop-shadow">
-                  @ {mentor.company}
-                </p>
-              </div>
-            </div>
-
-            {/* Top Right Actions */}
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
-              >
-                {isExpanded ? (
-                  <ChevronUp className="h-5 w-5 text-white" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-white" />
-                )}
-              </button>
+              <h3 className="text-2xl font-bold font-montserrat text-primary-dark mb-1">
+                {mentor.name}
+              </h3>
+              <p className="text-base font-semibold text-neutral-700 font-montserrat mb-1">
+                {mentor.title}
+              </p>
+              <p className="text-sm text-neutral-600 font-montserrat">
+                @ {mentor.company}
+              </p>
             </div>
           </div>
 
           {/* Content Section */}
-          <div className={`flex-1 bg-white ${isExpanded ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+          <div className="flex-1 bg-white overflow-hidden">
             {/* Quick Stats Bar */}
             <div className="grid grid-cols-4 gap-2 p-4 border-b border-neutral-100">
               <div className="text-center">
@@ -188,11 +158,7 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
               <h4 className="text-xs font-bold font-montserrat text-primary-dark mb-2 uppercase tracking-wide">
                 About
               </h4>
-              <p
-                className={`text-sm text-neutral-700 font-montserrat leading-relaxed ${
-                  !isExpanded ? 'line-clamp-3' : ''
-                }`}
-              >
+              <p className="text-sm text-neutral-700 font-montserrat leading-relaxed line-clamp-3">
                 {mentor.bio}
               </p>
             </div>
@@ -203,7 +169,7 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
                 Expertise
               </h4>
               <div className="flex flex-wrap gap-2">
-                {(isExpanded ? mentor.expertise : mentor.expertise.slice(0, 4)).map((skill, index) => (
+                {mentor.expertise.slice(0, 4).map((skill, index) => (
                   <Badge
                     key={index}
                     className="bg-primary-accent/10 text-primary-accent border-primary-accent/20"
@@ -212,7 +178,7 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
                     {skill}
                   </Badge>
                 ))}
-                {!isExpanded && mentor.expertise.length > 4 && (
+                {mentor.expertise.length > 4 && (
                   <Badge variant="secondary" size="sm">
                     +{mentor.expertise.length - 4} more
                   </Badge>
@@ -229,73 +195,25 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
                 {mentor.industry}
               </Badge>
             </div>
-
-            {/* Expanded Content */}
-            {isExpanded && (
-              <div className="px-4 pb-4 space-y-4 border-t border-neutral-100 pt-4">
-                {/* Languages */}
-                {mentor.languages && (
-                  <div>
-                    <h4 className="text-xs font-bold font-montserrat text-primary-dark mb-2 uppercase tracking-wide">
-                      Languages
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {mentor.languages.map((lang, index) => (
-                        <Badge key={index} variant="secondary" size="sm">
-                          {lang}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Additional Industries */}
-                {mentor.industries && (
-                  <div>
-                    <h4 className="text-xs font-bold font-montserrat text-primary-dark mb-2 uppercase tracking-wide">
-                      Industries Covered
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {mentor.industries.map((ind, index) => (
-                        <Badge key={index} variant="outline" size="sm">
-                          {ind}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Tap to Close Hint */}
-                <div className="text-center pt-2">
-                  <p className="text-xs text-primary-accent font-semibold font-montserrat">
-                    Tap the arrow above to close
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Swipe Indicators */}
-          {!isExpanded && (
-            <>
-              <motion.div
-                className="absolute top-32 right-8 bg-vibrant-accent text-white px-6 py-3 rounded-full font-bold font-montserrat text-lg shadow-xl transform rotate-12 pointer-events-none"
-                style={{
-                  opacity: useTransform(x, [0, 100], [0, 1]),
-                }}
-              >
-                CONNECT
-              </motion.div>
-              <motion.div
-                className="absolute top-32 left-8 bg-neutral-600 text-white px-6 py-3 rounded-full font-bold font-montserrat text-lg shadow-xl transform -rotate-12 pointer-events-none"
-                style={{
-                  opacity: useTransform(x, [-100, 0], [1, 0]),
-                }}
-              >
-                PASS
-              </motion.div>
-            </>
-          )}
+          <motion.div
+            className="absolute top-32 right-8 bg-vibrant-accent text-white px-6 py-3 rounded-full font-bold font-montserrat text-lg shadow-xl transform rotate-12 pointer-events-none"
+            style={{
+              opacity: useTransform(x, [0, 100], [0, 1]),
+            }}
+          >
+            CONNECT
+          </motion.div>
+          <motion.div
+            className="absolute top-32 left-8 bg-neutral-600 text-white px-6 py-3 rounded-full font-bold font-montserrat text-lg shadow-xl transform -rotate-12 pointer-events-none"
+            style={{
+              opacity: useTransform(x, [-100, 0], [1, 0]),
+            }}
+          >
+            PASS
+          </motion.div>
         </CardContent>
       </Card>
     </motion.div>
