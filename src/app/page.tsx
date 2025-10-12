@@ -13,6 +13,17 @@ import { Avatar } from '@/components/ui/avatar'
 import { CountUp } from '@/components/ui/count-up'
 import { TestimonialsColumn } from '@/components/ui/testimonials-column'
 import {
+  FadeIn,
+  SlideUp,
+  SlideInLeft,
+  SlideInRight,
+  ScaleUp,
+  StaggerContainer,
+  StaggerItem,
+  ButtonHover,
+  CardHover
+} from '@/components/ui/animations'
+import {
   Users,
   Calendar,
   Shield,
@@ -95,12 +106,32 @@ function SuccessMessage() {
   )
 }
 
-const stats = [
-  { label: 'Active Mentors', value: 10000, suffix: '+', decimals: 0, icon: Users },
-  { label: 'Successful Matches', value: 50000, suffix: '+', decimals: 0, icon: Heart },
-  { label: 'Industries Covered', value: 25, suffix: '+', decimals: 0, icon: Globe },
-  { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
-]
+// Helper functions for localStorage
+const getStoredStat = (key: string, defaultValue: number): number => {
+  if (typeof window === 'undefined') return defaultValue
+  const stored = localStorage.getItem(key)
+  return stored ? parseInt(stored, 10) : defaultValue
+}
+
+const setStoredStat = (key: string, value: number): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, value.toString())
+  }
+}
+
+export const incrementActiveMentors = () => {
+  const current = getStoredStat('activeMentors', 20)
+  const newValue = current + 1
+  setStoredStat('activeMentors', newValue)
+  return newValue
+}
+
+export const incrementSuccessfulMatches = () => {
+  const current = getStoredStat('successfulMatches', 15)
+  const newValue = current + 1
+  setStoredStat('successfulMatches', newValue)
+  return newValue
+}
 
 const features = [
   {
@@ -216,6 +247,26 @@ const thirdColumn = testimonials.slice(0, 3)
 
 
 export default function Home() {
+  const [stats, setStats] = useState([
+    { label: 'Active Mentors', value: 20, suffix: '+', decimals: 0, icon: Users },
+    { label: 'Successful Matches', value: 15, suffix: '+', decimals: 0, icon: Heart },
+    { label: 'Industries Covered', value: 25, suffix: '+', decimals: 0, icon: Globe },
+    { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
+  ])
+
+  useEffect(() => {
+    // Load stats from localStorage
+    const activeMentors = getStoredStat('activeMentors', 20)
+    const successfulMatches = getStoredStat('successfulMatches', 15)
+
+    setStats([
+      { label: 'Active Mentors', value: activeMentors, suffix: '+', decimals: 0, icon: Users },
+      { label: 'Successful Matches', value: successfulMatches, suffix: '+', decimals: 0, icon: Heart },
+      { label: 'Industries Covered', value: 25, suffix: '+', decimals: 0, icon: Globe },
+      { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
+    ])
+  }, [])
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -227,19 +278,23 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-primary-dark pt-24 pb-16 sm:pt-32 sm:pb-24 lg:pt-40 lg:pb-32">
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Mobile Layout: Title > Animation > Content */}
           <div className="flex flex-col lg:hidden items-center text-center">
             {/* Mobile: Header */}
-            <div className="mb-8">
-              <Badge variant="new" className="mb-4 bg-primary-accent/90 text-primary-dark border-primary-accent">
-                <Sparkles className="mr-1 h-3 w-3" />
-                Connect With Verified Mentors
-              </Badge>
-              <h1 className="text-4xl font-black font-montserrat tracking-tight text-white sm:text-5xl drop-shadow-lg">
-                Find Your Perfect Mentor
-              </h1>
-            </div>
+            <FadeIn className="mb-8">
+              <ScaleUp>
+                <Badge variant="new" className="mb-4 bg-primary-accent/90 text-primary-dark border-primary-accent">
+                  <Sparkles className="mr-1 h-3 w-3" />
+                  Connect With Verified Mentors
+                </Badge>
+              </ScaleUp>
+              <SlideUp delay={0.2}>
+                <h1 className="text-4xl font-black font-montserrat tracking-tight text-white sm:text-5xl drop-shadow-lg">
+                  Find Your Perfect Mentor
+                </h1>
+              </SlideUp>
+            </FadeIn>
 
             {/* Mobile: Animation (Center Focus) */}
             <div className="relative flex items-center justify-center w-full mb-8">
@@ -272,92 +327,116 @@ export default function Home() {
 
             {/* Mobile: Description & Buttons */}
             <div className="max-w-xl">
-              <p className="text-base leading-7 text-white/90 font-montserrat">
-                Connect with experienced mentors ready to guide your journey, wherever you are in life.
-                Whether you're navigating career transitions, seeking personal growth, or looking for
-                motivation and support, find meaningful connections through our verified mentor matching platform.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="xl" variant="primary" asChild className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-xl w-full sm:w-auto">
-                  <Link href="/onboarding/mentee">
-                    Find a Mentor
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button size="xl" variant="primary" asChild className="bg-secondary-accent hover:bg-secondary-accent/90 text-white shadow-xl w-full sm:w-auto">
-                  <Link href="/onboarding/mentor">
-                    Become a Mentor
-                  </Link>
-                </Button>
-              </div>
-              <p className="mt-6 text-sm text-white/70 font-montserrat">
-                No credit card required • Free to start • Cancel anytime
-              </p>
+              <SlideUp>
+                <p className="text-base leading-7 text-white/90 font-montserrat">
+                  Connect with verified mentors for career guidance, personal growth, and professional development.
+                </p>
+              </SlideUp>
+              <SlideUp delay={0.2}>
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+                  <ButtonHover>
+                    <Button size="lg" variant="primary" asChild className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-xl w-full sm:w-auto">
+                      <Link href="/onboarding/mentee" className="whitespace-nowrap">
+                        Find a Mentor
+                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      </Link>
+                    </Button>
+                  </ButtonHover>
+                  <ButtonHover>
+                    <Button size="lg" variant="primary" asChild className="bg-secondary-accent hover:bg-secondary-accent/90 text-white shadow-xl w-full sm:w-auto">
+                      <Link href="/onboarding/mentor" className="whitespace-nowrap">
+                        Become a Mentor
+                      </Link>
+                    </Button>
+                  </ButtonHover>
+                </div>
+              </SlideUp>
+              <FadeIn delay={0.4}>
+                <p className="mt-6 text-sm text-white/70 font-montserrat">
+                  No credit card required • Free to start • Cancel anytime
+                </p>
+              </FadeIn>
             </div>
           </div>
 
           {/* Desktop Layout: Side by Side */}
           <div className="hidden lg:grid grid-cols-2 gap-8 items-center">
             {/* Left: Content */}
-            <div className="max-w-2xl">
-              <Badge variant="new" className="mb-4 bg-primary-accent/90 text-primary-dark border-primary-accent">
-                <Sparkles className="mr-1 h-3 w-3" />
-                Connect With Verified Mentors
-              </Badge>
-              <h1 className="text-4xl font-black font-montserrat tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-lg">
-                Find Your Perfect Mentor
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-white/90 font-montserrat lg:text-xl">
-                Connect with experienced mentors ready to guide your journey, wherever you are in life.
-                Whether you're navigating career transitions, seeking personal growth, or looking for
-                motivation and support, find meaningful connections through our verified mentor matching platform.
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <Button size="xl" variant="primary" asChild className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-xl">
-                  <Link href="/onboarding/mentee">
-                    Find a Mentor
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button size="xl" variant="primary" asChild className="bg-secondary-accent hover:bg-secondary-accent/90 text-white shadow-xl">
-                  <Link href="/onboarding/mentor">
-                    Become a Mentor
-                  </Link>
-                </Button>
-              </div>
-              <p className="mt-6 text-sm text-white/70 font-montserrat">
-                No credit card required • Free to start • Cancel anytime
-              </p>
-            </div>
+            <SlideInLeft className="max-w-2xl">
+              <ScaleUp>
+                <Badge variant="new" className="mb-4 bg-primary-accent/90 text-primary-dark border-primary-accent">
+                  <Sparkles className="mr-1 h-3 w-3" />
+                  Connect With Verified Mentors
+                </Badge>
+              </ScaleUp>
+              <FadeIn delay={0.2}>
+                <h1 className="text-4xl font-black font-montserrat tracking-tight text-white sm:text-5xl lg:text-6xl drop-shadow-lg">
+                  Find Your Perfect Mentor
+                </h1>
+              </FadeIn>
+              <SlideUp delay={0.3}>
+                <p className="mt-6 text-lg leading-8 text-white/90 font-montserrat lg:text-xl">
+                  Connect with experienced mentors ready to guide your journey, wherever you are in life.
+                  Whether you're navigating career transitions, seeking personal growth, or looking for
+                  motivation and support, find meaningful connections through our verified mentor matching platform.
+                </p>
+              </SlideUp>
+              <SlideUp delay={0.4}>
+                <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <ButtonHover>
+                    <Button size="lg" variant="primary" asChild className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-xl">
+                      <Link href="/onboarding/mentee" className="whitespace-nowrap">
+                        Find a Mentor
+                        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      </Link>
+                    </Button>
+                  </ButtonHover>
+                  <ButtonHover>
+                    <Button size="lg" variant="primary" asChild className="bg-secondary-accent hover:bg-secondary-accent/90 text-white shadow-xl">
+                      <Link href="/onboarding/mentor" className="whitespace-nowrap">
+                        Become a Mentor
+                      </Link>
+                    </Button>
+                  </ButtonHover>
+                </div>
+              </SlideUp>
+              <FadeIn delay={0.5}>
+                <p className="mt-6 text-sm text-white/70 font-montserrat">
+                  No credit card required • Free to start • Cancel anytime
+                </p>
+              </FadeIn>
+            </SlideInLeft>
 
             {/* Right: Lottie Animation */}
-            <div className="relative flex items-center justify-center">
-              <div className="relative w-full max-w-lg mx-auto" style={{
-                backgroundColor: '#25283D'
-              }}>
-                <Lottie
-                  animationData={require('/public/hero-animation.json')}
-                  loop={true}
-                  className="w-full h-auto"
-                  style={{
-                    filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
-                  }}
-                  rendererSettings={{
-                    preserveAspectRatio: 'xMidYMid slice'
-                  }}
-                />
+            <SlideInRight className="relative flex items-center justify-center">
+              <FadeIn delay={0.3}>
+                <div className="relative w-full max-w-lg mx-auto" style={{
+                  backgroundColor: '#25283D'
+                }}>
+                  <Lottie
+                    animationData={require('/public/hero-animation.json')}
+                    loop={true}
+                    className="w-full h-auto"
+                    style={{
+                      filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
+                    }}
+                    rendererSettings={{
+                      preserveAspectRatio: 'xMidYMid slice'
+                    }}
+                  />
 
-                {/* Left gradient fade */}
-                <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none z-10" style={{
-                  background: 'linear-gradient(to right, #25283D, transparent)'
-                }} />
+                  {/* Left gradient fade */}
+                  <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none z-10" style={{
+                    background: 'linear-gradient(to right, #25283D, transparent)'
+                  }} />
 
-                {/* Right gradient fade */}
-                <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none z-10" style={{
-                  background: 'linear-gradient(to left, #25283D, transparent)'
-                }} />
-              </div>
-            </div>
+                  {/* Right gradient fade */}
+                  <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none z-10" style={{
+                    background: 'linear-gradient(to left, #25283D, transparent)'
+                  }} />
+                </div>
+              </FadeIn>
+            </SlideInRight>
           </div>
         </div>
       </section>
@@ -365,24 +444,26 @@ export default function Home() {
       {/* Stats Section */}
       <section className="bg-white py-12 sm:py-16 border-b border-neutral-200">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+          <StaggerContainer className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <stat.icon className="mx-auto h-8 w-8 text-secondary-accent mb-2" />
-                <p className="text-3xl font-black font-montserrat text-primary-dark">
-                  <CountUp
-                    end={stat.value}
-                    suffix={stat.suffix}
-                    decimals={stat.decimals}
-                    duration={2000}
-                  />
-                </p>
-                <p className="mt-1 text-sm font-montserrat text-neutral-600">
-                  {stat.label}
-                </p>
-              </div>
+              <StaggerItem key={stat.label}>
+                <ScaleUp className="text-center">
+                  <stat.icon className="mx-auto h-8 w-8 text-secondary-accent mb-2" />
+                  <p className="text-3xl font-black font-montserrat text-primary-dark">
+                    <CountUp
+                      end={stat.value}
+                      suffix={stat.suffix}
+                      decimals={stat.decimals}
+                      duration={2000}
+                    />
+                  </p>
+                  <p className="mt-1 text-sm font-montserrat text-neutral-600">
+                    {stat.label}
+                  </p>
+                </ScaleUp>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -391,16 +472,18 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
             {/* Left: Content & Steps */}
-            <div>
-              <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl lg:text-5xl">
-                How It Works
-              </h2>
-              <p className="mt-4 text-lg text-white/90 font-montserrat">
-                Start your mentorship journey in three simple steps
-              </p>
+            <SlideInLeft>
+              <FadeIn>
+                <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl lg:text-5xl">
+                  How It Works
+                </h2>
+                <p className="mt-4 text-lg text-white/90 font-montserrat">
+                  Start your mentorship journey in three simple steps
+                </p>
+              </FadeIn>
 
               {/* Steps */}
-              <div className="mt-12 space-y-8">
+              <StaggerContainer className="mt-12 space-y-8">
                 {[
                   {
                     step: '1',
@@ -421,57 +504,61 @@ export default function Home() {
                     icon: TrendingUp,
                   },
                 ].map((item) => (
-                  <div key={item.step} className="flex gap-6 items-start">
-                    <div className="flex-shrink-0">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-secondary-accent shadow-lg">
-                        <span className="text-xl font-black font-montserrat">{item.step}</span>
+                  <StaggerItem key={item.step}>
+                    <SlideUp className="flex gap-6 items-start">
+                      <div className="flex-shrink-0">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-secondary-accent shadow-lg">
+                          <span className="text-xl font-black font-montserrat">{item.step}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <item.icon className="h-8 w-8 text-white" />
-                        <h3 className="text-xl font-bold font-montserrat text-white">
-                          {item.title}
-                        </h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <item.icon className="h-8 w-8 text-white" />
+                          <h3 className="text-xl font-bold font-montserrat text-white">
+                            {item.title}
+                          </h3>
+                        </div>
+                        <p className="text-white/80 font-montserrat leading-relaxed">
+                          {item.description}
+                        </p>
                       </div>
-                      <p className="text-white/80 font-montserrat leading-relaxed">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
+                    </SlideUp>
+                  </StaggerItem>
                 ))}
-              </div>
-            </div>
+              </StaggerContainer>
+            </SlideInLeft>
 
             {/* Right: Lottie Animation */}
-            <div className="relative flex items-center justify-center">
-              <div className="relative w-full max-w-lg mx-auto" style={{
-                backgroundColor: '#8F3985'
-              }}>
-                <div className="relative" style={{
-                  mixBlendMode: 'screen',
+            <SlideInRight className="relative flex items-center justify-center">
+              <ScaleUp delay={0.2}>
+                <div className="relative w-full max-w-lg mx-auto" style={{
+                  backgroundColor: '#8F3985'
                 }}>
-                  <Lottie
-                    animationData={require('/public/how-it-works-animation.json')}
-                    loop={true}
-                    className="w-full h-auto"
-                    style={{
-                      filter: 'brightness(1.3) contrast(1.2) saturate(0.8)',
-                    }}
-                  />
+                  <div className="relative" style={{
+                    mixBlendMode: 'screen',
+                  }}>
+                    <Lottie
+                      animationData={require('/public/how-it-works-animation.json')}
+                      loop={true}
+                      className="w-full h-auto"
+                      style={{
+                        filter: 'brightness(1.3) contrast(1.2) saturate(0.8)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Left gradient fade */}
+                  <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none" style={{
+                    background: 'linear-gradient(to right, #8F3985, transparent)'
+                  }} />
+
+                  {/* Right gradient fade */}
+                  <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none" style={{
+                    background: 'linear-gradient(to left, #8F3985, transparent)'
+                  }} />
                 </div>
-
-                {/* Left gradient fade */}
-                <div className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none" style={{
-                  background: 'linear-gradient(to right, #8F3985, transparent)'
-                }} />
-
-                {/* Right gradient fade */}
-                <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none" style={{
-                  background: 'linear-gradient(to left, #8F3985, transparent)'
-                }} />
-              </div>
-            </div>
+              </ScaleUp>
+            </SlideInRight>
           </div>
         </div>
       </section>
@@ -479,28 +566,34 @@ export default function Home() {
       {/* Features Section */}
       <section id="features" className="bg-neutral-50 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
-              Platform Features
-            </h2>
-            <p className="mt-4 text-lg text-neutral-600 font-montserrat">
-              Everything you need for a successful mentorship experience
-            </p>
-          </div>
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <SlideUp>
+              <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
+                Platform Features
+              </h2>
+              <p className="mt-4 text-lg text-neutral-600 font-montserrat">
+                Everything you need for a successful mentorship experience
+              </p>
+            </SlideUp>
+          </FadeIn>
           <div className="mx-auto mt-16 max-w-7xl">
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <StaggerContainer className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((feature) => (
-                <Card key={feature.title} className="border-0 shadow-card hover:shadow-elevated transition-shadow">
-                  <CardHeader>
-                    <feature.icon className={`h-10 w-10 ${feature.color}`} />
-                    <CardTitle className="mt-4">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardContent>
-                </Card>
+                <StaggerItem key={feature.title}>
+                  <CardHover>
+                    <Card className="border-0 shadow-card hover:shadow-elevated transition-shadow h-full">
+                      <CardHeader>
+                        <feature.icon className={`h-10 w-10 ${feature.color}`} />
+                        <CardTitle className="mt-4">{feature.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription>{feature.description}</CardDescription>
+                      </CardContent>
+                    </Card>
+                  </CardHover>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </div>
       </section>
@@ -508,52 +601,65 @@ export default function Home() {
       {/* Industries Section */}
       <section id="industries" className="py-24 sm:py-32 bg-primary-dark">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl">
-              Mentors Across All Industries
-            </h2>
-            <p className="mt-4 text-lg text-white/90 font-montserrat">
-              Find experienced professionals in your field
-            </p>
-          </div>
-          <div className="mx-auto mt-12 max-w-5xl">
-            <div className="flex flex-wrap justify-center gap-3">
-              {industries.map((industry) => (
-                <Badge
-                  key={industry}
-                  variant="outline"
-                  size="lg"
-                  className="cursor-pointer border-white/30 text-white hover:bg-primary-accent hover:text-primary-dark hover:border-primary-accent transition-all"
-                >
-                  {industry}
-                </Badge>
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <SlideUp>
+              <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl">
+                Mentors Across All Industries
+              </h2>
+              <p className="mt-4 text-lg text-white/90 font-montserrat">
+                Find experienced professionals in your field
+              </p>
+            </SlideUp>
+          </FadeIn>
+          <SlideUp delay={0.2} className="mx-auto mt-12 max-w-5xl">
+            <StaggerContainer className="flex flex-wrap justify-center gap-3">
+              {industries.map((industry, index) => (
+                <StaggerItem key={industry}>
+                  <ScaleUp delay={index * 0.05}>
+                    <Badge
+                      variant="outline"
+                      size="lg"
+                      className="cursor-pointer border-white/30 text-white hover:bg-primary-accent hover:text-primary-dark hover:border-primary-accent transition-all"
+                    >
+                      {industry}
+                    </Badge>
+                  </ScaleUp>
+                </StaggerItem>
               ))}
-              <Badge variant="secondary" size="lg" className="bg-secondary-accent text-white hover:bg-secondary-accent/90">
-                + 15 More Industries
-              </Badge>
-            </div>
-          </div>
+              <StaggerItem>
+                <ScaleUp delay={industries.length * 0.05}>
+                  <Badge variant="secondary" size="lg" className="bg-secondary-accent text-white hover:bg-secondary-accent/90">
+                    + 15 More Industries
+                  </Badge>
+                </ScaleUp>
+              </StaggerItem>
+            </StaggerContainer>
+          </SlideUp>
         </div>
       </section>
 
       {/* Testimonials Section */}
       <section className="bg-primary-accent py-24 sm:py-32 overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
-              Success Stories
-            </h2>
-            <p className="mt-4 text-lg text-primary-dark/80 font-montserrat">
-              Hear from our community of mentors and mentees
-            </p>
-          </div>
+          <FadeIn className="mx-auto max-w-2xl text-center mb-16">
+            <SlideUp>
+              <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
+                Success Stories
+              </h2>
+              <p className="mt-4 text-lg text-primary-dark/80 font-montserrat">
+                Hear from our community of mentors and mentees
+              </p>
+            </SlideUp>
+          </FadeIn>
 
           {/* Vertical scrolling testimonials columns */}
-          <div className="relative h-[600px] flex gap-6 justify-center items-start [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)]">
-            <TestimonialsColumn testimonials={firstColumn} duration={15} className="hidden md:block" />
-            <TestimonialsColumn testimonials={secondColumn} duration={19} className="" />
-            <TestimonialsColumn testimonials={thirdColumn} duration={17} className="hidden lg:block" />
-          </div>
+          <FadeIn delay={0.2}>
+            <div className="relative h-[600px] flex gap-6 justify-center items-start [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)]">
+              <TestimonialsColumn testimonials={firstColumn} duration={15} className="hidden md:block" />
+              <TestimonialsColumn testimonials={secondColumn} duration={19} className="" />
+              <TestimonialsColumn testimonials={thirdColumn} duration={17} className="hidden lg:block" />
+            </div>
+          </FadeIn>
         </div>
       </section>
 
@@ -562,36 +668,46 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
             {/* Left: Content */}
-            <div className="text-center lg:text-left">
-              <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Ready to Get Started?
-              </h2>
-              <p className="mt-6 text-lg leading-8 text-white/90 font-montserrat lg:text-xl">
-                Join thousands of ambitious individuals growing and thriving through meaningful mentorship connections.
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-6">
-                <Button size="xl" variant="primary" asChild className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-xl">
-                  <Link href="/get-started">
-                    Start Your Journey
-                    <Zap className="ml-2 h-5 w-5" />
+            <SlideInLeft className="text-center lg:text-left">
+              <FadeIn>
+                <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl lg:text-5xl">
+                  Ready to Get Started?
+                </h2>
+              </FadeIn>
+              <SlideUp delay={0.2}>
+                <p className="mt-6 text-lg leading-8 text-white/90 font-montserrat lg:text-xl">
+                  Join thousands of ambitious individuals growing and thriving through meaningful mentorship connections.
+                </p>
+              </SlideUp>
+              <SlideUp delay={0.3}>
+                <div className="mt-10 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-6">
+                  <ButtonHover>
+                    <Button size="lg" variant="primary" asChild className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-xl w-full sm:w-auto">
+                      <Link href="/get-started" className="whitespace-nowrap">
+                        Start Your Journey
+                        <Zap className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      </Link>
+                    </Button>
+                  </ButtonHover>
+                  <Link href="#how-it-works" className="text-sm font-semibold font-montserrat leading-6 text-white hover:text-primary-accent transition-colors">
+                    Learn more <span aria-hidden="true">→</span>
                   </Link>
-                </Button>
-                <Link href="#how-it-works" className="text-sm font-semibold font-montserrat leading-6 text-white hover:text-primary-accent transition-colors">
-                  Learn more <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-            </div>
+                </div>
+              </SlideUp>
+            </SlideInLeft>
 
             {/* Right: Lottie Animation */}
-            <div className="relative flex items-center justify-center">
-              <div className="relative w-full max-w-md mx-auto">
-                <Lottie
-                  animationData={require('/public/cta-animation.json')}
-                  loop={true}
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
+            <SlideInRight className="relative flex items-center justify-center">
+              <ScaleUp delay={0.2}>
+                <div className="relative w-full max-w-md mx-auto">
+                  <Lottie
+                    animationData={require('/public/cta-animation.json')}
+                    loop={true}
+                    className="w-full h-auto"
+                  />
+                </div>
+              </ScaleUp>
+            </SlideInRight>
           </div>
         </div>
       </section>

@@ -23,6 +23,7 @@ import {
   Twitter
 } from 'lucide-react'
 import { FaTiktok } from 'react-icons/fa'
+import { incrementActiveMentors } from '@/app/page'
 
 const TOTAL_STEPS = 4
 
@@ -76,6 +77,10 @@ export default function MentorOnboarding() {
   const handleSubmit = () => {
     console.log('Form submitted:', formData)
     // Here you would typically send the data to your backend
+
+    // Increment the active mentors count
+    incrementActiveMentors()
+
     // Redirect to homepage with success message
     router.push('/?success=mentor-signup')
   }
@@ -755,7 +760,7 @@ function MentorshipGoalsStep({ formData, setFormData }: any) {
 
       <div>
         <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-3">
-          Your Experience Level as a Mentor *
+          Experience Level in Your Field *
         </label>
         <div className="flex flex-wrap gap-3">
           {experienceLevels.map((level) => (
