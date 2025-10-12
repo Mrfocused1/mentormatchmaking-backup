@@ -57,13 +57,11 @@ export default function BrowseMentorsNew() {
   // Show onboarding overlay when entering results view on mobile
   useEffect(() => {
     if (currentStep === 'results' && viewMode === 'swipe') {
-      // Check if mobile (width < 768px) and hasn't been shown before
+      // Check if mobile (width < 768px)
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-      const hasSeenOnboarding = typeof window !== 'undefined' && localStorage.getItem('hasSeenSwipeOnboarding') === 'true'
 
-      if (isMobile && !hasSeenOnboarding) {
+      if (isMobile) {
         setShowOnboarding(true)
-        localStorage.setItem('hasSeenSwipeOnboarding', 'true')
       }
     }
   }, [currentStep, viewMode])
