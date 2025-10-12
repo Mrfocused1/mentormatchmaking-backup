@@ -897,7 +897,7 @@ export default function BrowseMentorsNew() {
                   }}
                   className="inline-block"
                 >
-                  <div className="bg-white/20 rounded-full p-6">
+                  <div>
                     <svg
                       width="80"
                       height="80"
