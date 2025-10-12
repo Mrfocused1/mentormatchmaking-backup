@@ -908,12 +908,30 @@ export default function BrowseMentorsNew() {
                       xmlns="http://www.w3.org/2000/svg"
                       className="text-white"
                     >
+                      {/* Hand/Finger Swipe Gesture */}
                       <path
-                        d="M9 18l6-6-6-6"
+                        d="M9 11V6C9 5.44772 9.44772 5 10 5C10.5523 5 11 5.44772 11 6V11"
                         stroke="currentColor"
                         strokeWidth="2"
                         strokeLinecap="round"
-                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M11 11V4C11 3.44772 11.4477 3 12 3C12.5523 3 13 3.44772 13 4V11"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M13 11V5C13 4.44772 13.4477 4 14 4C14.5523 4 15 4.44772 15 5V11"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M15 11V7C15 6.44772 15.4477 6 16 6C16.5523 6 17 6.44772 17 7V13C17 16.3137 14.3137 19 11 19H10C7.23858 19 5 16.7614 5 14V12C5 11.4477 5.44772 11 6 11C6.55228 11 7 11.4477 7 12V14"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
                       />
                     </svg>
                   </div>
