@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Eye,
   Check,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react'
 
 // Time slot type
