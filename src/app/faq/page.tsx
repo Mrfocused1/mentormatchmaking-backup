@@ -19,18 +19,18 @@ export default function FAQPage() {
       questions: [
         {
           id: 1,
-          question: 'What is MentorMatchmaking?',
-          answer: 'MentorMatchmaking is a platform that connects ambitious individuals with experienced mentors across various industries. Whether you\'re navigating career transitions, seeking life guidance, or looking to grow personally and professionally, we use a matching system to help you find the perfect mentor or mentee based on your goals, interests, and where you are in your journey.'
+          question: 'What is Look 4 Mentors?',
+          answer: 'Look for Mentors is a platform that connects ambitious individuals with experienced mentors across various industries. Whether you\'re navigating career transitions, seeking life guidance, or looking to grow personally and professionally, we use a matching system to help you find the perfect mentor or mentee based on your goals, interests, and where you are in your journey.'
         },
         {
           id: 2,
-          question: 'How does MentorMatchmaking work?',
+          question: 'How does Look 4 Mentors work?',
           answer: 'Our platform works through a mutual matching system. Mentees can browse mentor profiles and show interest, while mentors can browse mentee profiles (with privacy protection) and offer mentorship. When both parties express interest, you\'re matched and can begin your mentorship journey together.'
         },
         {
           id: 3,
-          question: 'Is MentorMatchmaking free?',
-          answer: 'Yes! MentorMatchmaking is 100% free to use. All features are available to everyone at no cost, including profile creation, unlimited browsing, matching, connections, messaging, and all platform resources. There are no premium tiers, subscriptions, or paid features.'
+          question: 'Is Look 4 Mentors free?',
+          answer: 'Yes! Look 4 Mentors is 100% free to use. All features are available to everyone at no cost, including profile creation, unlimited browsing, matching, connections, messaging, and all platform resources. There are no premium tiers, subscriptions, or paid features.'
         },
         {
           id: 4,
@@ -186,12 +186,12 @@ export default function FAQPage() {
         {
           id: 27,
           question: 'What browsers are supported?',
-          answer: 'MentorMatchmaking works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend keeping your browser updated for the best experience. Our mobile app is available on iOS and Android.'
+          answer: 'Look 4 Mentors works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend keeping your browser updated for the best experience. Our mobile app is available on iOS and Android.'
         },
         {
           id: 28,
           question: 'I\'m having trouble logging in. What should I do?',
-          answer: 'First, try resetting your password using the "Forgot Password" link. Clear your browser cache and cookies. Make sure you\'re using the correct email address. If problems persist, contact our support team at support@mentormatchmaking.com.'
+          answer: 'First, try resetting your password using the "Forgot Password" link. Clear your browser cache and cookies. Make sure you\'re using the correct email address. If problems persist, contact our support team at support@look4mentors.com.'
         },
         {
           id: 29,
@@ -243,7 +243,7 @@ export default function FAQPage() {
             Frequently Asked Questions
           </h1>
           <p className="text-lg text-white/90 font-montserrat mb-8">
-            Everything you need to know about MentorMatchmaking
+            Everything you need to know about Look 4 Mentors
           </p>
 
           {/* Search Bar */}
@@ -366,7 +366,7 @@ export default function FAQPage() {
                   className="border-2 border-white text-white hover:bg-white hover:text-primary-dark"
                   asChild
                 >
-                  <a href="mailto:support@mentormatchmaking.com">Email Us</a>
+                  <a href="mailto:support@look4mentors.com">Email Us</a>
                 </Button>
               </div>
             </CardContent>

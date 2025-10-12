@@ -38,7 +38,7 @@ export default function DashboardPage() {
   // Mock user data - in production this would come from auth/API
   const user = {
     name: 'Sarah Johnson',
-    role: 'mentor', // or 'mentee'
+    role: 'mentee', // Testing mentee view
     title: 'Senior Software Engineer',
     company: 'Google',
     avatar: null,

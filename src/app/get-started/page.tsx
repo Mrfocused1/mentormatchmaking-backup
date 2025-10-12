@@ -221,7 +221,7 @@ export default function GetStarted() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
-              Why Choose MentorMatchmaking?
+              Why Choose Look 4 Mentors?
             </h2>
             <p className="mt-4 text-lg text-neutral-600 font-montserrat">
               Everything you need for a successful mentorship experience

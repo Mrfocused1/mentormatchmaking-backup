@@ -110,7 +110,7 @@ export default function SafetyGuidelinesArticle() {
           <li>Email: safety@mentorplatform.com</li>
           <li>Emergency hotline: Available in app</li>
           <li>Report button: On every profile and message</li>
-          <li>Live chat: 24/7 support available</li>
+          <li>Contact form: Available 24/7 on our contact page</li>
         </ul>
       </div>
     </div>

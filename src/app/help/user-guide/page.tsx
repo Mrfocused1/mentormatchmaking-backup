@@ -65,7 +65,7 @@ export default function UserGuidePage() {
               </div>
               <div>
                 <h1 className="text-4xl font-black font-montserrat text-primary-dark">
-                  MentorMatchmaking User Guide
+                  Look 4 Mentors User Guide
                 </h1>
                 <p className="text-lg text-neutral-600 font-montserrat mt-1">
                   Everything you need to know to get the most out of the platform
@@ -127,10 +127,10 @@ export default function UserGuidePage() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-xl font-bold font-montserrat text-primary-dark mb-3">
-                      Welcome to MentorMatchmaking!
+                      Welcome to Look 4 Mentors!
                     </h3>
                     <p className="text-neutral-700 font-montserrat leading-relaxed mb-3">
-                      MentorMatchmaking is a 100% free platform that connects mentors and mentees through secure text messaging.
+                      Look for Mentors is a 100% free platform that connects mentors and mentees through secure text messaging.
                       Whether you're seeking guidance or looking to share your expertise, we make it easy to find meaningful mentorship connections.
                     </p>
                     <div className="bg-secondary-accent/10 border-l-4 border-secondary-accent p-4 rounded">
@@ -340,7 +340,7 @@ export default function UserGuidePage() {
                 <div className="space-y-4">
                   <div className="bg-secondary-accent/10 border-l-4 border-secondary-accent p-4 rounded mb-4">
                     <p className="text-sm font-montserrat text-primary-dark">
-                      <strong>Important:</strong> All communication on MentorMatchmaking is text-based messaging only.
+                      <strong>Important:</strong> All communication on Look for Mentors is text-based messaging only.
                       There are no video calls, phone calls, or voice calls on the platform.
                     </p>
                   </div>
@@ -603,12 +603,12 @@ export default function UserGuidePage() {
                 <div className="space-y-4">
                   {[
                     {
-                      q: 'Is MentorMatchmaking really free?',
-                      a: 'Yes! MentorMatchmaking is 100% free to use. All features, including matching, messaging, profile creation, and connections, are available to everyone at no cost. There are no premium tiers, subscriptions, or hidden fees.'
+                      q: 'Is Look 4 Mentors really free?',
+                      a: 'Yes! Look 4 Mentors is 100% free to use. All features, including matching, messaging, profile creation, and connections, are available to everyone at no cost. There are no premium tiers, subscriptions, or hidden fees.'
                     },
                     {
                       q: 'Do you offer video or phone calls?',
-                      a: 'No. All communication on MentorMatchmaking is text-based messaging only. There are no video calls, phone calls, or voice calls on the platform. However, you can share your own contact details privately if both parties agree to connect outside the platform.'
+                      a: 'No. All communication on Look for Mentors is text-based messaging only. There are no video calls, phone calls, or voice calls on the platform. However, you can share your own contact details privately if both parties agree to connect outside the platform.'
                     },
                     {
                       q: 'How long does it take to find a match?',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -140,6 +141,7 @@ const mockSessions = {
 type SessionFilter = 'upcoming' | 'pending' | 'past'
 
 export default function SessionsPage() {
+  const router = useRouter()
   const [activeFilter, setActiveFilter] = useState<SessionFilter>('upcoming')
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
@@ -164,7 +166,7 @@ export default function SessionsPage() {
   }
 
   const handleLeaveReview = (sessionId: number) => {
-    alert('Review form would open here')
+    router.push(`/sessions/${sessionId}/review`)
   }
 
   const handleMarkComplete = (sessionId: number) => {

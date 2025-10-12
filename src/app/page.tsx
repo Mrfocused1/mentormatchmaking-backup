@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { CountUp } from '@/components/ui/count-up'
+import { TestimonialsColumn } from '@/components/ui/testimonials-column'
 import {
   Users,
   Calendar,
@@ -98,7 +99,7 @@ const industries = [
 
 const testimonials = [
   {
-    content: "Finding my mentor through MentorMatchmaking was a game-changer for my career. The personalized guidance helped me land my dream job!",
+    content: "Finding my mentor through Look 4 Mentors was a game-changer for my career. The personalized guidance helped me land my dream job!",
     author: "Sarah Chen",
     role: "Software Engineer",
     company: "Tech Startup",
@@ -121,7 +122,35 @@ const testimonials = [
     rating: 5,
     avatar: null,
   },
+  {
+    content: "The mentorship I received helped me transition into a new career field. Forever grateful for this amazing platform!",
+    author: "David Kim",
+    role: "Data Analyst",
+    company: "FinTech Corp",
+    rating: 5,
+    avatar: null,
+  },
+  {
+    content: "Being able to connect with industry experts has accelerated my professional growth beyond my expectations.",
+    author: "Jessica Martinez",
+    role: "UX Designer",
+    company: "Design Studio",
+    rating: 5,
+    avatar: null,
+  },
+  {
+    content: "This platform connected me with a mentor who truly understood my goals and challenges. Highly recommend!",
+    author: "Alex Johnson",
+    role: "Marketing Specialist",
+    company: "E-commerce Co",
+    rating: 5,
+    avatar: null,
+  },
 ]
+
+const firstColumn = testimonials.slice(0, 3)
+const secondColumn = testimonials.slice(3, 6)
+const thirdColumn = testimonials.slice(0, 3)
 
 
 export default function Home() {
@@ -507,7 +536,7 @@ export default function Home() {
       {/* Testimonials Section */}
       <section className="bg-primary-accent py-24 sm:py-32 overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
               Success Stories
             </h2>
@@ -516,104 +545,13 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Auto-scrolling testimonials */}
-          <div className="mt-16 relative">
-            <div
-              className="flex gap-8"
-              style={{
-                animation: 'testimonialScroll 20s linear infinite',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.animationPlayState = 'paused'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.animationPlayState = 'running'
-              }}
-            >
-              {/* First set of testimonials */}
-              {testimonials.map((testimonial, index) => (
-                <Card key={`first-${index}`} className="bg-white flex-shrink-0 w-[350px]">
-                  <CardContent className="pt-6">
-                    <div className="flex mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-5 w-5 fill-warning text-warning" />
-                      ))}
-                    </div>
-                    <p className="text-neutral-700 font-montserrat italic">
-                      &ldquo;{testimonial.content}&rdquo;
-                    </p>
-                    <div className="mt-6 flex items-center gap-3">
-                      <Avatar
-                        fallback={testimonial.author}
-                        size="sm"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold font-montserrat text-primary-dark">
-                          {testimonial.author}
-                        </p>
-                        <p className="text-xs text-neutral-600 font-montserrat">
-                          {testimonial.role} at {testimonial.company}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {/* Duplicate set for seamless loop */}
-              {testimonials.map((testimonial, index) => (
-                <Card key={`second-${index}`} className="bg-white flex-shrink-0 w-[350px]">
-                  <CardContent className="pt-6">
-                    <div className="flex mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-5 w-5 fill-warning text-warning" />
-                      ))}
-                    </div>
-                    <p className="text-neutral-700 font-montserrat italic">
-                      &ldquo;{testimonial.content}&rdquo;
-                    </p>
-                    <div className="mt-6 flex items-center gap-3">
-                      <Avatar
-                        fallback={testimonial.author}
-                        size="sm"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold font-montserrat text-primary-dark">
-                          {testimonial.author}
-                        </p>
-                        <p className="text-xs text-neutral-600 font-montserrat">
-                          {testimonial.role} at {testimonial.company}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Left gradient fade */}
-            <div className="absolute left-0 top-0 bottom-0 w-64 pointer-events-none z-10" style={{
-              background: 'linear-gradient(to right, #98DFEA 0%, #98DFEA 50%, transparent 100%)'
-            }} />
-
-            {/* Right gradient fade */}
-            <div className="absolute right-0 top-0 bottom-0 w-64 pointer-events-none z-10" style={{
-              background: 'linear-gradient(to left, #98DFEA 0%, #98DFEA 50%, transparent 100%)'
-            }} />
+          {/* Vertical scrolling testimonials columns */}
+          <div className="relative h-[600px] flex gap-6 justify-center items-start [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)]">
+            <TestimonialsColumn testimonials={firstColumn} duration={15} className="hidden md:block" />
+            <TestimonialsColumn testimonials={secondColumn} duration={19} className="" />
+            <TestimonialsColumn testimonials={thirdColumn} duration={17} className="hidden lg:block" />
           </div>
         </div>
-
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes testimonialScroll {
-              0% {
-                transform: translateX(0);
-              }
-              100% {
-                transform: translateX(calc(-350px * 3 - 2rem * 3));
-              }
-            }
-          `
-        }} />
       </section>
 
       {/* CTA Section */}

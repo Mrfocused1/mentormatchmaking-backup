@@ -10,27 +10,27 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "MentorMatchmaking - Find Your Perfect Mentor | Professional Mentorship Platform",
-  description: "Connect with experienced mentors across industries. Find professional mentorship, career guidance, and skill development through our verified mentor matching platform.",
-  keywords: "mentor, mentorship, find a mentor, career mentor, professional mentoring, business mentor, life coach, career guidance, mentorship platform, mentor matching",
+  title: "Look 4 Mentors - Find Your Perfect Mentor | Professional Mentorship Platform",
+  description: "Connect with experienced mentors across industries. Find professional mentorship, career guidance, and skill development through our verified mentor matching platform at Look for Mentors.",
+  keywords: "mentor, mentorship, find a mentor, career mentor, professional mentoring, business mentor, life coach, career guidance, mentorship platform, mentor matching, look for mentors",
   openGraph: {
-    title: "Find Your Perfect Mentor | MentorMatchmaking",
+    title: "Find Your Perfect Mentor | Look 4 Mentors",
     description: "Connect with experienced mentors for career growth and professional development",
     type: "website",
-    url: "https://mentormatchmaking.com",
-    siteName: "MentorMatchmaking",
+    url: "https://look4mentors.com",
+    siteName: "Look 4 Mentors",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "MentorMatchmaking Platform",
+        alt: "Look 4 Mentors Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Find Your Perfect Mentor | MentorMatchmaking",
+    title: "Find Your Perfect Mentor | Look 4 Mentors",
     description: "Connect with experienced mentors for career growth",
     images: ["/og-image.png"],
   },
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://mentormatchmaking.com",
+    canonical: "https://look4mentors.com",
   },
 };
 

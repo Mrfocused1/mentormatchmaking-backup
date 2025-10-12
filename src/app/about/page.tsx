@@ -47,7 +47,7 @@ export default function About() {
     {
       year: '2020',
       title: 'Founded',
-      description: 'MentorMatchmaking was born from a vision to democratize access to mentorship and guidance.',
+      description: 'Look for Mentors was born from a vision to democratize access to mentorship and guidance.',
     },
     {
       year: '2021',
@@ -150,7 +150,7 @@ export default function About() {
                 Our Mission
               </h2>
               <p className="mt-6 text-lg text-neutral-700 font-montserrat leading-relaxed">
-                At MentorMatchmaking, we believe that everyone deserves access to quality
+                At Look for Mentors, we believe that everyone deserves access to quality
                 mentorship. Our mission is to democratize guidance and support by connecting
                 ambitious individuals with experienced mentors who can help them navigate
                 their journeys—wherever they are in life.
@@ -197,28 +197,28 @@ export default function About() {
       </section>
 
       {/* Values Section */}
-      <section className="py-24 sm:py-32 bg-white">
+      <section className="py-24 sm:py-32 bg-primary-dark">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
+            <h2 className="text-3xl font-bold font-montserrat tracking-tight text-white sm:text-4xl">
               Our Values
             </h2>
-            <p className="mt-4 text-lg text-neutral-600 font-montserrat">
+            <p className="mt-4 text-lg text-white/80 font-montserrat">
               The principles that guide everything we do
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             {values.map((value, index) => (
-              <Card key={index} className="border-2 border-neutral-200 hover:border-primary-accent shadow-lg hover:shadow-xl transition-all">
+              <Card key={index} className="bg-white/95 border-2 border-white/20 hover:border-primary-accent shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
                 <CardContent className="p-8 text-center">
-                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-primary-accent/10">
-                    <value.icon className="h-8 w-8 text-primary-accent" />
+                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-accent to-vibrant-accent">
+                    <value.icon className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold font-montserrat text-primary-dark mb-3">
                     {value.title}
                   </h3>
-                  <p className="text-neutral-600 font-montserrat">
+                  <p className="text-neutral-700 font-montserrat">
                     {value.description}
                   </p>
                 </CardContent>

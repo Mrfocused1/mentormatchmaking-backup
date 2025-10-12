@@ -34,7 +34,7 @@ export default function CodeOfConductPage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">Our Commitment</h2>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      MentorMatchmaking is committed to providing a safe, inclusive, and respectful environment for all users. This Code of Conduct outlines the standards of behavior we expect from everyone in our community—mentors, mentees, and staff alike.
+                      Look for Mentors is committed to providing a safe, inclusive, and respectful environment for all users. This Code of Conduct outlines the standards of behavior we expect from everyone in our community—mentors, mentees, and staff alike.
                     </p>
                     <p className="text-neutral-700 leading-relaxed">
                       By using our platform, you agree to uphold these principles and contribute to a positive mentorship experience for all.
@@ -181,8 +181,8 @@ export default function CodeOfConductPage() {
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">How to Report</h3>
                     <ul className="list-disc pl-6 space-y-2 text-neutral-700 mb-3">
                       <li>Use the "Report" button on user profiles or conversations</li>
-                      <li>Email our Trust & Safety team at conduct@mentormatchmaking.com</li>
-                      <li>Contact support@mentormatchmaking.com for general concerns</li>
+                      <li>Email our Trust & Safety team at conduct@look4mentors.com</li>
+                      <li>Contact support@look4mentors.com for general concerns</li>
                     </ul>
 
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">What to Include</h3>
@@ -232,7 +232,7 @@ export default function CodeOfConductPage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">Appeals</h2>
                     <p className="text-neutral-700 leading-relaxed">
-                      If you believe a decision was made in error, you may appeal by contacting conduct@mentormatchmaking.com within 14 days of the decision. Please provide any additional information or context that may be relevant to your appeal.
+                      If you believe a decision was made in error, you may appeal by contacting conduct@look4mentors.com within 14 days of the decision. Please provide any additional information or context that may be relevant to your appeal.
                     </p>
                   </div>
 
@@ -249,10 +249,10 @@ export default function CodeOfConductPage() {
                       If you have questions about this Code of Conduct, please contact us:
                     </p>
                     <div className="bg-neutral-100 rounded-lg p-4 text-neutral-700">
-                      <p className="font-semibold mb-1">MentorMatchmaking Trust & Safety</p>
-                      <p>Code of Conduct Inquiries: conduct@mentormatchmaking.com</p>
-                      <p>Report a Violation: conduct@mentormatchmaking.com</p>
-                      <p>General Support: support@mentormatchmaking.com</p>
+                      <p className="font-semibold mb-1">Look 4 Mentors Trust & Safety</p>
+                      <p>Code of Conduct Inquiries: conduct@look4mentors.com</p>
+                      <p>Report a Violation: conduct@look4mentors.com</p>
+                      <p>General Support: support@look4mentors.com</p>
                     </div>
                   </div>
 
@@ -261,7 +261,7 @@ export default function CodeOfConductPage() {
                       Thank You
                     </p>
                     <p className="text-neutral-700 leading-relaxed">
-                      Thank you for being part of the MentorMatchmaking community and for helping us maintain a safe, respectful, and supportive environment for everyone. Together, we can create meaningful mentorship experiences that transform careers and lives.
+                      Thank you for being part of the Look for Mentors community and for helping us maintain a safe, respectful, and supportive environment for everyone. Together, we can create meaningful mentorship experiences that transform careers and lives.
                     </p>
                   </div>
 

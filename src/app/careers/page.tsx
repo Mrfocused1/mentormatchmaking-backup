@@ -146,7 +146,7 @@ export default function CareersPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black font-montserrat text-primary-dark mb-4">
-              Why Join MentorMatchmaking?
+              Why Join Look 4 Mentors?
             </h2>
             <p className="text-lg text-neutral-600 font-montserrat max-w-3xl mx-auto">
               We're on a mission to democratize access to mentorship and help millions of professionals achieve their career goals.
@@ -215,7 +215,7 @@ export default function CareersPage() {
                   Pitch Yourself to Join Our Team
                 </h2>
                 <p className="text-neutral-600 font-montserrat">
-                  Tell us about yourself and what you can bring to MentorMatchmaking. We're open to all talents and backgrounds!
+                  Tell us about yourself and what you can bring to Look 4 Mentors. We're open to all talents and backgrounds!
                 </p>
               </div>
 
@@ -397,7 +397,7 @@ export default function CareersPage() {
                     required
                     rows={6}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent font-montserrat text-sm resize-none"
-                    placeholder="Tell us about your skills, experience, and what unique value you'd bring to MentorMatchmaking. Be creative and authentic - we want to know what makes you special!"
+                    placeholder="Tell us about your skills, experience, and what unique value you'd bring to Look 4 Mentors. Be creative and authentic - we want to know what makes you special!"
                   />
                   <p className="text-xs text-neutral-500 font-montserrat mt-2">
                     {formData.message.length} characters

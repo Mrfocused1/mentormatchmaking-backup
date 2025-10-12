@@ -133,6 +133,21 @@
     to { transform: scale(1); opacity: 1; }
   }
 
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(152, 223, 234, 0.5),
+                  0 0 40px rgba(152, 223, 234, 0.3),
+                  0 0 60px rgba(152, 223, 234, 0.2);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(152, 223, 234, 0.7),
+                  0 0 50px rgba(152, 223, 234, 0.5),
+                  0 0 80px rgba(152, 223, 234, 0.3);
+      transform: scale(1.05);
+    }
+  }
+
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
@@ -143,6 +158,10 @@
 
   .animate-scale-in {
     animation: scaleIn 0.2s ease-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
   }
 
   /* Text truncation */

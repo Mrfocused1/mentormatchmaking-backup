@@ -436,7 +436,7 @@ export default function SafetyCenterPage() {
                     </div>
                     <div className="bg-white/10 rounded-lg p-4">
                       <p className="text-sm text-white/70 font-montserrat mb-1">Our Safety Team</p>
-                      <p className="text-xl font-bold font-montserrat text-white">safety@mentormatchmaking.com</p>
+                      <p className="text-xl font-bold font-montserrat text-white">safety@look4mentors.com</p>
                     </div>
                   </div>
                 </div>

@@ -44,7 +44,7 @@ export default function CookiePolicyPage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">2. How We Use Cookies</h2>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      MentorMatchmaking uses cookies to:
+                      Look for Mentors uses cookies to:
                     </p>
                     <ul className="list-disc pl-6 space-y-2 text-neutral-700">
                       <li>Keep you signed in to your account</li>
@@ -162,7 +162,7 @@ export default function CookiePolicyPage() {
                     <ul className="list-disc pl-6 space-y-2 text-neutral-700 mb-3">
                       <li><strong>Google Analytics:</strong> Tracks user behavior and site performance</li>
                       <li><strong>Email Service Providers:</strong> Track email opens and clicks</li>
-                      <li><strong>Customer Support Tools:</strong> Provide live chat and help desk functionality</li>
+                      <li><strong>Customer Support Tools:</strong> Provide help desk functionality</li>
                       <li><strong>Advertising Platforms:</strong> Deliver targeted advertisements</li>
                     </ul>
                     <p className="text-neutral-700 leading-relaxed">
@@ -267,9 +267,9 @@ export default function CookiePolicyPage() {
                       If you have questions about our use of cookies, please contact us:
                     </p>
                     <div className="bg-neutral-100 rounded-lg p-4 text-neutral-700">
-                      <p className="font-semibold mb-1">MentorMatchmaking</p>
-                      <p>Email: privacy@mentormatchmaking.com</p>
-                      <p>Support: support@mentormatchmaking.com</p>
+                      <p className="font-semibold mb-1">Look 4 Mentors</p>
+                      <p>Email: privacy@look4mentors.com</p>
+                      <p>Support: support@look4mentors.com</p>
                     </div>
                   </div>
 

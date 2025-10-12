@@ -47,13 +47,12 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-black font-montserrat text-primary-dark">
-                MM
-              </span>
-              <span className="hidden sm:block text-sm font-medium font-montserrat text-neutral-600">
-                MentorMatchmaking
-              </span>
+            <Link href="/" className="flex items-center">
+              <img
+                src="/logo.svg"
+                alt="Look 4 Mentors"
+                className="h-10 w-auto"
+              />
             </Link>
           </div>
 

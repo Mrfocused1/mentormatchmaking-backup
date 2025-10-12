@@ -34,10 +34,10 @@ export default function PrivacyPolicyPage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">1. Introduction</h2>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      At MentorMatchmaking ("we," "us," or "our"), we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
+                      At Look 4 Mentors ("we," "us," or "our"), we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
                     </p>
                     <p className="text-neutral-700 leading-relaxed">
-                      By using MentorMatchmaking, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our platform.
+                      By using Look for Mentors, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our platform.
                     </p>
                   </div>
 
@@ -136,7 +136,7 @@ export default function PrivacyPolicyPage() {
                       <li><strong>Object:</strong> You can object to our processing of your information for certain purposes</li>
                     </ul>
                     <p className="text-neutral-700 leading-relaxed">
-                      To exercise these rights, please contact us at privacy@mentormatchmaking.com.
+                      To exercise these rights, please contact us at privacy@look4mentors.com.
                     </p>
                   </div>
 
@@ -210,7 +210,7 @@ export default function PrivacyPolicyPage() {
                       <li>The right to non-discrimination for exercising your privacy rights</li>
                     </ul>
                     <p className="text-neutral-700 leading-relaxed">
-                      To exercise these rights, please contact us at privacy@mentormatchmaking.com.
+                      To exercise these rights, please contact us at privacy@look4mentors.com.
                     </p>
                   </div>
 
@@ -246,10 +246,10 @@ export default function PrivacyPolicyPage() {
                       If you have questions about this Privacy Policy or our privacy practices, please contact us:
                     </p>
                     <div className="bg-neutral-100 rounded-lg p-4 text-neutral-700">
-                      <p className="font-semibold mb-1">MentorMatchmaking</p>
-                      <p>Email: privacy@mentormatchmaking.com</p>
-                      <p>Support: support@mentormatchmaking.com</p>
-                      <p>Legal: legal@mentormatchmaking.com</p>
+                      <p className="font-semibold mb-1">Look 4 Mentors</p>
+                      <p>Email: privacy@look4mentors.com</p>
+                      <p>Support: support@look4mentors.com</p>
+                      <p>Legal: legal@look4mentors.com</p>
                     </div>
                   </div>
 

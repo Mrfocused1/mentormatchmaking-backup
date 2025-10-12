@@ -166,7 +166,7 @@ export default function MessagesPage() {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
@@ -228,28 +228,28 @@ export default function MessagesPage() {
       {/* Messages Interface */}
       <section className="py-8">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <Card className="shadow-xl overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-12 h-[calc(100vh-300px)] min-h-[600px]">
+          <Card className="shadow-2xl overflow-hidden border-2 border-neutral-200">
+            <div className="grid grid-cols-1 lg:grid-cols-12 h-[700px]">
               {/* Conversations Sidebar */}
               <div className={`lg:col-span-4 border-r border-neutral-200 flex flex-col ${
                 isMobileConversationOpen ? 'hidden lg:flex' : 'flex'
               }`}>
                 {/* Search Bar */}
-                <div className="p-4 border-b border-neutral-200">
+                <div className="p-4 border-b border-neutral-200 bg-white">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
                     <input
                       type="text"
                       placeholder="Search conversations..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                      className="w-full pl-11 pr-4 py-3 border-2 border-neutral-200 rounded-xl font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-primary-accent hover:border-neutral-300 transition-all shadow-sm"
                     />
                   </div>
                 </div>
 
                 {/* Conversations List */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto bg-neutral-50">
                   {filteredConversations.length > 0 ? (
                     filteredConversations.map((conversation) => (
                       <button
@@ -258,8 +258,10 @@ export default function MessagesPage() {
                           setSelectedConversation(conversation)
                           setIsMobileConversationOpen(true)
                         }}
-                        className={`w-full p-4 border-b border-neutral-100 hover:bg-neutral-50 transition-colors text-left ${
-                          selectedConversation.id === conversation.id ? 'bg-primary-accent/5 border-l-4 border-l-primary-accent' : ''
+                        className={`w-full p-4 border-b border-neutral-100 hover:bg-white transition-all text-left group ${
+                          selectedConversation.id === conversation.id
+                            ? 'bg-gradient-to-r from-primary-accent/10 to-secondary-accent/10 border-l-4 border-l-primary-accent shadow-sm'
+                            : 'bg-white hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -314,7 +316,7 @@ export default function MessagesPage() {
                 {selectedConversation ? (
                   <>
                     {/* Conversation Header */}
-                    <div className="p-4 border-b border-neutral-200 bg-white">
+                    <div className="p-5 border-b-2 border-neutral-100 bg-gradient-to-r from-white to-neutral-50 shadow-sm">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <button
@@ -392,32 +394,32 @@ export default function MessagesPage() {
                     </div>
 
                     {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-neutral-50 to-neutral-100/50">
                       {mockMessages.map((message) => (
                         <div
                           key={message.id}
-                          className={`flex ${message.senderName === 'You' ? 'justify-end' : 'justify-start'}`}
+                          className={`flex ${message.senderName === 'You' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                         >
-                          <div className={`max-w-[70%] ${
+                          <div className={`max-w-[75%] ${
                             message.senderName === 'You' ? 'order-2' : 'order-1'
                           }`}>
-                            <div className={`rounded-2xl px-4 py-3 ${
+                            <div className={`rounded-2xl px-5 py-3.5 shadow-sm ${
                               message.senderName === 'You'
-                                ? 'bg-primary-accent text-primary-dark'
-                                : 'bg-white border border-neutral-200 text-primary-dark'
+                                ? 'bg-gradient-to-r from-primary-accent to-primary-accent/90 text-primary-dark'
+                                : 'bg-white border-2 border-neutral-100 text-primary-dark'
                             }`}>
                               <p className="text-sm font-montserrat leading-relaxed">
                                 {message.content}
                               </p>
                             </div>
-                            <div className={`flex items-center gap-1 mt-1 px-2 ${
+                            <div className={`flex items-center gap-1.5 mt-1.5 px-2 ${
                               message.senderName === 'You' ? 'justify-end' : 'justify-start'
                             }`}>
-                              <span className="text-xs text-neutral-500 font-montserrat">
+                              <span className="text-xs text-neutral-500 font-montserrat font-medium">
                                 {message.timestamp}
                               </span>
                               {message.senderName === 'You' && (
-                                <CheckCheck className="h-3 w-3 text-primary-accent" />
+                                <CheckCheck className="h-3.5 w-3.5 text-primary-accent" />
                               )}
                             </div>
                           </div>
@@ -426,32 +428,32 @@ export default function MessagesPage() {
                     </div>
 
                     {/* Message Input */}
-                    <div className="p-4 border-t border-neutral-200 bg-white">
+                    <div className="p-5 border-t-2 border-neutral-100 bg-white">
                       <div className="flex items-end gap-3">
-                        <Button variant="ghost" size="sm" className="mb-2">
-                          <Paperclip className="h-5 w-5 text-neutral-600" />
-                        </Button>
+                        <button className="mb-2 p-2.5 hover:bg-primary-accent/10 rounded-xl transition-all group">
+                          <Paperclip className="h-5 w-5 text-neutral-500 group-hover:text-primary-accent transition-colors" />
+                        </button>
                         <div className="flex-1">
                           <textarea
                             value={messageText}
                             onChange={(e) => setMessageText(e.target.value)}
-                            onKeyPress={handleKeyPress}
+                            onKeyDown={handleKeyDown}
                             placeholder="Type your message..."
                             rows={1}
-                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-montserrat text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                            style={{ minHeight: '44px', maxHeight: '120px' }}
+                            className="w-full px-5 py-3.5 border-2 border-neutral-200 rounded-2xl font-montserrat text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-primary-accent hover:border-neutral-300 transition-all shadow-sm"
+                            style={{ minHeight: '48px', maxHeight: '120px' }}
                           />
                         </div>
                         <Button
                           onClick={handleSendMessage}
                           disabled={!messageText.trim()}
-                          className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark disabled:opacity-50 disabled:cursor-not-allowed mb-2"
+                          className="bg-gradient-to-r from-primary-accent to-secondary-accent hover:from-primary-accent/90 hover:to-secondary-accent/90 text-primary-dark disabled:opacity-50 disabled:cursor-not-allowed mb-2 shadow-lg hover:shadow-xl transition-all rounded-xl px-5 py-3"
                         >
                           <Send className="h-5 w-5" />
                         </Button>
                       </div>
-                      <p className="text-xs text-neutral-500 font-montserrat mt-2 px-12">
-                        Press Enter to send, Shift + Enter for new line
+                      <p className="text-xs text-neutral-500 font-montserrat mt-3 px-3 text-center">
+                        Press <kbd className="px-2 py-0.5 bg-neutral-100 rounded font-semibold">Enter</kbd> to send • <kbd className="px-2 py-0.5 bg-neutral-100 rounded font-semibold">Shift + Enter</kbd> for new line
                       </p>
                     </div>
                   </>

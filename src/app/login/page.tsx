@@ -195,7 +195,7 @@ export default function Login() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-neutral-500 font-montserrat">
-                    New to MentorMatchmaking?
+                    New to Look 4 Mentors?
                   </span>
                 </div>
               </div>

@@ -277,14 +277,32 @@ export default function NotificationsPage() {
     const config = notificationConfig[notification.type]
     const Icon = config.icon
 
+    const handleCardClick = () => {
+      if (notification.actionUrl) {
+        // Mark as read when navigating
+        if (!notification.isRead) {
+          markAsRead(notification.id)
+        }
+      }
+    }
+
     return (
       <div
         key={notification.id}
-        className={`p-4 border-b border-neutral-100 hover:bg-neutral-50 transition-colors ${
+        className={`relative p-4 border-b border-neutral-100 hover:bg-neutral-50 transition-colors ${
           !notification.isRead ? 'bg-primary-accent/5' : ''
-        }`}
+        } ${notification.actionUrl ? 'cursor-pointer' : ''}`}
       >
-        <div className="flex items-start gap-4">
+        {/* Clickable overlay for the entire card */}
+        {notification.actionUrl && (
+          <Link
+            href={notification.actionUrl}
+            onClick={handleCardClick}
+            className="absolute inset-0 z-0"
+          />
+        )}
+
+        <div className="flex items-start gap-4 relative z-10">
           {/* Icon */}
           <div className={`flex-shrink-0 w-12 h-12 ${config.bgColor} rounded-full flex items-center justify-center`}>
             {notification.user ? (
@@ -313,29 +331,23 @@ export default function NotificationsPage() {
             <p className="text-sm text-neutral-600 font-montserrat mb-2">
               {notification.description}
             </p>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-neutral-400 font-montserrat">
-                {notification.timestamp}
-              </span>
-              {notification.actionUrl && (
-                <Link
-                  href={notification.actionUrl}
-                  className="text-xs font-semibold text-primary-accent hover:text-primary-accent/80 font-montserrat"
-                >
-                  View
-                </Link>
-              )}
-            </div>
+            <span className="text-xs text-neutral-400 font-montserrat">
+              {notification.timestamp}
+            </span>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative z-20">
             {!notification.isRead && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => markAsRead(notification.id)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  markAsRead(notification.id)
+                }}
                 className="text-neutral-500 hover:text-primary-accent"
+                title="Mark as read"
               >
                 <Check className="h-4 w-4" />
               </Button>
@@ -343,8 +355,12 @@ export default function NotificationsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => deleteNotification(notification.id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                deleteNotification(notification.id)
+              }}
               className="text-neutral-500 hover:text-red-600"
+              title="Delete notification"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

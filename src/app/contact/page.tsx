@@ -71,9 +71,9 @@ export default function Contact() {
     {
       icon: Mail,
       title: 'Email',
-      content: 'support@mentormatchmaking.com',
+      content: 'support@look4mentors.com',
       description: 'Send us an email anytime',
-      href: 'mailto:support@mentormatchmaking.com',
+      href: 'mailto:support@look4mentors.com',
     },
     {
       icon: Phone,

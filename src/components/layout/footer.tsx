@@ -34,13 +34,12 @@ export function Footer() {
         {/* Top Section - Logo and Navigation */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-8 pb-8 border-b border-neutral-200">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-black font-montserrat text-primary-dark">
-              MM
-            </span>
-            <span className="hidden sm:block text-sm font-medium font-montserrat text-neutral-600">
-              MentorMatchmaking
-            </span>
+          <Link href="/" className="flex items-center">
+            <img
+              src="/logo.svg"
+              alt="Look 4 Mentors"
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Navigation Links */}
@@ -76,7 +75,7 @@ export function Footer() {
         {/* Bottom Section - Legal and Copyright */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8">
           <p className="text-sm font-montserrat text-neutral-600">
-            &copy; {new Date().getFullYear()} MentorMatchmaking. All rights reserved.
+            &copy; {new Date().getFullYear()} Look 4 Mentors. All rights reserved.
           </p>
 
           {/* Legal Links */}

@@ -151,7 +151,7 @@ type TimePeriod = 'today' | '7days' | '30days' | 'all'
 
 export default function ProfileViewsPage() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('30days')
-  const [filterRole, setFilterRole] = useState<'all' | 'mentors' | 'mentees'>('all')
+  const [filterRole, setFilterRole] = useState<'all' | 'mentees'>('all')
 
   // Filter views based on time period
   const getFilteredViews = () => {
@@ -169,11 +169,12 @@ export default function ProfileViewsPage() {
       filteredByTime = mockProfileViews.filter(v => new Date(v.viewedAt) >= thirtyDaysAgo)
     }
 
-    // Filter by role
-    if (filterRole === 'mentors') {
-      return filteredByTime.filter(v => v.viewerRole === 'mentor')
-    } else if (filterRole === 'mentees') {
-      return filteredByTime.filter(v => v.viewerRole === 'mentee')
+    // For mentor dashboard, only show mentee views (mentors can't view other mentors)
+    filteredByTime = filteredByTime.filter(v => v.viewerRole === 'mentee')
+
+    // Filter by engagement
+    if (filterRole === 'mentees') {
+      return filteredByTime.filter(v => v.showedInterest || v.sentMessage)
     }
 
     return filteredByTime
@@ -346,7 +347,7 @@ export default function ProfileViewsPage() {
               </div>
             </div>
 
-            {/* Role Filter */}
+            {/* Role Filter - Removed for mentor dashboard as only mentees can view mentor profiles */}
             <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-neutral-400 flex-shrink-0" />
               <div className="flex gap-2">
@@ -354,17 +355,9 @@ export default function ProfileViewsPage() {
                   variant={filterRole === 'all' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setFilterRole('all')}
-                  className={filterRole === 'all' ? 'bg-primary-accent text-primary-dark' : ''}
+                  className={filterRole === 'all' ? 'bg-secondary-accent text-white' : ''}
                 >
-                  All
-                </Button>
-                <Button
-                  variant={filterRole === 'mentors' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setFilterRole('mentors')}
-                  className={filterRole === 'mentors' ? 'bg-primary-accent text-primary-dark' : ''}
-                >
-                  Mentors
+                  All Mentee Views
                 </Button>
                 <Button
                   variant={filterRole === 'mentees' ? 'primary' : 'ghost'}
@@ -372,7 +365,7 @@ export default function ProfileViewsPage() {
                   onClick={() => setFilterRole('mentees')}
                   className={filterRole === 'mentees' ? 'bg-secondary-accent text-white' : ''}
                 >
-                  Mentees
+                  Engaged Only
                 </Button>
               </div>
             </div>
@@ -383,8 +376,8 @@ export default function ProfileViewsPage() {
             <Card className="shadow-md">
               <CardHeader className="border-b border-neutral-200">
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary-accent" />
-                  Viewers by Role
+                  <Users className="h-5 w-5 text-secondary-accent" />
+                  Mentee Profile Views
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -392,36 +385,25 @@ export default function ProfileViewsPage() {
                   <div className="space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-montserrat text-neutral-600">Mentors</span>
-                        <span className="text-lg font-bold font-montserrat text-primary-dark">
-                          {viewersByRole.mentors}
-                        </span>
-                      </div>
-                      <div className="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-primary-accent h-2 rounded-full transition-all"
-                          style={{ width: `${filteredViews.length > 0 ? (viewersByRole.mentors / filteredViews.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-montserrat text-neutral-600">Mentees</span>
-                        <span className="text-lg font-bold font-montserrat text-primary-dark">
+                        <span className="text-sm font-montserrat text-neutral-600">Total Mentee Views</span>
+                        <span className="text-3xl font-bold font-montserrat text-secondary-accent">
                           {viewersByRole.mentees}
                         </span>
                       </div>
-                      <div className="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden">
                         <div
-                          className="bg-secondary-accent h-2 rounded-full transition-all"
-                          style={{ width: `${filteredViews.length > 0 ? (viewersByRole.mentees / filteredViews.length) * 100 : 0}%` }}
+                          className="bg-secondary-accent h-3 rounded-full transition-all"
+                          style={{ width: '100%' }}
                         ></div>
                       </div>
+                      <p className="text-xs font-montserrat text-neutral-500 mt-2">
+                        Mentees looking for guidance and mentorship
+                      </p>
                     </div>
                     <div className="pt-4 border-t border-neutral-200">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-montserrat text-neutral-600">Engaged Viewers</span>
-                        <span className="text-lg font-bold font-montserrat text-green-600">
+                        <span className="text-2xl font-bold font-montserrat text-green-600">
                           {viewersWhoEngaged}
                         </span>
                       </div>

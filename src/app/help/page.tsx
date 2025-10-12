@@ -123,8 +123,8 @@ const faqs = [
     answer: 'To get started as a mentee, create your account, complete your profile with your goals and interests, browse available mentors, and send interest requests to those who match your needs.'
   },
   {
-    question: 'Is MentorMatchmaking free?',
-    answer: 'Yes! MentorMatchmaking is completely free to use. All features, including matching, messaging, profile creation, and connections, are available to everyone at no cost. There are no premium tiers, subscriptions, or hidden fees.'
+    question: 'Is Look 4 Mentors free?',
+    answer: 'Yes! Look 4 Mentors is completely free to use. All features, including matching, messaging, profile creation, and connections, are available to everyone at no cost. There are no premium tiers, subscriptions, or hidden fees.'
   },
   {
     question: 'How does the matching process work?',
@@ -319,10 +319,13 @@ export default function HelpPage() {
             <Button
               variant="outline"
               size="lg"
+              asChild
               className="border-white text-white hover:bg-white/10"
             >
-              <MessageCircle className="h-5 w-5 mr-2" />
-              Live Chat
+              <Link href="/faq">
+                <HelpCircle className="h-5 w-5 mr-2" />
+                View FAQs
+              </Link>
             </Button>
           </div>
         </div>
@@ -342,7 +345,7 @@ export default function HelpPage() {
                   User Guide
                 </h3>
                 <p className="text-sm font-montserrat text-neutral-600 mb-4">
-                  Complete guide to using MentorMatchmaking
+                  Complete guide to using Look 4 Mentors
                 </p>
                 <Link
                   href="/help/user-guide"

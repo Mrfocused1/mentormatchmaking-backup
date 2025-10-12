@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">1. Acceptance of Terms</h2>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      By accessing and using MentorMatchmaking ("the Platform," "we," "us," or "our"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Platform.
+                      By accessing and using Look 4 Mentors ("the Platform," "we," "us," or "our"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Platform.
                     </p>
                     <p className="text-neutral-700 leading-relaxed">
                       We reserve the right to modify these terms at any time. Continued use of the Platform after changes constitutes acceptance of the modified terms.
@@ -44,7 +44,7 @@ export default function TermsOfServicePage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">2. Description of Service</h2>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      MentorMatchmaking is a platform that connects mentors and mentees for professional development and career guidance. We facilitate:
+                      Look for Mentors is a platform that connects mentors and mentees for professional development and career guidance. We facilitate:
                     </p>
                     <ul className="list-disc pl-6 space-y-2 text-neutral-700">
                       <li>Profile creation for mentors and mentees</li>
@@ -94,7 +94,7 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">5. Mentorship Relationships</h2>
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">5.1 Platform Role</h3>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      MentorMatchmaking is a platform that facilitates connections. We do not employ mentors or control the mentorship relationships. All mentorship interactions are between users.
+                      Look for Mentors is a platform that facilitates connections. We do not employ mentors or control the mentorship relationships. All mentorship interactions are between users.
                     </p>
 
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">5.2 No Guarantee</h3>
@@ -112,7 +112,7 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">6. Intellectual Property</h2>
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">6.1 Platform Content</h3>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      All content on the Platform, including text, graphics, logos, icons, images, and software, is the property of MentorMatchmaking or its licensors and is protected by copyright and intellectual property laws.
+                      All content on the Platform, including text, graphics, logos, icons, images, and software, is the property of Look 4 Mentors or its licensors and is protected by copyright and intellectual property laws.
                     </p>
 
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">6.2 User Content</h3>
@@ -132,7 +132,7 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">8. Platform Access and Features</h2>
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">8.1 Free Service</h3>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      MentorMatchmaking is completely free to use. All features, including profile creation, matching, messaging, and connections, are available to all users at no cost. There are no premium tiers, subscriptions, or paid features.
+                      Look for Mentors is completely free to use. All features, including profile creation, matching, messaging, and connections, are available to all users at no cost. There are no premium tiers, subscriptions, or paid features.
                     </p>
 
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">8.2 Future Changes</h3>
@@ -154,14 +154,14 @@ export default function TermsOfServicePage() {
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">10. Limitation of Liability</h2>
                     <p className="text-neutral-700 leading-relaxed">
-                      TO THE MAXIMUM EXTENT PERMITTED BY LAW, MENTORMATCHMAKING SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
+                      TO THE MAXIMUM EXTENT PERMITTED BY LAW, LOOK 4 MENTORS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">11. Indemnification</h2>
                     <p className="text-neutral-700 leading-relaxed">
-                      You agree to indemnify and hold MentorMatchmaking harmless from any claims, damages, losses, liabilities, and expenses arising out of your use of the Platform, your violation of these Terms, or your violation of any rights of another user.
+                      You agree to indemnify and hold Look 4 Mentors harmless from any claims, damages, losses, liabilities, and expenses arising out of your use of the Platform, your violation of these Terms, or your violation of any rights of another user.
                     </p>
                   </div>
 
@@ -169,7 +169,7 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold text-primary-dark mb-4">12. Dispute Resolution</h2>
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">12.1 Informal Resolution</h3>
                     <p className="text-neutral-700 leading-relaxed mb-3">
-                      If you have a dispute with us, you agree to first contact us at support@mentormatchmaking.com to attempt to resolve it informally.
+                      If you have a dispute with us, you agree to first contact us at support@look4mentors.com to attempt to resolve it informally.
                     </p>
 
                     <h3 className="text-lg font-semibold text-primary-dark mb-2">12.2 Arbitration</h3>
@@ -198,9 +198,9 @@ export default function TermsOfServicePage() {
                       If you have questions about these Terms of Service, please contact us:
                     </p>
                     <div className="bg-neutral-100 rounded-lg p-4 text-neutral-700">
-                      <p className="font-semibold mb-1">MentorMatchmaking</p>
-                      <p>Email: legal@mentormatchmaking.com</p>
-                      <p>Support: support@mentormatchmaking.com</p>
+                      <p className="font-semibold mb-1">Look 4 Mentors</p>
+                      <p>Email: legal@look4mentors.com</p>
+                      <p>Support: support@look4mentors.com</p>
                     </div>
                   </div>
 

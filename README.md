@@ -1,4 +1,4 @@
-# MentorMatchmaking Platform
+# Look 4 Mentors Platform
 
 A comprehensive mentorship platform connecting mentees with experienced mentors across industries. Built with Next.js 14, TypeScript, Prisma, and PostgreSQL.
 
@@ -57,7 +57,7 @@ A comprehensive mentorship platform connecting mentees with experienced mentors 
 1. **Clone the repository**
 ```bash
 git clone <your-repo-url>
-cd mentormatchmaking
+cd look4mentors
 ```
 
 2. **Install dependencies**
@@ -83,7 +83,7 @@ LINKEDIN_CLIENT_ID=""
 LINKEDIN_CLIENT_SECRET=""
 
 # Email Service
-EMAIL_FROM="noreply@mentormatchmaking.com"
+EMAIL_FROM="noreply@look4mentors.com"
 RESEND_API_KEY=""
 
 # File Upload
@@ -113,7 +113,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ## 📁 Project Structure
 
 ```
-mentormatchmaking/
+look4mentors/
 ├── src/
 │   ├── app/              # Next.js App Router pages
 │   ├── components/       # React components
@@ -235,7 +235,7 @@ This project is licensed under the MIT License.
 
 ## 🆘 Support
 
-For support, email support@mentormatchmaking.com or open an issue in the repository.
+For support, email support@look4mentors.com or open an issue in the repository.
 
 ## 🙏 Acknowledgments
 
