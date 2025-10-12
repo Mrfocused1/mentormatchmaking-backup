@@ -21,7 +21,14 @@ import {
   CheckCircle,
   RotateCcw,
   Search,
-  Check
+  Check,
+  Eye,
+  MapPin,
+  Star,
+  Briefcase,
+  Users,
+  Clock,
+  Globe
 } from 'lucide-react'
 
 export default function BrowseMentorsNew() {
@@ -47,6 +54,8 @@ export default function BrowseMentorsNew() {
   const [interestMessage, setInterestMessage] = useState('')
   const [uploadedCV, setUploadedCV] = useState<File | null>(null)
   const [showFilterModal, setShowFilterModal] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [profileMentor, setProfileMentor] = useState<any>(null)
 
   // Swipe feedback animation state
   const [swipeFeedback, setSwipeFeedback] = useState<'left' | 'right' | null>(null)
@@ -651,8 +660,13 @@ export default function BrowseMentorsNew() {
   }
 
   const handleViewProfile = (mentor: any) => {
-    // This would navigate to detailed profile page
-    console.log('View profile:', mentor)
+    setProfileMentor(mentor)
+    setShowProfileModal(true)
+  }
+
+  const handleCloseProfileModal = () => {
+    setShowProfileModal(false)
+    setProfileMentor(null)
   }
 
   return (
@@ -790,12 +804,19 @@ export default function BrowseMentorsNew() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex justify-center items-center gap-8 mb-6">
+                  <div className="flex justify-center items-center gap-4 mb-6">
                     <button
                       onClick={() => handleSwipe('left')}
                       className="w-16 h-16 rounded-full bg-white border-2 border-neutral-300 shadow-lg flex items-center justify-center hover:border-neutral-400 hover:scale-110 transition-all active:scale-95"
                     >
                       <X className="h-7 w-7 text-neutral-600" />
+                    </button>
+
+                    <button
+                      onClick={() => handleViewProfile(mentors[currentCardIndex])}
+                      className="w-16 h-16 rounded-full bg-white border-2 border-primary-accent shadow-lg flex items-center justify-center hover:border-primary-accent/80 hover:scale-110 transition-all active:scale-95"
+                    >
+                      <Eye className="h-7 w-7 text-primary-accent" />
                     </button>
 
                     <button
@@ -1188,6 +1209,206 @@ export default function BrowseMentorsNew() {
               >
                 <Send className="mr-2 h-5 w-5" />
                 Send Request
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile View Modal */}
+      {showProfileModal && profileMentor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-white px-8 py-6 border-b border-neutral-200">
+              <div className="flex items-start gap-6">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-24 h-24 rounded-full bg-primary-accent flex items-center justify-center text-white text-3xl font-bold font-montserrat shadow-lg">
+                    {profileMentor.name.split(' ').map((n: string) => n[0]).join('')}
+                  </div>
+                  <div className="absolute bottom-1 right-1 w-6 h-6 bg-success border-4 border-white rounded-full" />
+                </div>
+
+                {/* Mentor Info */}
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold font-montserrat text-primary-dark mb-1">
+                    {profileMentor.name}
+                  </h2>
+                  <p className="text-base font-semibold text-neutral-700 font-montserrat mb-1">
+                    {profileMentor.title}
+                  </p>
+                  <p className="text-sm text-neutral-600 font-montserrat">
+                    @ {profileMentor.company}
+                  </p>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={handleCloseProfileModal}
+                  className="text-neutral-400 hover:text-neutral-600 transition-colors p-2 hover:bg-neutral-100 rounded-full flex-shrink-0"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-8 py-6 space-y-6 max-h-[calc(90vh-240px)] overflow-y-auto custom-scrollbar">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-neutral-50 rounded-xl">
+                  <Briefcase className="h-6 w-6 text-primary-accent mx-auto mb-2" />
+                  <p className="text-lg font-bold font-montserrat text-primary-dark">
+                    {profileMentor.yearsExperience}
+                  </p>
+                  <p className="text-xs text-neutral-600 font-montserrat">Years Exp.</p>
+                </div>
+                <div className="text-center p-4 bg-neutral-50 rounded-xl">
+                  <Users className="h-6 w-6 text-secondary-accent mx-auto mb-2" />
+                  <p className="text-lg font-bold font-montserrat text-primary-dark">
+                    {profileMentor.mentees}
+                  </p>
+                  <p className="text-xs text-neutral-600 font-montserrat">Mentees</p>
+                </div>
+                <div className="text-center p-4 bg-neutral-50 rounded-xl">
+                  <Star className="h-6 w-6 text-warning mx-auto mb-2 fill-warning" />
+                  <p className="text-lg font-bold font-montserrat text-primary-dark">
+                    {profileMentor.rating}
+                  </p>
+                  <p className="text-xs text-neutral-600 font-montserrat">Rating</p>
+                </div>
+                <div className="text-center p-4 bg-neutral-50 rounded-xl">
+                  <Clock
+                    className={`h-6 w-6 mx-auto mb-2 ${
+                      profileMentor.availability === 'Available' ? 'text-success' : 'text-warning'
+                    }`}
+                  />
+                  <p
+                    className={`text-xs font-bold font-montserrat ${
+                      profileMentor.availability === 'Available' ? 'text-success' : 'text-warning'
+                    }`}
+                  >
+                    {profileMentor.availability === 'Available' ? 'Open' : 'Limited'}
+                  </p>
+                  <p className="text-xs text-neutral-600 font-montserrat">Status</p>
+                </div>
+              </div>
+
+              {/* Location & Rating */}
+              <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
+                <div className="flex items-center gap-2 text-sm text-neutral-700 font-montserrat">
+                  <MapPin className="h-5 w-5 text-primary-accent" />
+                  <span className="font-semibold">{profileMentor.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 fill-warning text-warning" />
+                  <span className="text-sm font-bold font-montserrat text-primary-dark">
+                    {profileMentor.rating}
+                  </span>
+                  <span className="text-sm text-neutral-600 font-montserrat">
+                    ({profileMentor.reviewCount} reviews)
+                  </span>
+                </div>
+              </div>
+
+              {/* About Section */}
+              <div>
+                <h3 className="text-sm font-bold font-montserrat text-primary-dark mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <div className="w-1 h-5 bg-primary-accent rounded-full"></div>
+                  About
+                </h3>
+                <p className="text-base text-neutral-700 font-montserrat leading-relaxed">
+                  {profileMentor.bio}
+                </p>
+              </div>
+
+              {/* Expertise Section */}
+              <div>
+                <h3 className="text-sm font-bold font-montserrat text-primary-dark mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <div className="w-1 h-5 bg-secondary-accent rounded-full"></div>
+                  Expertise
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {profileMentor.expertise.map((skill: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 bg-primary-accent/10 text-primary-accent border border-primary-accent/20 rounded-full text-sm font-semibold font-montserrat"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Industry Section */}
+              <div>
+                <h3 className="text-sm font-bold font-montserrat text-primary-dark mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <div className="w-1 h-5 bg-vibrant-accent rounded-full"></div>
+                  Industry
+                </h3>
+                <span className="inline-block px-4 py-2 bg-secondary-accent/10 text-secondary-accent border border-secondary-accent/20 rounded-full text-sm font-semibold font-montserrat">
+                  {profileMentor.industry}
+                </span>
+              </div>
+
+              {/* Languages Section */}
+              {profileMentor.languages && profileMentor.languages.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold font-montserrat text-primary-dark mb-3 uppercase tracking-wide flex items-center gap-2">
+                    <div className="w-1 h-5 bg-success rounded-full"></div>
+                    Languages
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profileMentor.languages.map((language: string, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 px-4 py-2 bg-neutral-50 rounded-full"
+                      >
+                        <Globe className="h-4 w-4 text-neutral-600" />
+                        <span className="text-sm font-semibold font-montserrat text-neutral-700">
+                          {language}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Industries */}
+              {profileMentor.industries && profileMentor.industries.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold font-montserrat text-primary-dark mb-3 uppercase tracking-wide flex items-center gap-2">
+                    <div className="w-1 h-5 bg-warning rounded-full"></div>
+                    Additional Industries
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profileMentor.industries.map((ind: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-full text-sm font-semibold font-montserrat"
+                      >
+                        {ind}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white border-t-2 border-neutral-100 px-8 py-6">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => {
+                  handleCloseProfileModal()
+                  handleShowInterest(profileMentor)
+                }}
+                className="w-full bg-secondary-accent hover:bg-secondary-accent/90 text-white shadow-lg hover:shadow-xl transition-all font-bold"
+              >
+                <Heart className="mr-2 h-5 w-5" />
+                Connect with {profileMentor.name.split(' ')[0]}
               </Button>
             </div>
           </div>
