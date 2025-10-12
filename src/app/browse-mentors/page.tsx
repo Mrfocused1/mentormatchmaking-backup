@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -50,6 +50,27 @@ export default function BrowseMentorsNew() {
 
   // Swipe feedback animation state
   const [swipeFeedback, setSwipeFeedback] = useState<'left' | 'right' | null>(null)
+
+  // Onboarding overlay state (mobile only)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Show onboarding overlay when entering results view on mobile
+  useEffect(() => {
+    if (currentStep === 'results' && viewMode === 'swipe') {
+      // Check if mobile (width < 768px) and hasn't been shown before
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+      const hasSeenOnboarding = typeof window !== 'undefined' && localStorage.getItem('hasSeenSwipeOnboarding') === 'true'
+
+      if (isMobile && !hasSeenOnboarding) {
+        setShowOnboarding(true)
+        localStorage.setItem('hasSeenSwipeOnboarding', 'true')
+      }
+    }
+  }, [currentStep, viewMode])
+
+  const handleDismissOnboarding = () => {
+    setShowOnboarding(false)
+  }
 
   // Mock data
   const mentors = [
@@ -436,18 +457,6 @@ export default function BrowseMentorsNew() {
             <div className="mx-auto max-w-lg px-6 pt-28 pb-8">
               {currentCardIndex < mentors.length ? (
                 <>
-                  {/* Instructions (show on first card only) */}
-                  {currentCardIndex === 0 && (
-                    <div className="mb-6 bg-primary-accent/10 border border-primary-accent/20 rounded-xl p-4 text-center animate-in fade-in duration-500">
-                      <p className="text-sm font-semibold font-montserrat text-primary-dark">
-                        👉 Swipe right to connect • Swipe left to pass
-                      </p>
-                      <p className="text-xs text-neutral-600 font-montserrat mt-1">
-                        Or use the buttons below
-                      </p>
-                    </div>
-                  )}
-
                   {/* Card Stack */}
                   <div className="relative h-[600px] mb-6">
                     {mentors.slice(currentCardIndex, currentCardIndex + 2).map((mentor, index) => (
@@ -865,7 +874,89 @@ export default function BrowseMentorsNew() {
         </div>
       )}
 
-      <Footer />
+      {/* Onboarding Overlay (Mobile Only) */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={handleDismissOnboarding}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 md:hidden cursor-pointer"
+          >
+            <div className="text-center">
+              {/* Swipe Animation */}
+              <div className="mb-8 relative">
+                <motion.div
+                  animate={{
+                    x: [-40, 40, -40],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="inline-block"
+                >
+                  <div className="bg-white/20 rounded-full p-6">
+                    <svg
+                      width="60"
+                      height="60"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-white"
+                    >
+                      <path
+                        d="M9 18l6-6-6-6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Instructions */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <h2 className="text-3xl font-bold font-montserrat text-white mb-4">
+                  Swipe to Browse
+                </h2>
+                <p className="text-lg text-white/90 font-montserrat mb-2">
+                  <span className="text-green-400">→ Swipe right</span> to connect
+                </p>
+                <p className="text-lg text-white/90 font-montserrat mb-8">
+                  <span className="text-red-400">← Swipe left</span> to pass
+                </p>
+              </motion.div>
+
+              {/* Tap to Start */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, repeat: Infinity, repeatType: "reverse", duration: 1 }}
+                className="mt-12"
+              >
+                <p className="text-base font-semibold font-montserrat text-white/70">
+                  Tap anywhere to start
+                </p>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Footer - Hidden on mobile */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   )
 }

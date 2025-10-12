@@ -572,7 +572,10 @@ export default function BrowseMentorsNew() {
         </div>
       )}
 
-      <Footer />
+      {/* Footer - Hidden on mobile */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   )
 }
