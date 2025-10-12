@@ -84,7 +84,7 @@ export default function DeactivateAccountArticle() {
           <li>Notify active connections about your break</li>
           <li>Cancel upcoming sessions</li>
           <li>Download any important data or conversations</li>
-          <li>Update auto-responses if available</li>
+          <li>Update au if available</li>
           <li>Consider taking a break instead of full deactivation</li>
         </ul>
       </div>

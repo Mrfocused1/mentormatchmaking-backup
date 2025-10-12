@@ -295,7 +295,7 @@ export default function ReviewsPage() {
               <div className="sticky top-24 space-y-6">
                 {/* Overall Rating Card */}
                 <Card className="shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-primary-dark to-primary-dark/90 text-white">
+                  <CardHeader className="bg-primary-dark text-white">
                     <CardTitle className="flex items-center gap-2 font-montserrat">
                       <Star className="h-5 w-5" />
                       Overall Rating

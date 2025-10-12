@@ -179,7 +179,7 @@ export default function About() {
 
             {/* Right: Visual */}
             <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-accent to-secondary-accent p-12">
+              <div className="relative rounded-2xl overflow-hidden bg-primary-accent p-12">
                 <div className="text-center">
                   <Target className="mx-auto h-24 w-24 text-white mb-6" />
                   <h3 className="text-2xl font-bold font-montserrat text-white mb-4">
@@ -212,7 +212,7 @@ export default function About() {
             {values.map((value, index) => (
               <Card key={index} className="bg-white/95 border-2 border-white/20 hover:border-primary-accent shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
                 <CardContent className="p-8 text-center">
-                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-accent to-vibrant-accent">
+                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-primary-accent
                     <value.icon className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold font-montserrat text-primary-dark mb-3">
@@ -242,7 +242,7 @@ export default function About() {
 
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-primary-accent to-secondary-accent hidden lg:block" />
+            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-primary-accent hidden lg:block" />
 
             <div className="space-y-12">
               {milestones.map((milestone, index) => (
@@ -278,7 +278,7 @@ export default function About() {
                         index % 2 === 0 ? '' : 'lg:col-start-1'
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-accent to-secondary-accent border-4 border-white shadow-lg" />
+                      <div className="w-8 h-8 rounded-full bg-primary-accent border-4 border-white shadow-lg" />
                     </div>
                   </div>
                 </div>

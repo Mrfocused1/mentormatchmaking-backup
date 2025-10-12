@@ -49,7 +49,7 @@ export default function PrivacySettingsArticle() {
       <div>
         <h3 className="text-xl font-bold font-montserrat text-primary-dark mb-3">Communication Privacy</h3>
         <ul className="list-disc list-inside space-y-2 text-neutral-700 font-montserrat ml-4">
-          <li><strong>Message Privacy:</strong> End-to-end encryption enabled</li>
+          <li><strong>Message Privacy:</strong> End- encryption enabled</li>
           <li><strong>Read Receipts:</strong> Show/hide when you've read messages</li>
           <li><strong>Typing Indicators:</strong> Show when you're typing</li>
           <li><strong>Last Seen:</strong> Display last active time</li>

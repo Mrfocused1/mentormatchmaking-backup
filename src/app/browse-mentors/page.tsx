@@ -555,7 +555,7 @@ export default function BrowseMentorsNew() {
           />
 
           {/* Modal Content */}
-          <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom duration-300">
+          <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-hidden animate-in slide-in- duration-300">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between rounded-t-3xl z-10">
               <div>
@@ -732,7 +732,7 @@ export default function BrowseMentorsNew() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-primary-accent to-secondary-accent px-8 py-6">
+            <div className="bg-primary-accent px-8 py-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold font-montserrat text-primary-dark">
@@ -785,7 +785,7 @@ export default function BrowseMentorsNew() {
                 </label>
 
                 {uploadedCV ? (
-                  <div className="flex items-center justify-between p-5 bg-gradient-to-r from-primary-accent/10 to-secondary-accent/10 border-2 border-primary-accent rounded-xl">
+                  <div className="flex items-center justify-between p-5 bg-primary-accent/10 border-2 border-primary-accent rounded-xl">
                     <div className="flex items-center gap-4">
                       <div className="bg-primary-accent rounded-xl p-3">
                         <FileText className="h-6 w-6 text-primary-dark" />
@@ -807,7 +807,7 @@ export default function BrowseMentorsNew() {
                     </button>
                   </div>
                 ) : (
-                  <label className="group flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-neutral-300 rounded-xl cursor-pointer hover:border-primary-accent hover:bg-gradient-to-br hover:from-primary-accent/5 hover:to-secondary-accent/5 transition-all">
+                  <label className="group flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-neutral-300 rounded-xl cursor-pointer hover:border-primary-accent hover:bg-primary-accent/5 transition-all">
                     <div className="bg-neutral-100 group-hover:bg-primary-accent/20 rounded-full p-4 mb-3 transition-all">
                       <Upload className="h-8 w-8 text-neutral-400 group-hover:text-primary-accent transition-colors" />
                     </div>
@@ -821,7 +821,7 @@ export default function BrowseMentorsNew() {
               </div>
 
               {/* Info */}
-              <div className="bg-gradient-to-r from-vibrant-accent/10 to-secondary-accent/10 border-l-4 border-vibrant-accent rounded-xl p-5">
+              <div className="bg-vibrant-accent/10 border-l-4 border-vibrant-accent rounded-xl p-5">
                 <div className="flex gap-3">
                   <div className="flex-shrink-0">
                     <div className="bg-vibrant-accent rounded-full p-2">
@@ -855,7 +855,7 @@ export default function BrowseMentorsNew() {
                 size="lg"
                 onClick={handleSubmitInterest}
                 disabled={!interestMessage.trim()}
-                className="flex-1 bg-gradient-to-r from-secondary-accent to-vibrant-accent hover:from-secondary-accent/90 hover:to-vibrant-accent/90 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all font-bold"
+                className="flex-1 bg-secondary-accent hover:bg-secondary-accent/90 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all font-bold"
               >
                 <Send className="mr-2 h-5 w-5" />
                 Send Request

@@ -29,7 +29,9 @@ import {
   ThumbsUp,
   UserPlus,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  Target
 } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -332,6 +334,52 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Analytics Overview Banner */}
+              <Card className="shadow-xl bg-secondary-accent/10 border-2 border-secondary-accent/30">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-secondary-accent rounded-full">
+                        <BarChart3 className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black font-montserrat text-primary-dark mb-1">
+                          View Learning Analytics
+                        </h3>
+                        <p className="text-sm font-montserrat text-neutral-700 mb-3">
+                          Track your mentorship journey, goals, learning topics, and growth
+                        </p>
+                        <div className="flex flex-wrap gap-4 text-sm font-montserrat">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-secondary-accent" />
+                            <span className="text-neutral-700"><span className="font-bold">{analytics.completedSessions}</span> sessions attended</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-primary-accent" />
+                            <span className="text-neutral-700"><span className="font-bold">{analytics.totalMatches}</span> mentors</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4 text-green-600" />
+                            <span className="text-neutral-700"><span className="font-bold">8/12</span> goals completed</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="bg-secondary-accent text-white hover:bg-secondary-accent/90 shadow-lg whitespace-nowrap"
+                      asChild
+                    >
+                      <Link href="/analytics/mentee">
+                        <TrendingUp className="mr-2 h-5 w-5" />
+                        View Analytics
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Two Column Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

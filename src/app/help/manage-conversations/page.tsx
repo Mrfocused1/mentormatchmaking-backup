@@ -269,7 +269,7 @@ export default function ManageConversationsArticle() {
           <li>Archive immediately after resolving conversations</li>
           <li>Unsubscribe from unnecessary group chats</li>
           <li>Set expectations about response times in your profile</li>
-          <li>Use auto-responses when unavailable</li>
+          <li>Use au when unavailable</li>
           <li>Review weekly to ensure nothing is overlooked</li>
         </ul>
       </div>

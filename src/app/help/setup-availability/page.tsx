@@ -73,7 +73,7 @@ export default function SetupAvailabilityArticle() {
         </p>
         <ul className="list-disc list-inside space-y-2 text-neutral-700 font-montserrat ml-4">
           <li>Select your current timezone from the dropdown</li>
-          <li>The system will auto-detect, but verify it's correct</li>
+          <li>The system will au but verify it's correct</li>
           <li>Update this setting when traveling to different time zones</li>
           <li>All scheduled messaging times will be displayed in your selected timezone</li>
         </ul>
@@ -156,7 +156,7 @@ export default function SetupAvailabilityArticle() {
           Configure who can schedule messaging times with you:
         </p>
         <ul className="list-disc list-inside space-y-2 text-neutral-700 font-montserrat ml-4">
-          <li><strong>Auto-Approve:</strong> Allow instant scheduling without confirmation</li>
+          <li><strong>Au Allow instant scheduling without confirmation</li>
           <li><strong>Manual Approval:</strong> Review and approve each messaging request</li>
           <li><strong>Connections Only:</strong> Restrict to established connections</li>
           <li><strong>Public Scheduling:</strong> Allow anyone to request messaging times</li>
@@ -216,7 +216,7 @@ export default function SetupAvailabilityArticle() {
           <div>
             <p className="text-sm font-semibold font-montserrat text-primary-dark mb-1">For Active Mentors:</p>
             <p className="text-sm text-neutral-700 font-montserrat">
-              4-8 hours per week for messaging, 3-4 days. Mix of morning and afternoon availability. Faster response times (same day). Auto-approve for established connections.
+              4-8 hours per week for messaging, 3-4 days. Mix of morning and afternoon availability. Faster response times (same day). Au for established connections.
             </p>
           </div>
 

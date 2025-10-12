@@ -60,7 +60,7 @@ export default function BrowseMentees() {
       careerStage: 'College Student',
       industryInterests: ['Technology', 'Product Management', 'Startups'],
       aspirations: 'I want to break into product management at a tech company. I\'m fascinated by how great products are built and want to learn from someone who\'s done it.',
-      whyMentorship: 'Looking for guidance on transitioning from my computer science degree into a PM role. I want to understand the day-to-day and build the right skills.',
+      whyMentorship: 'Looking for guidance on transitioning from my computer science degree into a PM role. I want to understand the day- and build the right skills.',
       skillsToLearn: ['Product Strategy', 'User Research', 'Stakeholder Management'],
       mentorshipStyle: 'Monthly 1-on-1 calls, casual but structured',
       avatarColor: 'bg-blue-500',

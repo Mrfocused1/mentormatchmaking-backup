@@ -68,13 +68,13 @@ const mockGoals: Goal[] = [
   {
     id: '2',
     title: 'Learn Advanced Figma Techniques',
-    description: 'Master auto-layout, variants, and component properties',
+    description: 'Master au variants, and component properties',
     category: 'skill',
     priority: 'high',
     deadline: '2025-11-30',
     progress: 75,
     milestones: [
-      { id: '1', text: 'Complete auto-layout course', completed: true, completedDate: '2025-09-20' },
+      { id: '1', text: 'Complete au course', completed: true, completedDate: '2025-09-20' },
       { id: '2', text: 'Master variants system', completed: true, completedDate: '2025-09-28' },
       { id: '3', text: 'Learn component properties', completed: true, completedDate: '2025-10-05' },
       { id: '4', text: 'Build practice design system', completed: false },
@@ -247,7 +247,7 @@ export default function GoalsPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="shadow-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+            <Card className="shadow-lg border-2 border-blue-200 bg-blue-50
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <Target className="h-8 w-8 text-blue-600" />
@@ -259,7 +259,7 @@ export default function GoalsPage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-2 border-green-200 bg-gradient-to-br from-green-50 to-white">
+            <Card className="shadow-lg border-2 border-green-200 bg-green-50
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <Award className="h-8 w-8 text-green-600" />
@@ -273,7 +273,7 @@ export default function GoalsPage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+            <Card className="shadow-lg border-2 border-purple-200 bg-purple-50
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <TrendingUp className="h-8 w-8 text-purple-600" />

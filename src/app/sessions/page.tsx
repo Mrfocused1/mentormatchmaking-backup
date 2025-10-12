@@ -76,7 +76,7 @@ const mockSessions = {
       topic: 'Product Strategy Session',
       status: 'pending',
       requestedBy: 'mentee',
-      notes: 'Would love to discuss go-to-market strategy for my new feature'
+      notes: 'Would love to discuss go- strategy for my new feature'
     },
     {
       id: 5,

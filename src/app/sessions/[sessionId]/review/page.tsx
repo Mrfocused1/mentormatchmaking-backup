@@ -220,7 +220,7 @@ export default function SessionReviewPage() {
         <div className="mx-auto max-w-4xl px-6 lg:px-8">
           {/* Session Details Card */}
           <Card className="shadow-lg mb-8">
-            <CardHeader className="bg-gradient-to-r from-primary-dark to-primary-dark/90 text-white">
+            <CardHeader className="bg-primary-dark text-white">
               <CardTitle className="font-montserrat">Session Details</CardTitle>
             </CardHeader>
             <CardContent className="p-6">

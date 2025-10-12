@@ -260,7 +260,7 @@ export default function MessagesPage() {
                         }}
                         className={`w-full p-4 border-b border-neutral-100 hover:bg-white transition-all text-left group ${
                           selectedConversation.id === conversation.id
-                            ? 'bg-gradient-to-r from-primary-accent/10 to-secondary-accent/10 border-l-4 border-l-primary-accent shadow-sm'
+                            ? 'bg-primary-accent/10 border-l-4 border-l-primary-accent shadow-sm'
                             : 'bg-white hover:shadow-sm'
                         }`}
                       >
@@ -316,7 +316,7 @@ export default function MessagesPage() {
                 {selectedConversation ? (
                   <>
                     {/* Conversation Header */}
-                    <div className="p-5 border-b-2 border-neutral-100 bg-gradient-to-r from-white to-neutral-50 shadow-sm">
+                    <div className="p-5 border-b-2 border-neutral-100 bg-white shadow-sm">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <button
@@ -394,18 +394,18 @@ export default function MessagesPage() {
                     </div>
 
                     {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-neutral-50 to-neutral-100/50">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50
                       {mockMessages.map((message) => (
                         <div
                           key={message.id}
-                          className={`flex ${message.senderName === 'You' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                          className={`flex ${message.senderName === 'You' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in- duration-300`}
                         >
                           <div className={`max-w-[75%] ${
                             message.senderName === 'You' ? 'order-2' : 'order-1'
                           }`}>
                             <div className={`rounded-2xl px-5 py-3.5 shadow-sm ${
                               message.senderName === 'You'
-                                ? 'bg-gradient-to-r from-primary-accent to-primary-accent/90 text-primary-dark'
+                                ? 'bg-primary-accent text-primary-dark'
                                 : 'bg-white border-2 border-neutral-100 text-primary-dark'
                             }`}>
                               <p className="text-sm font-montserrat leading-relaxed">
@@ -447,7 +447,7 @@ export default function MessagesPage() {
                         <Button
                           onClick={handleSendMessage}
                           disabled={!messageText.trim()}
-                          className="bg-gradient-to-r from-primary-accent to-secondary-accent hover:from-primary-accent/90 hover:to-secondary-accent/90 text-primary-dark disabled:opacity-50 disabled:cursor-not-allowed mb-2 shadow-lg hover:shadow-xl transition-all rounded-xl px-5 py-3"
+                          className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark disabled:opacity-50 disabled:cursor-not-allowed mb-2 shadow-lg hover:shadow-xl transition-all rounded-xl px-5 py-3"
                         >
                           <Send className="h-5 w-5" />
                         </Button>

@@ -415,7 +415,7 @@ export default function SavedMentorsPage() {
             {/* Sidebar - Collections */}
             <div className="lg:col-span-1">
               <Card className="shadow-lg sticky top-24">
-                <CardHeader className="bg-gradient-to-r from-primary-dark to-primary-dark/90 text-white">
+                <CardHeader className="bg-primary-dark text-white">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 font-montserrat">
                       <FolderOpen className="h-5 w-5" />

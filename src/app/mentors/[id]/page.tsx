@@ -220,7 +220,7 @@ export default function MentorProfilePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-dark via-primary-dark to-primary-dark/90 pt-24 pb-12 sm:pt-32">
+      <section className="bg-primary-dark pt-24 pb-12 sm:pt-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-6">
             <Link
@@ -344,7 +344,7 @@ export default function MentorProfilePage() {
 
             {/* Quick Stats Card */}
             <Card className="lg:w-80 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-secondary-accent to-secondary-accent/90 text-white">
+              <CardHeader className="bg-secondary-accent text-white">
                 <CardTitle className="flex items-center gap-2 font-montserrat">
                   <BarChart3 className="h-5 w-5" />
                   Mentor Stats
@@ -506,7 +506,7 @@ export default function MentorProfilePage() {
             <div className="space-y-6">
               {/* Session Types */}
               <Card className="shadow-lg sticky top-24">
-                <CardHeader className="bg-gradient-to-r from-primary-dark to-primary-dark/90 text-white">
+                <CardHeader className="bg-primary-dark text-white">
                   <CardTitle className="flex items-center gap-2 font-montserrat">
                     <Calendar className="h-5 w-5" />
                     Session Options

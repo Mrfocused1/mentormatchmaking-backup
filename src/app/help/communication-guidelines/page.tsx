@@ -42,7 +42,7 @@ export default function CommunicationGuidelinesArticle() {
           <li><strong>Active conversations:</strong> Respond within 24 hours</li>
           <li><strong>Session-related:</strong> Respond within 12 hours</li>
           <li><strong>Urgent matters:</strong> Respond as soon as possible</li>
-          <li>Set auto-replies when unavailable for extended periods</li>
+          <li>Set au when unavailable for extended periods</li>
           <li>Communicate your typical response time in your profile</li>
         </ul>
       </div>

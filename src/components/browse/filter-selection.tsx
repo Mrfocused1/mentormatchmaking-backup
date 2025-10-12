@@ -65,7 +65,7 @@ export function FilterSelection({
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-dark via-primary-dark to-secondary-accent/30 pt-24 pb-12">
+    <div className="min-h-screen bg-primary-dark pt-24 pb-12">
       <div className="mx-auto max-w-4xl px-6">
         {/* Header */}
         <div className="text-center mb-8">

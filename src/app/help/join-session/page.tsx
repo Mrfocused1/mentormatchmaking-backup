@@ -225,7 +225,7 @@ export default function StartConversationArticle() {
           <li>Use WiFi or good cellular data for reliable messaging</li>
           <li>Keep messages concise and scannable on small screens</li>
           <li>Review longer messages before sending</li>
-          <li>Use voice-to-text carefully - always proofread</li>
+          <li>Use voice- carefully - always proofread</li>
           <li>Access message history to review previous conversations</li>
         </ul>
       </div>

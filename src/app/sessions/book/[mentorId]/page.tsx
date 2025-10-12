@@ -193,7 +193,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
   const selectedDateObj = mockSlots.find(d => d.date === selectedDate)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-dark via-primary-dark to-secondary-accent/20">
+    <div className="min-h-screen bg-primary-dark">
       <Header />
 
       {/* Hero Section */}
@@ -201,7 +201,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <Card className="shadow-2xl overflow-hidden border-0">
             {/* Mentor Profile Header */}
-            <div className="bg-gradient-to-r from-primary-accent/10 to-secondary-accent/10 p-8">
+            <div className="bg-primary-accent/10 p-8">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 {/* Avatar */}
                 <div className="relative">
@@ -292,7 +292,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
       <section className="pb-6">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           {connectionStatus === 'none' && (
-            <Card className="shadow-xl border-2 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50">
+            <Card className="shadow-xl border-2 border-yellow-400 bg-yellow-50">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-yellow-100 rounded-full">
@@ -308,7 +308,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
                     <Button
                       variant="primary"
                       onClick={() => setShowInterestModal(true)}
-                      className="bg-gradient-to-r from-secondary-accent to-vibrant-accent text-white hover:from-secondary-accent/90 hover:to-vibrant-accent/90 shadow-lg"
+                      className="bg-secondary-accent text-white hover:bg-secondary-accent/90 shadow-lg"
                     >
                       <Heart className="h-5 w-5 mr-2" />
                       Send Connection Request
@@ -320,7 +320,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
           )}
 
           {connectionStatus === 'pending' && (
-            <Card className="shadow-xl border-2 border-blue-400 bg-gradient-to-r from-blue-50 to-cyan-50">
+            <Card className="shadow-xl border-2 border-blue-400 bg-blue-50">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-blue-100 rounded-full">
@@ -340,7 +340,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
           )}
 
           {connectionStatus === 'connected' && (
-            <Card className="shadow-xl border-2 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50">
+            <Card className="shadow-xl border-2 border-green-400 bg-green-50">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-green-100 rounded-full">
@@ -378,7 +378,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
 
           <Card className="shadow-2xl border-0">
             {/* Session Types */}
-            <div className="bg-gradient-to-r from-neutral-50 to-white p-6 border-b-2 border-neutral-100">
+            <div className="bg-neutral-50 p-6 border-b-2 border-neutral-100">
               <h3 className="text-lg font-black font-montserrat text-primary-dark mb-4">
                 Available Session Types
               </h3>
@@ -516,7 +516,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
       {showInterestModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="bg-gradient-to-r from-secondary-accent to-vibrant-accent text-white">
+            <CardHeader className="bg-secondary-accent text-white">
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-6 w-6" />
                 Connect with {mockMentor.name}
@@ -524,7 +524,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {/* Mentor Summary */}
-              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-neutral-50 to-neutral-100 rounded-xl">
+              <div className="flex items-center gap-4 p-4 bg-neutral-50 rounded-xl">
                 <Avatar fallback={mockMentor.name} size="lg" className="border-2 border-white shadow-md" />
                 <div className="flex-1">
                   <h3 className="font-bold font-montserrat text-primary-dark">{mockMentor.name}</h3>
@@ -569,7 +569,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
                 <Button
                   variant="primary"
                   onClick={handleShowInterest}
-                  className="flex-1 bg-gradient-to-r from-secondary-accent to-vibrant-accent text-white hover:from-secondary-accent/90 hover:to-vibrant-accent/90 shadow-lg"
+                  className="flex-1 bg-secondary-accent text-white hover:bg-secondary-accent/90 shadow-lg"
                 >
                   <Heart className="h-5 w-5 mr-2" />
                   Send Request
@@ -597,7 +597,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
       {showBookingModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="bg-gradient-to-r from-primary-accent to-secondary-accent text-primary-dark">
+            <CardHeader className="bg-primary-accent text-primary-dark">
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-6 w-6" />
                 Confirm Your Booking
@@ -655,7 +655,7 @@ export default function BookSessionPage({ params }: { params: { mentorId: string
                 <Button
                   variant="primary"
                   onClick={handleConfirmBooking}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg"
+                  className="flex-1 bg-green-600 text-white hover:bg-green-700 shadow-lg"
                 >
                   <Check className="h-5 w-5 mr-2" />
                   Confirm Booking

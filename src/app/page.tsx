@@ -165,7 +165,7 @@ export default function Home() {
       setShowSuccessMessage(true)
       setSuccessType(type)
 
-      // Auto-hide after 8 seconds
+      // Au after 8 seconds
       const timer = setTimeout(() => {
         setShowSuccessMessage(false)
       }, 8000)
@@ -189,7 +189,7 @@ export default function Home() {
 
       {/* Success Message */}
       {showSuccessMessage && (
-        <div className="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 animate-in slide-in-from-top duration-500">
+        <div className="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 animate-in slide-in- duration-500">
           <div className="bg-white border-2 border-secondary-accent shadow-2xl rounded-lg p-6 max-w-md w-full">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">

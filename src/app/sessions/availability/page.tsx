@@ -266,7 +266,7 @@ export default function AvailabilityPage() {
                   <CardTitle className="text-lg">Availability Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-primary-accent/10 to-secondary-accent/10 rounded-xl p-4">
+                  <div className="bg-primary-accent/10 rounded-xl p-4">
                     <div className="text-3xl font-black font-montserrat text-primary-dark mb-1">
                       {availableSlots}
                     </div>
@@ -474,7 +474,7 @@ export default function AvailabilityPage() {
               </Card>
 
               {/* Quick Tips */}
-              <Card className="shadow-md bg-gradient-to-br from-vibrant-accent/5 to-primary-accent/5">
+              <Card className="shadow-md bg-vibrant-accent/5">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-vibrant-accent" />
@@ -508,7 +508,7 @@ export default function AvailabilityPage() {
                 <Button
                   variant="primary"
                   onClick={() => setShowAddForm(!showAddForm)}
-                  className="bg-gradient-to-r from-primary-accent to-secondary-accent text-primary-dark shadow-lg"
+                  className="bg-primary-accent text-primary-dark shadow-lg"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Time Slot
@@ -640,7 +640,7 @@ export default function AvailabilityPage() {
                           {slots.map(slot => (
                             <div
                               key={slot.id}
-                              className="flex items-center justify-between p-4 bg-gradient-to-r from-neutral-50 to-neutral-100/50 rounded-lg border border-neutral-200 hover:border-primary-accent transition-colors"
+                              className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-primary-accent transition-colors"
                             >
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
