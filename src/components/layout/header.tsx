@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Menu, X, LayoutDashboard, MessageCircle, Bell, User } from 'lucide-react'
@@ -10,7 +9,6 @@ import { cn } from '@/lib/utils'
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const router = useRouter()
 
   // TODO: Replace with actual authentication check
   const isAuthenticated = () => {
@@ -23,21 +21,10 @@ export function Header() {
   const unreadMessages = 5
   const unreadNotifications = 3
 
-  const handleBrowseClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (isAuthenticated()) {
-      // TODO: Add logic to determine if user is mentor or mentee
-      // For now, we'll default to browse-mentors
-      router.push('/browse-mentors')
-    } else {
-      router.push('/login')
-    }
-  }
-
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
-    { name: 'Browse', href: '#', requiresAuth: true },
+    { name: 'Browse', href: '/browse-mentors' },
     { name: 'Contact', href: '/contact' },
   ]
 
@@ -59,23 +46,13 @@ export function Header() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
-              item.requiresAuth ? (
-                <button
-                  key={item.name}
-                  onClick={handleBrowseClick}
-                  className="text-sm font-medium font-montserrat text-primary-dark hover:text-vibrant-accent transition-colors"
-                >
-                  {item.name}
-                </button>
-              ) : (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-sm font-medium font-montserrat text-primary-dark hover:text-vibrant-accent transition-colors"
-                >
-                  {item.name}
-                </Link>
-              )
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-sm font-medium font-montserrat text-primary-dark hover:text-vibrant-accent transition-colors"
+              >
+                {item.name}
+              </Link>
             ))}
           </div>
 
@@ -211,27 +188,14 @@ export function Header() {
 
           {/* Main Navigation Links */}
           {navigation.map((item) => (
-            item.requiresAuth ? (
-              <button
-                key={item.name}
-                onClick={(e) => {
-                  handleBrowseClick(e)
-                  setMobileMenuOpen(false)
-                }}
-                className="block w-full text-left rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
-              >
-                {item.name}
-              </button>
-            ) : (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            )
+            <Link
+              key={item.name}
+              href={item.href}
+              className="block rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.name}
+            </Link>
           ))}
 
           {/* CTA Buttons - Only show if not authenticated */}
