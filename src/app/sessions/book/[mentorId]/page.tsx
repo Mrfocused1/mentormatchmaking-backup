@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -121,7 +121,8 @@ const sessionTypeInfo: Record<string, { description: string; color: string; icon
   }
 }
 
-export default function BookSessionPage({ params }: { params: { mentorId: string } }) {
+export default function BookSessionPage({ params }: { params: Promise<{ mentorId: string }> }) {
+  const { mentorId } = use(params)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<any>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
