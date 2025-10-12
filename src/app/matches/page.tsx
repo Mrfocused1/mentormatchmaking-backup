@@ -342,12 +342,16 @@ export default function MatchesPage() {
                   <CardContent className="p-6">
                     {/* Header */}
                     <div className="flex items-start gap-4 mb-4">
-                      <Avatar
-                        fallback={match.name}
-                        size="lg"
-                        className="flex-shrink-0 cursor-pointer"
+                      <div
+                        className="cursor-pointer"
                         onClick={() => router.push(`/profile/${match.userId}`)}
-                      />
+                      >
+                        <Avatar
+                          fallback={match.name}
+                          size="lg"
+                          className="flex-shrink-0"
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <Link href={`/profile/${match.userId}`}>
                           <h3 className="font-bold font-montserrat text-primary-dark hover:text-primary-accent transition-colors truncate">
@@ -358,7 +362,7 @@ export default function MatchesPage() {
                           {match.title}
                         </p>
                         <Badge
-                          variant={match.role === 'mentor' ? 'primary' : 'secondary'}
+                          variant="default"
                           size="sm"
                           className={`mt-2 ${
                             match.role === 'mentor'
