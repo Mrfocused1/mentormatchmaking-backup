@@ -292,7 +292,7 @@ Warm regards,
       message: offerMessage
     })
     alert('Mentorship offer sent successfully!')
-    handleCloseModal()
+    handleCloseOfferModal()
   }
 
   const handleSwipe = (direction: 'left' | 'right', mentee: any) => {
