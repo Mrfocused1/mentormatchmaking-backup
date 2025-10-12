@@ -59,7 +59,7 @@ export default function BrowseMentorsNew() {
       yearsExperience: 8,
       expertise: ['React', 'Node.js', 'System Design', 'AWS', 'Leadership', 'Career Planning'],
       availability: 'Available',
-      bio: 'Passionate about helping junior developers navigate their tech careers. Previously at Google and Meta, I've learned valuable lessons I love to share. Specialized in full-stack development and career advancement.',
+      bio: 'Passionate about helping junior developers navigate their tech careers. Previously at Google and Meta, I\'ve learned valuable lessons I love to share. Specialized in full-stack development and career advancement.',
       avatar: null,
       languages: ['English (Native)', 'Mandarin (Fluent)'],
       industries: ['Technology', 'Startups', 'SaaS'],
