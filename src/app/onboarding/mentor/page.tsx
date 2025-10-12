@@ -23,7 +23,7 @@ import {
   Twitter
 } from 'lucide-react'
 import { FaTiktok } from 'react-icons/fa'
-import { incrementActiveMentors } from '@/app/page'
+import { incrementActiveMentors } from '@/lib/stats'
 
 const TOTAL_STEPS = 4
 
