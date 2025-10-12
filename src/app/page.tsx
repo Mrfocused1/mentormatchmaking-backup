@@ -23,6 +23,7 @@ import {
   ButtonHover,
   CardHover
 } from '@/components/ui/animations'
+import { getActiveMentors, getSuccessfulMatches } from '@/lib/stats'
 import {
   Users,
   Calendar,
@@ -104,33 +105,6 @@ function SuccessMessage() {
       </div>
     </div>
   )
-}
-
-// Helper functions for localStorage
-const getStoredStat = (key: string, defaultValue: number): number => {
-  if (typeof window === 'undefined') return defaultValue
-  const stored = localStorage.getItem(key)
-  return stored ? parseInt(stored, 10) : defaultValue
-}
-
-const setStoredStat = (key: string, value: number): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(key, value.toString())
-  }
-}
-
-export const incrementActiveMentors = () => {
-  const current = getStoredStat('activeMentors', 20)
-  const newValue = current + 1
-  setStoredStat('activeMentors', newValue)
-  return newValue
-}
-
-export const incrementSuccessfulMatches = () => {
-  const current = getStoredStat('successfulMatches', 15)
-  const newValue = current + 1
-  setStoredStat('successfulMatches', newValue)
-  return newValue
 }
 
 const features = [
@@ -256,8 +230,8 @@ export default function Home() {
 
   useEffect(() => {
     // Load stats from localStorage
-    const activeMentors = getStoredStat('activeMentors', 20)
-    const successfulMatches = getStoredStat('successfulMatches', 15)
+    const activeMentors = getActiveMentors()
+    const successfulMatches = getSuccessfulMatches()
 
     setStats([
       { label: 'Active Mentors', value: activeMentors, suffix: '+', decimals: 0, icon: Users },
