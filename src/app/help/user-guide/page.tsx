@@ -73,10 +73,10 @@ export default function UserGuidePage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="primary" className="bg-primary-accent text-primary-dark">
+              <Badge variant="default" className="bg-primary-accent text-primary-dark">
                 100% Free
               </Badge>
-              <Badge variant="primary" className="bg-secondary-accent text-white">
+              <Badge variant="default" className="bg-secondary-accent text-white">
                 Messaging Only
               </Badge>
             </div>
