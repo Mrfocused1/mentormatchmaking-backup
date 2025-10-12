@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -32,6 +32,68 @@ import {
 } from 'lucide-react'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+
+// Success Message Component (wrapped in Suspense)
+function SuccessMessage() {
+  const searchParams = useSearchParams()
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [successType, setSuccessType] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check if we should show the success message
+    const type = searchParams.get('success')
+    if (type === 'mentor-signup' || type === 'mentee-signup') {
+      setShowSuccessMessage(true)
+      setSuccessType(type)
+
+      // Auto-hide after 8 seconds
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 8000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
+
+  const getSuccessMessage = () => {
+    if (successType === 'mentor-signup') {
+      return 'Thank you for signing up as a mentor. You\'ll receive a confirmation email shortly.'
+    } else if (successType === 'mentee-signup') {
+      return 'Thank you for signing up as a mentee. You\'ll receive a confirmation email shortly.'
+    }
+    return ''
+  }
+
+  if (!showSuccessMessage) return null
+
+  return (
+    <div className="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 animate-in slide-in- duration-500">
+      <div className="bg-white border-2 border-secondary-accent shadow-2xl rounded-lg p-6 max-w-md w-full">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <div className="h-12 w-12 rounded-full bg-secondary-accent/10 flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-secondary-accent" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold font-montserrat text-primary-dark mb-1">
+              Welcome Aboard!
+            </h3>
+            <p className="text-sm text-neutral-700 font-montserrat leading-relaxed">
+              {getSuccessMessage()}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowSuccessMessage(false)}
+            className="flex-shrink-0 text-neutral-400 hover:text-neutral-600 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const stats = [
   { label: 'Active Mentors', value: 10000, suffix: '+', decimals: 0, icon: Users },
@@ -154,67 +216,14 @@ const thirdColumn = testimonials.slice(0, 3)
 
 
 export default function Home() {
-  const searchParams = useSearchParams()
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-  const [successType, setSuccessType] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Check if we should show the success message
-    const type = searchParams.get('success')
-    if (type === 'mentor-signup' || type === 'mentee-signup') {
-      setShowSuccessMessage(true)
-      setSuccessType(type)
-
-      // Au after 8 seconds
-      const timer = setTimeout(() => {
-        setShowSuccessMessage(false)
-      }, 8000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [searchParams])
-
-  const getSuccessMessage = () => {
-    if (successType === 'mentor-signup') {
-      return 'Thank you for signing up as a mentor. You\'ll receive a confirmation email shortly.'
-    } else if (successType === 'mentee-signup') {
-      return 'Thank you for signing up as a mentee. You\'ll receive a confirmation email shortly.'
-    }
-    return ''
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <Header />
 
       {/* Success Message */}
-      {showSuccessMessage && (
-        <div className="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 animate-in slide-in- duration-500">
-          <div className="bg-white border-2 border-secondary-accent shadow-2xl rounded-lg p-6 max-w-md w-full">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="h-12 w-12 rounded-full bg-secondary-accent/10 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-secondary-accent" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold font-montserrat text-primary-dark mb-1">
-                  Welcome Aboard!
-                </h3>
-                <p className="text-sm text-neutral-700 font-montserrat leading-relaxed">
-                  {getSuccessMessage()}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowSuccessMessage(false)}
-                className="flex-shrink-0 text-neutral-400 hover:text-neutral-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <SuccessMessage />
+      </Suspense>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-primary-dark pt-24 pb-16 sm:pt-32 sm:pb-24 lg:pt-40 lg:pb-32">
