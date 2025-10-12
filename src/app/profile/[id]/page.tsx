@@ -50,7 +50,7 @@ const mockUserProfiles: Record<string, any> = {
     memberSince: 'January 2023',
     isVerified: true,
     bio: "I'm a product manager with over 10 years of experience in tech. I'm passionate about helping aspiring PMs break into the industry and navigate their careers. My expertise includes product strategy, roadmap planning, stakeholder management, and team leadership.",
-    expertise: ['Product Management', 'Strategy', 'Leadership', 'UX Design', 'Agile', 'Stakeholder Management', 'Data Analysis', 'Go-
+    expertise: ['Product Management', 'Strategy', 'Leadership', 'UX Design', 'Agile', 'Stakeholder Management', 'Data Analysis', 'Go-to-Market'],
     interests: ['Artificial Intelligence', 'SaaS Products', 'Mobile Apps', 'Career Growth', 'Startup Culture'],
     experience: [
       {
