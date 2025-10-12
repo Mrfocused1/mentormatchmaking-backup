@@ -4,7 +4,7 @@ import { forwardRef, InputHTMLAttributes } from 'react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-function cn(...inputs: (string | undefined | null | false | 0 | ''  | object)[]) {
+function cn(...inputs: (string | undefined | null | false | 0 | 0n | '' | object)[]) {
   return twMerge(clsx(inputs))
 }
 
