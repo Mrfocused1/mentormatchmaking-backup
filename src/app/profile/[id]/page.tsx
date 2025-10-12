@@ -259,7 +259,7 @@ export default function ProfilePage() {
 
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <Badge
-                  variant={profile.role === 'mentor' ? 'primary' : 'secondary'}
+                  variant="default"
                   size="lg"
                   className={profile.role === 'mentor' ? 'bg-primary-accent text-primary-dark' : 'bg-secondary-accent text-white'}
                 >
