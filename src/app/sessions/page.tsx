@@ -313,7 +313,7 @@ export default function SessionsPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-montserrat text-neutral-600">Upcoming</span>
-                      <Badge variant="primary" className="bg-primary-accent text-primary-dark">
+                      <Badge variant="default" className="bg-primary-accent text-primary-dark">
                         {mockSessions.upcoming.length}
                       </Badge>
                     </div>
