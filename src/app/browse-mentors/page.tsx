@@ -286,6 +286,7 @@ export default function BrowseMentorsNew() {
   ]
 
   const expertiseAreas = [
+    'All',
     'Software Development',
     'Frontend Development',
     'Backend Development',
