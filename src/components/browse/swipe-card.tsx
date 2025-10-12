@@ -80,7 +80,7 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
         <CardContent className="p-0 h-full flex flex-col">
           {/* Hero Section with Background */}
           <div className="relative h-48 bg-primary-dark flex-shrink-0">
-            <div className="absolute inset-0 bg-black/60 />
+            <div className="absolute inset-0 bg-black/60" />
 
             {/* Avatar positioned at bottom left */}
             <div className="absolute bottom-4 left-4 flex items-end gap-3">

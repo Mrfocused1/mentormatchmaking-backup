@@ -212,7 +212,7 @@ export default function About() {
             {values.map((value, index) => (
               <Card key={index} className="bg-white/95 border-2 border-white/20 hover:border-primary-accent shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
                 <CardContent className="p-8 text-center">
-                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-primary-accent
+                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-full bg-primary-accent">
                     <value.icon className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold font-montserrat text-primary-dark mb-3">
