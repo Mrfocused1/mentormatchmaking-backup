@@ -245,10 +245,7 @@ export default function Home() {
                     filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
                   }}
                   rendererSettings={{
-                    preserveAspectRatio: 'xMidYMid slice',
-                    clearCanvas: false,
-                    progressiveLoad: false,
-                    hideOnTransparent: true
+                    preserveAspectRatio: 'xMidYMid slice'
                   }}
                 />
 
@@ -337,10 +334,7 @@ export default function Home() {
                     filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
                   }}
                   rendererSettings={{
-                    preserveAspectRatio: 'xMidYMid slice',
-                    clearCanvas: false,
-                    progressiveLoad: false,
-                    hideOnTransparent: true
+                    preserveAspectRatio: 'xMidYMid slice'
                   }}
                 />
 
