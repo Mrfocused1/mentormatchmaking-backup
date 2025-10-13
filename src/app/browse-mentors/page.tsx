@@ -57,6 +57,10 @@ export default function BrowseMentorsNew() {
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [profileMentor, setProfileMentor] = useState<any>(null)
 
+  // Filter modal search states
+  const [industrySearch, setIndustrySearch] = useState('')
+  const [expertiseSearch, setExpertiseSearch] = useState('')
+
   // Swipe feedback animation state
   const [swipeFeedback, setSwipeFeedback] = useState<'left' | 'right' | null>(null)
 
@@ -953,21 +957,42 @@ export default function BrowseMentorsNew() {
                     </span>
                   )}
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {industries.map((industry) => (
-                    <button
-                      key={industry}
-                      onClick={() => toggleIndustry(industry)}
-                      className={`px-4 py-2 rounded-full font-semibold font-montserrat text-sm transition-all ${
-                        selectedIndustries.includes(industry)
-                          ? 'bg-primary-accent text-primary-dark shadow-md scale-105'
-                          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-                      }`}
-                    >
-                      {industry}
-                    </button>
-                  ))}
+                {/* Industry Search */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                  <input
+                    type="text"
+                    placeholder="Search industries..."
+                    value={industrySearch}
+                    onChange={(e) => setIndustrySearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-300 font-montserrat text-sm text-primary-dark placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-accent"
+                  />
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {industries
+                    .filter((industry) =>
+                      industry.toLowerCase().includes(industrySearch.toLowerCase())
+                    )
+                    .slice(0, industrySearch ? undefined : 10)
+                    .map((industry) => (
+                      <button
+                        key={industry}
+                        onClick={() => toggleIndustry(industry)}
+                        className={`px-4 py-2 rounded-full font-semibold font-montserrat text-sm transition-all ${
+                          selectedIndustries.includes(industry)
+                            ? 'bg-primary-accent text-primary-dark shadow-md scale-105'
+                            : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                        }`}
+                      >
+                        {industry}
+                      </button>
+                    ))}
+                </div>
+                {!industrySearch && industries.length > 10 && (
+                  <p className="text-xs text-neutral-500 font-montserrat mt-2">
+                    Showing 10 of {industries.length} industries. Use search to find more.
+                  </p>
+                )}
               </div>
 
               {/* Expertise */}
@@ -980,21 +1005,42 @@ export default function BrowseMentorsNew() {
                     </span>
                   )}
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {expertiseAreas.map((expertise) => (
-                    <button
-                      key={expertise}
-                      onClick={() => toggleExpertise(expertise)}
-                      className={`px-4 py-2 rounded-full font-semibold font-montserrat text-sm transition-all ${
-                        selectedExpertise.includes(expertise)
-                          ? 'bg-secondary-accent text-white shadow-md scale-105'
-                          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-                      }`}
-                    >
-                      {expertise}
-                    </button>
-                  ))}
+                {/* Expertise Search */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                  <input
+                    type="text"
+                    placeholder="Search expertise..."
+                    value={expertiseSearch}
+                    onChange={(e) => setExpertiseSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-300 font-montserrat text-sm text-primary-dark placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-accent"
+                  />
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {expertiseAreas
+                    .filter((expertise) =>
+                      expertise.toLowerCase().includes(expertiseSearch.toLowerCase())
+                    )
+                    .slice(0, expertiseSearch ? undefined : 10)
+                    .map((expertise) => (
+                      <button
+                        key={expertise}
+                        onClick={() => toggleExpertise(expertise)}
+                        className={`px-4 py-2 rounded-full font-semibold font-montserrat text-sm transition-all ${
+                          selectedExpertise.includes(expertise)
+                            ? 'bg-secondary-accent text-white shadow-md scale-105'
+                            : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                        }`}
+                      >
+                        {expertise}
+                      </button>
+                    ))}
+                </div>
+                {!expertiseSearch && expertiseAreas.length > 10 && (
+                  <p className="text-xs text-neutral-500 font-montserrat mt-2">
+                    Showing 10 of {expertiseAreas.length} expertise areas. Use search to find more.
+                  </p>
+                )}
               </div>
 
               {/* Experience Level */}
