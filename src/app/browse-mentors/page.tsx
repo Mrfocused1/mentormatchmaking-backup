@@ -28,7 +28,12 @@ import {
   Briefcase,
   Users,
   Clock,
-  Globe
+  Globe,
+  Linkedin,
+  Twitter,
+  Github,
+  Mail,
+  Link as LinkIcon
 } from 'lucide-react'
 
 export default function BrowseMentorsNew() {
@@ -112,6 +117,13 @@ export default function BrowseMentorsNew() {
       avatar: null,
       languages: ['English (Native)', 'Mandarin (Fluent)'],
       industries: ['Technology', 'Startups', 'SaaS'],
+      socialMedia: {
+        linkedin: 'https://linkedin.com/in/sarahchen',
+        twitter: 'https://twitter.com/sarahchen',
+        github: 'https://github.com/sarahchen',
+        email: 'sarah.chen@email.com',
+        website: 'https://sarahchen.dev'
+      },
     },
     {
       id: 2,
@@ -130,6 +142,12 @@ export default function BrowseMentorsNew() {
       avatar: null,
       languages: ['English (Native)', 'Spanish (Native)'],
       industries: ['Marketing', 'Advertising', 'E-commerce'],
+      socialMedia: {
+        linkedin: 'https://linkedin.com/in/mrodriguez',
+        twitter: 'https://twitter.com/mrodriguez',
+        email: 'michael.rodriguez@email.com',
+        website: 'https://michaelrodriguez.com'
+      },
     },
     {
       id: 3,
@@ -148,6 +166,12 @@ export default function BrowseMentorsNew() {
       avatar: null,
       languages: ['English (Native)', 'French (Conversational)'],
       industries: ['Technology', 'SaaS', 'Enterprise Software'],
+      socialMedia: {
+        linkedin: 'https://linkedin.com/in/emilyrodriguez',
+        twitter: 'https://twitter.com/emilypm',
+        github: 'https://github.com/emilyrodriguez',
+        email: 'emily.rodriguez@email.com'
+      },
     },
     {
       id: 4,
@@ -1491,6 +1515,71 @@ export default function BrowseMentorsNew() {
                         {ind}
                       </span>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Social Media Section */}
+              {profileMentor.socialMedia && (
+                <div>
+                  <h3 className="text-sm font-bold font-montserrat text-primary-dark mb-3 uppercase tracking-wide flex items-center gap-2">
+                    <div className="w-1 h-5 bg-vibrant-accent rounded-full"></div>
+                    Connect
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {profileMentor.socialMedia.linkedin && (
+                      <a
+                        href={profileMentor.socialMedia.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0077B5]/10 hover:bg-[#0077B5]/20 border border-[#0077B5]/30 rounded-full text-sm font-semibold font-montserrat text-[#0077B5] transition-all hover:scale-105"
+                      >
+                        <Linkedin className="h-4 w-4" />
+                        <span>LinkedIn</span>
+                      </a>
+                    )}
+                    {profileMentor.socialMedia.twitter && (
+                      <a
+                        href={profileMentor.socialMedia.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/30 rounded-full text-sm font-semibold font-montserrat text-[#1DA1F2] transition-all hover:scale-105"
+                      >
+                        <Twitter className="h-4 w-4" />
+                        <span>Twitter</span>
+                      </a>
+                    )}
+                    {profileMentor.socialMedia.github && (
+                      <a
+                        href={profileMentor.socialMedia.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-neutral-800/10 hover:bg-neutral-800/20 border border-neutral-800/30 rounded-full text-sm font-semibold font-montserrat text-neutral-800 transition-all hover:scale-105"
+                      >
+                        <Github className="h-4 w-4" />
+                        <span>GitHub</span>
+                      </a>
+                    )}
+                    {profileMentor.socialMedia.email && (
+                      <a
+                        href={`mailto:${profileMentor.socialMedia.email}`}
+                        className="flex items-center gap-2 px-4 py-2 bg-secondary-accent/10 hover:bg-secondary-accent/20 border border-secondary-accent/30 rounded-full text-sm font-semibold font-montserrat text-secondary-accent transition-all hover:scale-105"
+                      >
+                        <Mail className="h-4 w-4" />
+                        <span>Email</span>
+                      </a>
+                    )}
+                    {profileMentor.socialMedia.website && (
+                      <a
+                        href={profileMentor.socialMedia.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary-accent/10 hover:bg-primary-accent/20 border border-primary-accent/30 rounded-full text-sm font-semibold font-montserrat text-primary-accent transition-all hover:scale-105"
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                        <span>Website</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               )}
