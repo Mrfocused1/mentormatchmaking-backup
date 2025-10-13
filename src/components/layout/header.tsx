@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Menu, X, LayoutDashboard, MessageCircle, Bell, User } from 'lucide-react'
+import { Menu, X, LayoutDashboard, MessageCircle, Bell, User, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Header() {
@@ -63,14 +63,14 @@ export function Header() {
                 {/* Authenticated User Navigation */}
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
+                  className="flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
                 >
                   <LayoutDashboard className="h-5 w-5" />
                   <span>Dashboard</span>
                 </Link>
                 <Link
                   href="/messages"
-                  className="relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
+                  className="relative flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
                 >
                   <MessageCircle className="h-5 w-5" />
                   <span>Messages</span>
@@ -82,7 +82,7 @@ export function Header() {
                 </Link>
                 <Link
                   href="/notifications"
-                  className="relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
+                  className="relative flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
                 >
                   <Bell className="h-5 w-5" />
                   <span>Notifications</span>
@@ -93,8 +93,16 @@ export function Header() {
                   )}
                 </Link>
                 <Link
+                  href="/contact-admin"
+                  className="flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium font-montserrat text-vibrant-accent hover:bg-vibrant-accent/10 transition-colors"
+                  title="Contact Admin"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                  <span className="hidden lg:inline">Help</span>
+                </Link>
+                <Link
                   href="/profile"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors ml-2"
+                  className="flex items-center justify-center gap-2 px-3 min-h-[44px] min-w-[44px] rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors ml-2"
                 >
                   <User className="h-5 w-5" />
                 </Link>
@@ -102,10 +110,10 @@ export function Header() {
             ) : (
               <>
                 {/* Non-Authenticated Navigation */}
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" className="min-h-[44px]" asChild>
                   <Link href="/login">Log In</Link>
                 </Button>
-                <Button variant="primary" size="sm" asChild>
+                <Button variant="primary" size="sm" className="min-h-[44px]" asChild>
                   <Link href="/get-started">Get Started</Link>
                 </Button>
               </>
@@ -116,7 +124,7 @@ export function Header() {
           <div className="flex md:hidden">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-primary-dark hover:bg-neutral-100"
+              className="inline-flex items-center justify-center rounded-md min-h-[44px] min-w-[44px] text-primary-dark hover:bg-neutral-100"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
@@ -143,7 +151,7 @@ export function Header() {
             <div className="space-y-1 mb-4 pb-4 border-b border-neutral-200">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
+                className="flex items-center gap-3 rounded-md px-3 min-h-[44px] text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <LayoutDashboard className="h-5 w-5" />
@@ -151,7 +159,7 @@ export function Header() {
               </Link>
               <Link
                 href="/messages"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
+                className="flex items-center gap-3 rounded-md px-3 min-h-[44px] text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <MessageCircle className="h-5 w-5" />
@@ -164,7 +172,7 @@ export function Header() {
               </Link>
               <Link
                 href="/notifications"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
+                className="flex items-center gap-3 rounded-md px-3 min-h-[44px] text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Bell className="h-5 w-5" />
@@ -176,8 +184,16 @@ export function Header() {
                 )}
               </Link>
               <Link
+                href="/contact-admin"
+                className="flex items-center gap-3 rounded-md px-3 min-h-[44px] text-base font-medium font-montserrat text-vibrant-accent hover:bg-vibrant-accent/10"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <HelpCircle className="h-5 w-5" />
+                <span>Contact Admin</span>
+              </Link>
+              <Link
                 href="/profile"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
+                className="flex items-center gap-3 rounded-md px-3 min-h-[44px] text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <User className="h-5 w-5" />
@@ -191,7 +207,7 @@ export function Header() {
             <Link
               key={item.name}
               href={item.href}
-              className="block rounded-md px-3 py-2 text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
+              className="block rounded-md px-3 min-h-[44px] flex items-center text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
               onClick={() => setMobileMenuOpen(false)}
             >
               {item.name}
@@ -201,10 +217,10 @@ export function Header() {
           {/* CTA Buttons - Only show if not authenticated */}
           {!isAuthenticated() && (
             <div className="flex flex-col space-y-2 pt-4">
-              <Button variant="outline" fullWidth asChild>
+              <Button variant="outline" fullWidth className="min-h-[44px]" asChild>
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button variant="primary" fullWidth asChild>
+              <Button variant="primary" fullWidth className="min-h-[44px]" asChild>
                 <Link href="/get-started">Get Started</Link>
               </Button>
             </div>

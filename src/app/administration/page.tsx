@@ -962,7 +962,7 @@ export default function AdministrationPage() {
           {/* Pending Approvals Tab */}
           {activeTab === 'pending' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-bold font-montserrat text-primary-dark">
                     Pending Approvals
@@ -971,7 +971,7 @@ export default function AdministrationPage() {
                     Review and approve new mentor and mentee applications
                   </p>
                 </div>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 self-start sm:self-auto">
                   {mockPendingApprovals.length} Pending
                 </Badge>
               </div>
@@ -979,69 +979,71 @@ export default function AdministrationPage() {
               <div className="space-y-4">
                 {mockPendingApprovals.map((user) => (
                   <Card key={user.id} className="shadow-lg hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-6">
-                        {/* Avatar */}
-                        <Avatar fallback={user.name} size="lg" className="flex-shrink-0" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+                        {/* Avatar - Centered on mobile, left on desktop */}
+                        <div className="flex justify-center sm:justify-start">
+                          <Avatar fallback={user.name} size="lg" className="flex-shrink-0" />
+                        </div>
 
                         {/* User Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-4">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="text-xl font-bold font-montserrat text-primary-dark">
-                                  {user.name}
-                                </h3>
-                                <Badge
-                                  variant="secondary"
-                                  className={user.role === 'mentor' ? 'bg-secondary-accent text-white' : 'bg-primary-accent text-primary-dark'}
-                                >
-                                  {user.role === 'mentor' ? 'Mentor' : 'Mentee'}
+                        <div className="flex-1 min-w-0 space-y-4">
+                          {/* Header Section */}
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <h3 className="text-lg sm:text-xl font-bold font-montserrat text-primary-dark">
+                                {user.name}
+                              </h3>
+                              <Badge
+                                variant="secondary"
+                                className={user.role === 'mentor' ? 'bg-secondary-accent text-white' : 'bg-primary-accent text-primary-dark'}
+                              >
+                                {user.role === 'mentor' ? 'Mentor' : 'Mentee'}
+                              </Badge>
+                              {user.hasConnectedSocial && (
+                                <Badge variant="default" className="bg-green-100 text-green-700 border-green-300">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <span className="hidden sm:inline">Social Connected</span>
+                                  <span className="sm:hidden">Connected</span>
                                 </Badge>
-                                {user.hasConnectedSocial && (
-                                  <Badge variant="default" className="bg-green-100 text-green-700 border-green-300">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Social Connected
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm font-semibold text-neutral-700 font-montserrat">
-                                {user.jobTitle} at {user.company}
-                              </p>
-                              <p className="text-xs text-neutral-500 font-montserrat mt-1">
-                                Applied: {new Date(user.appliedDate).toLocaleDateString('en-US', {
-                                  month: 'long',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </p>
+                              )}
                             </div>
+                            <p className="text-sm font-semibold text-neutral-700 font-montserrat">
+                              {user.jobTitle} at {user.company}
+                            </p>
+                            <p className="text-xs text-neutral-500 font-montserrat mt-1">
+                              Applied: {new Date(user.appliedDate).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </p>
                           </div>
 
-                          {/* Contact Info */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                            <div className="flex items-center gap-2 text-sm text-neutral-600 font-montserrat">
-                              <Mail className="h-4 w-4 text-primary-accent" />
-                              {user.email}
+                          {/* Contact Info - Stack on mobile */}
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-2 text-sm text-neutral-600 font-montserrat">
+                              <Mail className="h-4 w-4 text-primary-accent flex-shrink-0 mt-0.5" />
+                              <span className="break-all">{user.email}</span>
                             </div>
                             {user.phone && (
                               <div className="flex items-center gap-2 text-sm text-neutral-600 font-montserrat">
-                                <Phone className="h-4 w-4 text-primary-accent" />
-                                {user.phone}
+                                <Phone className="h-4 w-4 text-primary-accent flex-shrink-0" />
+                                <span>{user.phone}</span>
                               </div>
                             )}
                             <div className="flex items-center gap-2 text-sm text-neutral-600 font-montserrat">
-                              <Bell className="h-4 w-4 text-primary-accent" />
-                              Prefers {user.preferredNotification === 'email' ? 'Email' : 'SMS'}
+                              <Bell className="h-4 w-4 text-primary-accent flex-shrink-0" />
+                              <span>Prefers {user.preferredNotification === 'email' ? 'Email' : 'SMS'}</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-neutral-600 font-montserrat">
-                              <Clock className="h-4 w-4 text-primary-accent" />
-                              {user.yearsExperience} years experience
+                              <Clock className="h-4 w-4 text-primary-accent flex-shrink-0" />
+                              <span>{user.yearsExperience} years experience</span>
                             </div>
                           </div>
 
                           {/* Expertise */}
-                          <div className="mb-4">
+                          <div>
                             <p className="text-xs font-semibold text-neutral-500 font-montserrat mb-2 uppercase">
                               Expertise
                             </p>
@@ -1056,17 +1058,18 @@ export default function AdministrationPage() {
 
                           {/* Social Media */}
                           {(user.socialMedia.linkedin || user.socialMedia.twitter || user.socialMedia.instagram) && (
-                            <div className="mb-4">
+                            <div>
                               <p className="text-xs font-semibold text-neutral-500 font-montserrat mb-2 uppercase">
                                 Social Media
                               </p>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-4 flex-wrap">
                                 {user.socialMedia.linkedin && (
                                   <a
                                     href={user.socialMedia.linkedin}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary-accent hover:text-primary-accent/80"
+                                    className="text-primary-accent hover:text-primary-accent/80 transition-colors p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                    aria-label="LinkedIn profile"
                                   >
                                     <Linkedin className="h-5 w-5" />
                                   </a>
@@ -1076,7 +1079,8 @@ export default function AdministrationPage() {
                                     href={user.socialMedia.twitter}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary-accent hover:text-primary-accent/80"
+                                    className="text-primary-accent hover:text-primary-accent/80 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                    aria-label="Twitter profile"
                                   >
                                     <Twitter className="h-5 w-5" />
                                   </a>
@@ -1086,7 +1090,8 @@ export default function AdministrationPage() {
                                     href={user.socialMedia.instagram}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary-accent hover:text-primary-accent/80"
+                                    className="text-primary-accent hover:text-primary-accent/80 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                    aria-label="Instagram profile"
                                   >
                                     <Instagram className="h-5 w-5" />
                                   </a>
@@ -1097,7 +1102,7 @@ export default function AdministrationPage() {
 
                           {/* Auto-Approval Notice */}
                           {user.hasConnectedSocial && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                               <div className="flex items-start gap-2">
                                 <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                                 <div>
@@ -1113,11 +1118,11 @@ export default function AdministrationPage() {
                           )}
 
                           {/* Action Buttons */}
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2">
                             <Button
                               variant="primary"
                               onClick={() => handleApproveUser(user.id, user.name, user.preferredNotification)}
-                              className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] whitespace-nowrap"
+                              className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] whitespace-nowrap w-full sm:w-auto justify-center"
                             >
                               <CheckCircle className="mr-1.5 h-4 w-4 flex-shrink-0" />
                               Approve
@@ -1125,7 +1130,7 @@ export default function AdministrationPage() {
                             <Button
                               variant="outline"
                               onClick={() => handleDenyUser(user.id, user.name)}
-                              className="border-red-600 text-red-600 hover:bg-red-50 min-h-[44px] whitespace-nowrap"
+                              className="border-red-600 text-red-600 hover:bg-red-50 min-h-[44px] whitespace-nowrap w-full sm:w-auto justify-center"
                             >
                               <XCircle className="mr-1.5 h-4 w-4 flex-shrink-0" />
                               Deny
@@ -1133,10 +1138,10 @@ export default function AdministrationPage() {
                             <Button
                               variant="ghost"
                               onClick={() => handleViewProfile(user)}
-                              className="min-h-[44px] whitespace-nowrap"
+                              className="min-h-[44px] whitespace-nowrap w-full sm:w-auto justify-center"
                             >
                               <Eye className="mr-1.5 h-4 w-4 flex-shrink-0" />
-                              Profile
+                              View Profile
                             </Button>
                           </div>
                         </div>
@@ -1147,12 +1152,12 @@ export default function AdministrationPage() {
 
                 {mockPendingApprovals.length === 0 && (
                   <Card className="shadow-lg">
-                    <CardContent className="p-12 text-center">
-                      <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold font-montserrat text-neutral-700 mb-2">
+                    <CardContent className="p-8 sm:p-12 text-center">
+                      <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-lg sm:text-xl font-bold font-montserrat text-neutral-700 mb-2">
                         All Caught Up!
                       </h3>
-                      <p className="text-neutral-500 font-montserrat">
+                      <p className="text-sm sm:text-base text-neutral-500 font-montserrat">
                         There are no pending approvals at this time.
                       </p>
                     </CardContent>
@@ -1165,7 +1170,7 @@ export default function AdministrationPage() {
           {/* All Users Tab */}
           {activeTab === 'users' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold font-montserrat text-primary-dark">
                     All Users
@@ -1174,25 +1179,27 @@ export default function AdministrationPage() {
                     Manage user accounts and verification status
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-initial sm:min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
                     <input
                       type="text"
                       placeholder="Search users..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border-2 border-neutral-200 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-primary-accent"
+                      className="w-full pl-10 pr-4 min-h-[44px] border-2 border-neutral-200 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-primary-accent"
                     />
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-1" />
-                    Filter
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-1" />
-                    Export
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="min-h-[44px] whitespace-nowrap flex-1 sm:flex-initial">
+                      <Filter className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                      Filter
+                    </Button>
+                    <Button variant="outline" size="sm" className="min-h-[44px] whitespace-nowrap flex-1 sm:flex-initial">
+                      <Download className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                      Export
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -1200,47 +1207,65 @@ export default function AdministrationPage() {
                 {mockAllUsers.map((user) => (
                   <Card key={user.id} className="shadow-lg hover:shadow-xl transition-shadow">
                     <CardContent className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                        <Avatar fallback={user.name} size="md" className="flex-shrink-0" />
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                        {/* Avatar - Centered on mobile */}
+                        <div className="flex justify-center sm:justify-start">
+                          <Avatar fallback={user.name} size="md" className="flex-shrink-0" />
+                        </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-lg font-bold font-montserrat text-primary-dark">
-                              {user.name}
-                            </h3>
-                            {user.verified && (
-                              <Badge variant="default" className="bg-primary-accent text-primary-dark">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Verified
+                        <div className="flex-1 min-w-0 space-y-3">
+                          {/* Name and Badges */}
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <h3 className="text-base sm:text-lg font-bold font-montserrat text-primary-dark">
+                                {user.name}
+                              </h3>
+                              {user.verified && (
+                                <Badge variant="default" className="bg-primary-accent text-primary-dark">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <span className="hidden sm:inline">Verified</span>
+                                  <span className="sm:hidden">✓</span>
+                                </Badge>
+                              )}
+                              <Badge
+                                variant="secondary"
+                                className={user.role === 'mentor' ? 'bg-secondary-accent text-white' : 'bg-neutral-200 text-neutral-700'}
+                              >
+                                {user.role === 'mentor' ? 'Mentor' : 'Mentee'}
                               </Badge>
-                            )}
-                            <Badge
-                              variant="secondary"
-                              className={user.role === 'mentor' ? 'bg-secondary-accent text-white' : 'bg-neutral-200 text-neutral-700'}
-                            >
-                              {user.role === 'mentor' ? 'Mentor' : 'Mentee'}
-                            </Badge>
-                            <Badge
-                              variant="secondary"
-                              className={user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
-                            >
-                              {user.status}
-                            </Badge>
+                              <Badge
+                                variant="secondary"
+                                className={user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
+                              >
+                                {user.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-neutral-600 font-montserrat break-all">
+                              {user.email}
+                            </p>
                           </div>
-                          <p className="text-sm text-neutral-600 font-montserrat">
-                            {user.email}
-                          </p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500 font-montserrat flex-wrap">
-                            <span>Joined {user.joinedDate}</span>
-                            <span>•</span>
-                            <span>Last active {user.lastActive}</span>
-                            <span>•</span>
-                            <span>{user.totalSessions} sessions</span>
+
+                          {/* User Stats - Stack on mobile */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-neutral-500 font-montserrat">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-primary-accent flex-shrink-0" />
+                              <span>Joined {user.joinedDate}</span>
+                            </div>
+                            <span className="hidden sm:inline">•</span>
+                            <div className="flex items-center gap-1">
+                              <Activity className="h-3 w-3 text-green-600 flex-shrink-0" />
+                              <span>Last active {user.lastActive}</span>
+                            </div>
+                            <span className="hidden sm:inline">•</span>
+                            <div className="flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3 text-secondary-accent flex-shrink-0" />
+                              <span>{user.totalSessions} sessions</span>
+                            </div>
                             {user.role === 'mentor' && user.numberOfMentees !== undefined && (
                               <>
-                                <span>•</span>
+                                <span className="hidden sm:inline">•</span>
                                 <div className="flex items-center gap-1">
-                                  <Users className="h-3 w-3 text-primary-accent" />
+                                  <Users className="h-3 w-3 text-primary-accent flex-shrink-0" />
                                   <span>{user.numberOfMentees} mentee{user.numberOfMentees !== 1 ? 's' : ''}</span>
                                 </div>
                               </>
@@ -1248,33 +1273,34 @@ export default function AdministrationPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Action Buttons - Stack on mobile, row on desktop */}
+                        <div className="flex flex-row sm:flex-col lg:flex-row items-center justify-center sm:justify-start gap-2 flex-shrink-0 border-t sm:border-t-0 sm:border-l border-neutral-200 pt-3 sm:pt-0 sm:pl-4">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleToggleVerification(user.id, user.name, user.verified)}
-                            className="min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                            className="min-h-[44px] min-w-[44px] p-2 hover:bg-primary-accent/10"
                             title={user.verified ? 'Remove verification badge' : 'Verify user'}
                           >
-                            <Shield className="h-4 w-4 flex-shrink-0" />
+                            <Shield className="h-5 w-5 text-primary-accent flex-shrink-0" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewProfile(user)}
-                            className="min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                            className="min-h-[44px] min-w-[44px] p-2 hover:bg-primary-accent/10"
                             title="View profile"
                           >
-                            <Eye className="h-4 w-4 flex-shrink-0" />
+                            <Eye className="h-5 w-5 text-primary-dark flex-shrink-0" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleSuspendUser(user.id, user.name)}
-                            className="text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                            className="text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] p-2"
                             title="Suspend account"
                           >
-                            <XCircle className="h-4 w-4 flex-shrink-0" />
+                            <XCircle className="h-5 w-5 flex-shrink-0" />
                           </Button>
                         </div>
                       </div>
@@ -1288,7 +1314,7 @@ export default function AdministrationPage() {
           {/* Messages Tab */}
           {activeTab === 'messages' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-bold font-montserrat text-primary-dark">
                     Platform Messages
@@ -1297,7 +1323,7 @@ export default function AdministrationPage() {
                     Monitor all platform conversations for safety and compliance
                   </p>
                 </div>
-                <Badge variant="secondary" className="bg-primary-accent/10 text-primary-accent">
+                <Badge variant="secondary" className="bg-primary-accent/10 text-primary-accent self-start sm:self-auto">
                   {analyticsData.messagesExchanged.toLocaleString()} total messages
                 </Badge>
               </div>
@@ -1306,37 +1332,56 @@ export default function AdministrationPage() {
               <div className="space-y-4">
                 {mockConversations.map((conversation) => (
                   <Card key={conversation.id} className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="flex -space-x-2">
-                          <Avatar fallback={conversation.mentor} size="sm" className="border-2 border-white" />
-                          <Avatar fallback={conversation.mentee} size="sm" className="border-2 border-white" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        {/* Avatars - Better spacing on mobile */}
+                        <div className="flex items-center justify-center sm:justify-start">
+                          <div className="flex -space-x-3 sm:-space-x-2">
+                            <Avatar fallback={conversation.mentor} size="sm" className="border-2 border-white ring-1 ring-neutral-200" />
+                            <Avatar fallback={conversation.mentee} size="sm" className="border-2 border-white ring-1 ring-neutral-200" />
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold font-montserrat text-primary-dark text-sm">
-                              {conversation.mentor} <span className="text-neutral-500">↔</span> {conversation.mentee}
-                            </p>
-                            <Badge variant="outline" size="sm">
+
+                        <div className="flex-1 min-w-0 text-center sm:text-left">
+                          {/* Participants - Better mobile display */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+                              <p className="font-semibold font-montserrat text-primary-dark text-sm">
+                                {conversation.mentor}
+                              </p>
+                              <span className="text-neutral-500 hidden sm:inline">↔</span>
+                              <span className="text-neutral-400 sm:hidden">↓</span>
+                              <p className="font-semibold font-montserrat text-primary-dark text-sm">
+                                {conversation.mentee}
+                              </p>
+                            </div>
+                            <Badge variant="outline" size="sm" className="self-center sm:self-auto">
                               {conversation.messages.length} messages
                             </Badge>
                           </div>
-                          <p className="text-sm text-neutral-600 font-montserrat truncate">
+
+                          {/* Last Message */}
+                          <p className="text-sm text-neutral-600 font-montserrat line-clamp-2 sm:truncate">
                             {conversation.lastMessage}
                           </p>
                           <p className="text-xs text-neutral-400 font-montserrat mt-1">
                             {conversation.timestamp}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewConversation(conversation)}
-                          className="min-h-[44px] min-w-[44px] p-2 sm:px-3"
-                          title="View conversation"
-                        >
-                          <Eye className="h-4 w-4 flex-shrink-0" />
-                        </Button>
+
+                        {/* View Button - Full width on mobile, icon on desktop */}
+                        <div className="flex sm:flex-shrink-0 w-full sm:w-auto">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewConversation(conversation)}
+                            className="min-h-[44px] w-full sm:w-auto sm:min-w-[44px] p-2 sm:px-3 justify-center border sm:border-0 border-neutral-200"
+                            title="View conversation"
+                          >
+                            <Eye className="h-4 w-4 flex-shrink-0 sm:mr-0" />
+                            <span className="ml-2 sm:hidden">View Conversation</span>
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
