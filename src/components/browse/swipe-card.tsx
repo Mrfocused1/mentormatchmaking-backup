@@ -72,6 +72,7 @@ export function SwipeCard({ mentor, onSwipe, isTop }: SwipeCardProps) {
             <div className="flex flex-col items-center text-center px-4">
               <div className="relative mb-4">
                 <Avatar
+                  src={mentor.avatar}
                   fallback={mentor.name}
                   size="3xl"
                   className="shadow-xl"

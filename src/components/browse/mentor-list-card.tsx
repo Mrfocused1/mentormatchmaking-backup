@@ -45,7 +45,7 @@ export function MentorListCard({ mentor, onShowInterest, onViewProfile }: Mentor
           {/* Avatar */}
           <div className="flex-shrink-0 mx-auto sm:mx-0">
             <div className="relative">
-              <Avatar fallback={mentor.name} size="xl" className="shadow-md" />
+              <Avatar src={mentor.avatar} fallback={mentor.name} size="xl" className="shadow-md" />
               {/* Online Status Indicator */}
               <div className="absolute bottom-1 right-1 w-3 h-3 bg-success border-2 border-white rounded-full" />
             </div>

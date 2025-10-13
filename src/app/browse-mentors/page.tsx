@@ -209,6 +209,7 @@ export default function BrowseMentorsNew() {
   useEffect(() => {
     const fetchPexelsImages = async () => {
       try {
+        console.log('Fetching Pexels images...')
         const response = await fetch('https://api.pexels.com/v1/search?query=professional+business+portrait&per_page=20&orientation=square', {
           headers: {
             Authorization: '8sLoMXg5fX4DKdmX8sSFxebcYNbdcwU6VizqTp4YRdrJ7a3MVlwc9qpp'
@@ -216,14 +217,18 @@ export default function BrowseMentorsNew() {
         })
 
         const data = await response.json()
+        console.log('Pexels API response:', data)
 
         if (data.photos && data.photos.length >= 6) {
+          console.log('Setting mentor avatars with Pexels images')
           setMentors(prevMentors =>
             prevMentors.map((mentor, index) => ({
               ...mentor,
               avatar: data.photos[index]?.src?.medium || null
             }))
           )
+        } else {
+          console.log('Not enough photos returned:', data.photos?.length)
         }
       } catch (error) {
         console.error('Error fetching Pexels images:', error)
@@ -1308,9 +1313,17 @@ export default function BrowseMentorsNew() {
               <div className="flex items-start gap-6">
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
-                  <div className="w-24 h-24 rounded-full bg-primary-accent flex items-center justify-center text-white text-3xl font-bold font-montserrat shadow-lg">
-                    {profileMentor.name.split(' ').map((n: string) => n[0]).join('')}
-                  </div>
+                  {profileMentor.avatar ? (
+                    <img
+                      src={profileMentor.avatar}
+                      alt={profileMentor.name}
+                      className="w-24 h-24 rounded-full object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-primary-accent flex items-center justify-center text-white text-3xl font-bold font-montserrat shadow-lg">
+                      {profileMentor.name.split(' ').map((n: string) => n[0]).join('')}
+                    </div>
+                  )}
                   <div className="absolute bottom-1 right-1 w-6 h-6 bg-success border-4 border-white rounded-full" />
                 </div>
 
