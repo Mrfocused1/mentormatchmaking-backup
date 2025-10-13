@@ -2057,6 +2057,7 @@ export default function AdministrationPage() {
                     className={`flex gap-3 ${isMentor ? 'flex-row' : 'flex-row-reverse'}`}
                   >
                     <Avatar
+                      src={message.avatar}
                       fallback={message.sender}
                       size="sm"
                       className="flex-shrink-0"
