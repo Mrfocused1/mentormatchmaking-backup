@@ -1,10 +1,12 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { getActiveMentors, getSuccessfulMatches } from '@/lib/stats'
 import {
   Target,
   Heart,
@@ -16,7 +18,8 @@ import {
   Shield,
   Sparkles,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Star
 } from 'lucide-react'
 
 export default function About() {
@@ -89,12 +92,25 @@ export default function About() {
     },
   ]
 
-  const stats = [
-    { value: '10,000+', label: 'Active Mentors' },
-    { value: '50,000+', label: 'Successful Matches' },
-    { value: '25+', label: 'Industries' },
-    { value: '50+', label: 'Countries' },
-  ]
+  const [stats, setStats] = useState([
+    { value: '20+', label: 'Active Mentors' },
+    { value: '15+', label: 'Successful Matches' },
+    { value: '25+', label: 'Industries Covered' },
+    { value: '4.8/5', label: 'Average Rating' },
+  ])
+
+  useEffect(() => {
+    // Load stats from localStorage to match home page
+    const activeMentors = getActiveMentors()
+    const successfulMatches = getSuccessfulMatches()
+
+    setStats([
+      { value: `${activeMentors}+`, label: 'Active Mentors' },
+      { value: `${successfulMatches}+`, label: 'Successful Matches' },
+      { value: '25+', label: 'Industries Covered' },
+      { value: '4.8/5', label: 'Average Rating' },
+    ])
+  }, [])
 
   return (
     <div className="min-h-screen bg-white">
