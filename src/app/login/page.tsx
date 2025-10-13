@@ -52,10 +52,13 @@ export default function Login() {
     // Simulate API call
     setTimeout(() => {
       console.log('Login attempt:', formData)
-      // TODO: Implement actual authentication logic
+      // TODO: Implement actual authentication logic with backend
+      // For now, set localStorage to mark user as logged in
+      localStorage.setItem('isLoggedIn', 'true')
+      localStorage.setItem('userEmail', formData.email)
       setIsLoading(false)
-      // For now, redirect to homepage
-      // router.push('/dashboard')
+      // Redirect to dashboard
+      router.push('/dashboard')
     }, 1500)
   }
 

@@ -67,8 +67,14 @@ export default function MenteeOnboarding() {
   const handleSubmit = () => {
     console.log('Form submitted:', formData)
     // Here you would typically send the data to your backend
-    // Redirect to homepage with success message
-    router.push('/?success=mentee-signup')
+
+    // Set localStorage to mark user as logged in
+    localStorage.setItem('isLoggedIn', 'true')
+    localStorage.setItem('userEmail', formData.email)
+    localStorage.setItem('userRole', 'mentee')
+
+    // Redirect to dashboard with success message
+    router.push('/dashboard?success=mentee-signup')
   }
 
   const renderStepContent = () => {

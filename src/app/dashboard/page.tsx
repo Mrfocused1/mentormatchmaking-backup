@@ -41,13 +41,13 @@ export default function DashboardPage() {
     role: 'mentor', // or 'mentee'
     title: 'Senior Software Engineer',
     company: 'Google',
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
     joinDate: 'January 2024',
     rating: 4.9,
     totalMentees: 12,
     completedSessions: 45,
     // Profile completeness fields
-    hasAvatar: false,
+    hasAvatar: true,
     hasBio: true,
     hasSkills: true,
     hasExperience: true,
@@ -130,7 +130,7 @@ export default function DashboardPage() {
       matchDate: '2 days ago',
       lastMessage: 'Thank you for accepting! Looking forward to our first session.',
       unread: true,
-      avatar: null,
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
     {
       id: 2,
@@ -139,7 +139,7 @@ export default function DashboardPage() {
       matchDate: '5 days ago',
       lastMessage: 'Great session today! See you next week.',
       unread: false,
-      avatar: null,
+      avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
     {
       id: 3,
@@ -148,7 +148,7 @@ export default function DashboardPage() {
       matchDate: '1 week ago',
       lastMessage: 'Can we schedule a call for next Tuesday?',
       unread: true,
-      avatar: null,
+      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
   ]
 

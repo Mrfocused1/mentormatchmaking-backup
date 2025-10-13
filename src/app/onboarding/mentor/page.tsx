@@ -88,11 +88,16 @@ export default function MentorOnboarding() {
     console.log('Form submitted:', formData)
     // Here you would typically send the data to your backend
 
+    // Set localStorage to mark user as logged in
+    localStorage.setItem('isLoggedIn', 'true')
+    localStorage.setItem('userEmail', formData.email)
+    localStorage.setItem('userRole', 'mentor')
+
     // Increment the active mentors count
     incrementActiveMentors()
 
-    // Redirect to homepage with success message
-    router.push('/?success=mentor-signup')
+    // Redirect to dashboard with success message
+    router.push('/dashboard?success=mentor-signup')
   }
 
   const renderStepContent = () => {
