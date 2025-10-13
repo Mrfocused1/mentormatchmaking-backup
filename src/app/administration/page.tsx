@@ -59,6 +59,7 @@ const mockPendingApprovals = [
       instagram: null,
     },
     preferredNotification: 'email',
+    numberOfMentees: 0,
     avatar: null,
   },
   {
@@ -79,6 +80,7 @@ const mockPendingApprovals = [
       instagram: 'https://instagram.com/mariagarcia',
     },
     preferredNotification: 'sms',
+    numberOfMentees: 0,
     avatar: null,
   },
   {
@@ -99,6 +101,7 @@ const mockPendingApprovals = [
       instagram: null,
     },
     preferredNotification: 'email',
+    numberOfMentees: 0,
     avatar: null,
   },
 ]
@@ -115,7 +118,7 @@ const mockAllUsers = [
     joinedDate: '2025-09-15',
     lastActive: '2 hours ago',
     totalSessions: 24,
-    rating: 4.9,
+    numberOfMentees: 12,
     avatar: null,
   },
   {
@@ -128,7 +131,7 @@ const mockAllUsers = [
     joinedDate: '2025-09-20',
     lastActive: '1 day ago',
     totalSessions: 18,
-    rating: 5.0,
+    numberOfMentees: 9,
     avatar: null,
   },
   {
@@ -141,7 +144,7 @@ const mockAllUsers = [
     joinedDate: '2025-10-01',
     lastActive: '5 hours ago',
     totalSessions: 8,
-    rating: 4.8,
+    numberOfMentees: 0,
     avatar: null,
   },
 ]
@@ -1110,29 +1113,30 @@ export default function AdministrationPage() {
                           )}
 
                           {/* Action Buttons */}
-                          <div className="flex flex-wrap gap-3">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               variant="primary"
                               onClick={() => handleApproveUser(user.id, user.name, user.preferredNotification)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                              className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] whitespace-nowrap"
                             >
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              Approve & Notify
+                              <CheckCircle className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                              Approve
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => handleDenyUser(user.id, user.name)}
-                              className="border-red-600 text-red-600 hover:bg-red-50"
+                              className="border-red-600 text-red-600 hover:bg-red-50 min-h-[44px] whitespace-nowrap"
                             >
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Deny Application
+                              <XCircle className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                              Deny
                             </Button>
                             <Button
                               variant="ghost"
                               onClick={() => handleViewProfile(user)}
+                              className="min-h-[44px] whitespace-nowrap"
                             >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Full Profile
+                              <Eye className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                              Profile
                             </Button>
                           </div>
                         </div>
@@ -1195,8 +1199,8 @@ export default function AdministrationPage() {
               <div className="space-y-4">
                 {mockAllUsers.map((user) => (
                   <Card key={user.id} className="shadow-lg hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-6">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                         <Avatar fallback={user.name} size="md" className="flex-shrink-0" />
 
                         <div className="flex-1 min-w-0">
@@ -1226,18 +1230,18 @@ export default function AdministrationPage() {
                           <p className="text-sm text-neutral-600 font-montserrat">
                             {user.email}
                           </p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500 font-montserrat">
+                          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500 font-montserrat flex-wrap">
                             <span>Joined {user.joinedDate}</span>
                             <span>•</span>
                             <span>Last active {user.lastActive}</span>
                             <span>•</span>
                             <span>{user.totalSessions} sessions</span>
-                            {user.rating && (
+                            {user.role === 'mentor' && user.numberOfMentees !== undefined && (
                               <>
                                 <span>•</span>
                                 <div className="flex items-center gap-1">
-                                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                                  <span>{user.rating}</span>
+                                  <Users className="h-3 w-3 text-primary-accent" />
+                                  <span>{user.numberOfMentees} mentee{user.numberOfMentees !== 1 ? 's' : ''}</span>
                                 </div>
                               </>
                             )}
@@ -1249,26 +1253,28 @@ export default function AdministrationPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleToggleVerification(user.id, user.name, user.verified)}
+                            className="min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                            title={user.verified ? 'Remove verification badge' : 'Verify user'}
                           >
-                            <Shield className="h-4 w-4 mr-1" />
-                            {user.verified ? 'Remove Badge' : 'Verify'}
+                            <Shield className="h-4 w-4 flex-shrink-0" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewProfile(user)}
+                            className="min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                            title="View profile"
                           >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
+                            <Eye className="h-4 w-4 flex-shrink-0" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleSuspendUser(user.id, user.name)}
-                            className="text-red-600 hover:bg-red-50"
+                            className="text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                            title="Suspend account"
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Suspend
+                            <XCircle className="h-4 w-4 flex-shrink-0" />
                           </Button>
                         </div>
                       </div>
@@ -1326,9 +1332,10 @@ export default function AdministrationPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleViewConversation(conversation)}
+                          className="min-h-[44px] min-w-[44px] p-2 sm:px-3"
+                          title="View conversation"
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
+                          <Eye className="h-4 w-4 flex-shrink-0" />
                         </Button>
                       </div>
                     </CardContent>
@@ -1752,15 +1759,15 @@ export default function AdministrationPage() {
                     </CardContent>
                   </Card>
                 )}
-                {selectedUser.rating && (
+{selectedUser.role === 'mentor' && selectedUser.numberOfMentees !== undefined && (
                   <Card className="shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
-                        <Star className="h-5 w-5 text-warning fill-warning" />
+                        <Users className="h-5 w-5 text-primary-accent" />
                         <div>
-                          <p className="text-xs text-neutral-500 font-montserrat">Rating</p>
+                          <p className="text-xs text-neutral-500 font-montserrat">Number of Mentees</p>
                           <p className="text-sm font-semibold text-primary-dark font-montserrat">
-                            {selectedUser.rating} / 5.0
+                            {selectedUser.numberOfMentees} mentee{selectedUser.numberOfMentees !== 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
@@ -1903,7 +1910,7 @@ export default function AdministrationPage() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 pt-4 border-t border-neutral-200">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-neutral-200">
                 {selectedUser.appliedDate && (
                   <>
                     <Button
@@ -1912,10 +1919,10 @@ export default function AdministrationPage() {
                         handleApproveUser(selectedUser.id, selectedUser.name, selectedUser.preferredNotification)
                         setShowUserModal(false)
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] whitespace-nowrap"
                     >
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Approve & Notify
+                      <CheckCircle className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                      Approve
                     </Button>
                     <Button
                       variant="outline"
@@ -1923,10 +1930,10 @@ export default function AdministrationPage() {
                         handleDenyUser(selectedUser.id, selectedUser.name)
                         setShowUserModal(false)
                       }}
-                      className="border-red-600 text-red-600 hover:bg-red-50"
+                      className="border-red-600 text-red-600 hover:bg-red-50 min-h-[44px] whitespace-nowrap"
                     >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Deny Application
+                      <XCircle className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                      Deny
                     </Button>
                   </>
                 )}
@@ -1937,10 +1944,10 @@ export default function AdministrationPage() {
                       handleToggleVerification(selectedUser.id, selectedUser.name, selectedUser.verified)
                       setShowUserModal(false)
                     }}
-                    className="border-primary-accent text-primary-accent hover:bg-primary-accent/10"
+                    className="border-primary-accent text-primary-accent hover:bg-primary-accent/10 min-h-[44px] whitespace-nowrap"
                   >
-                    <Shield className="mr-2 h-4 w-4" />
-                    {selectedUser.verified ? 'Remove Verification' : 'Grant Verification'}
+                    <Shield className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                    {selectedUser.verified ? 'Remove Badge' : 'Verify'}
                   </Button>
                 )}
                 <Button
@@ -1949,10 +1956,10 @@ export default function AdministrationPage() {
                     handleSuspendUser(selectedUser.id, selectedUser.name)
                     setShowUserModal(false)
                   }}
-                  className="border-red-600 text-red-600 hover:bg-red-50"
+                  className="border-red-600 text-red-600 hover:bg-red-50 min-h-[44px] whitespace-nowrap"
                 >
-                  <UserX className="mr-2 h-4 w-4" />
-                  Suspend Account
+                  <UserX className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                  Suspend
                 </Button>
               </div>
             </div>
