@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -30,6 +30,7 @@ const TOTAL_STEPS = 4
 export default function MentorOnboarding() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const formCardRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState({
     // Step 1: Personal Info
     firstName: '',
@@ -61,6 +62,15 @@ export default function MentorOnboarding() {
     preferredMeetingFormat: [] as string[],
     timezone: '',
   })
+
+  // Scroll to top of form when step changes
+  useEffect(() => {
+    if (formCardRef.current) {
+      formCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    // Also scroll window to top
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep])
 
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS) {
@@ -170,7 +180,7 @@ export default function MentorOnboarding() {
           </div>
 
           {/* Form Content */}
-          <Card className="border-0 shadow-card mb-8">
+          <Card ref={formCardRef} className="border-0 shadow-card mb-8">
             <CardContent className="pt-6">
               {renderStepContent()}
             </CardContent>
