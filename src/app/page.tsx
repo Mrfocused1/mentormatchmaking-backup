@@ -349,11 +349,6 @@ export default function Home() {
                   </ButtonHover>
                 </div>
               </SlideUp>
-              <FadeIn delay={0.4}>
-                <p className="mt-6 text-sm text-white/70 font-montserrat">
-                  No credit card required • Free to start • Cancel anytime
-                </p>
-              </FadeIn>
             </div>
           </div>
 
@@ -398,11 +393,6 @@ export default function Home() {
                   </ButtonHover>
                 </div>
               </SlideUp>
-              <FadeIn delay={0.5}>
-                <p className="mt-6 text-sm text-white/70 font-montserrat">
-                  No credit card required • Free to start • Cancel anytime
-                </p>
-              </FadeIn>
             </SlideInLeft>
 
             {/* Right: Lottie Animation */}
