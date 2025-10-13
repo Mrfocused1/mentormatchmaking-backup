@@ -69,22 +69,25 @@ export function HelpArticle({
       <div className="pt-24 pb-16">
         <div className="mx-auto max-w-4xl px-6 lg:px-8">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600 mb-6">
-            <Link href="/help" className="hover:text-primary-accent transition-colors">
+          <div className="flex items-center gap-2 text-sm sm:text-sm font-montserrat text-neutral-600 mb-6 flex-wrap">
+            <Link
+              href="/help"
+              className="hover:text-primary-accent active:text-primary-accent transition-colors py-2 px-1 -ml-1 rounded"
+            >
               Help Center
             </Link>
-            <span>/</span>
-            <span className="text-neutral-400">{category}</span>
-            <span>/</span>
-            <span className="text-primary-dark font-semibold">{title}</span>
+            <span className="text-neutral-400">/</span>
+            <span className="text-neutral-400 py-2 truncate max-w-[120px] sm:max-w-none">{category}</span>
+            <span className="text-neutral-400">/</span>
+            <span className="text-primary-dark font-semibold py-2 truncate max-w-[120px] sm:max-w-none">{title}</span>
           </div>
 
           {/* Back Button */}
           <Button
             variant="outline"
-            size="sm"
+            size="md"
             onClick={() => router.back()}
-            className="mb-6"
+            className="mb-6 sm:h-9 sm:px-3 sm:text-sm"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Help Center
@@ -92,29 +95,27 @@ export function HelpArticle({
 
           {/* Article Header */}
           <div className="mb-8">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h1 className="text-4xl font-black font-montserrat text-primary-dark mb-3">
-                  {title}
-                </h1>
-                <p className="text-lg text-neutral-600 font-montserrat">
-                  {description}
-                </p>
-              </div>
-              {interactiveSteps && interactiveSteps.length > 0 && (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={startInteractiveTour}
-                  className="bg-secondary-accent hover:bg-secondary-accent/90 text-white flex-shrink-0"
-                >
-                  <Play className="h-5 w-5 mr-2" />
-                  Start Interactive Guide
-                </Button>
-              )}
+            <div className="mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-montserrat text-primary-dark mb-3 leading-tight">
+                {title}
+              </h1>
+              <p className="text-base sm:text-lg text-neutral-600 font-montserrat leading-relaxed">
+                {description}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-primary-accent/10 text-primary-accent rounded-full text-sm font-semibold font-montserrat">
+            {interactiveSteps && interactiveSteps.length > 0 && (
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={startInteractiveTour}
+                className="bg-secondary-accent hover:bg-secondary-accent/90 active:bg-secondary-accent/80 text-white w-full sm:w-auto"
+              >
+                <Play className="h-5 w-5 mr-2" />
+                Start Interactive Guide
+              </Button>
+            )}
+            <div className="flex items-center gap-2 mt-4">
+              <span className="inline-block px-4 py-2 sm:px-3 sm:py-1 bg-primary-accent/10 text-primary-accent rounded-full text-sm sm:text-sm font-semibold font-montserrat">
                 {category}
               </span>
             </div>
@@ -122,7 +123,7 @@ export function HelpArticle({
 
           {/* Article Content */}
           <Card className="shadow-lg mb-8">
-            <CardContent className="p-8 prose prose-lg max-w-none">
+            <CardContent className="p-5 sm:p-6 md:p-8 prose prose-base sm:prose-lg max-w-none">
               {content}
             </CardContent>
           </Card>
@@ -139,9 +140,9 @@ export function HelpArticle({
                   <Link
                     key={index}
                     href={article.href}
-                    className="p-4 border border-neutral-200 rounded-lg hover:border-primary-accent hover:bg-primary-accent/5 transition-colors group"
+                    className="p-5 sm:p-4 border-2 sm:border border-neutral-200 rounded-lg hover:border-primary-accent hover:bg-primary-accent/5 active:bg-primary-accent/10 transition-colors group min-h-[72px] flex items-center"
                   >
-                    <p className="font-semibold font-montserrat text-primary-dark group-hover:text-primary-accent">
+                    <p className="font-semibold font-montserrat text-primary-dark group-hover:text-primary-accent text-sm sm:text-base">
                       {article.title}
                     </p>
                   </Link>
@@ -158,18 +159,20 @@ export function HelpArticle({
             <p className="text-sm text-neutral-600 font-montserrat mb-4">
               Let us know if you found this guide useful or if you need more help.
             </p>
-            <div className="flex gap-3">
-              <Button variant="outline" size="sm">
-                👍 Yes
-              </Button>
-              <Button variant="outline" size="sm">
-                👎 No
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex gap-3 flex-1">
+                <Button variant="outline" size="md" className="flex-1 sm:flex-none sm:h-9 sm:px-3 sm:text-sm">
+                  👍 Yes
+                </Button>
+                <Button variant="outline" size="md" className="flex-1 sm:flex-none sm:h-9 sm:px-3 sm:text-sm">
+                  👎 No
+                </Button>
+              </div>
               <Button
                 variant="primary"
-                size="sm"
+                size="md"
                 asChild
-                className="ml-auto bg-primary-accent hover:bg-primary-accent/90 text-primary-dark"
+                className="w-full sm:w-auto sm:h-9 sm:px-3 sm:text-sm bg-primary-accent hover:bg-primary-accent/90 active:bg-primary-accent/80 text-primary-dark"
               >
                 <Link href="/contact">Contact Support</Link>
               </Button>

@@ -160,23 +160,23 @@ export default function HelpPage() {
       {/* Page Header */}
       <section className="bg-primary-dark pt-24 pb-16 sm:pt-32 sm:pb-20">
         <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-black font-montserrat text-white sm:text-5xl mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-montserrat text-white mb-4">
             How can we help you?
           </h1>
-          <p className="text-lg text-white/80 font-montserrat mb-8">
+          <p className="text-base sm:text-lg text-white/80 font-montserrat mb-8">
             Search our knowledge base or browse categories below
           </p>
 
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-neutral-400" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 sm:h-5 sm:w-5 text-neutral-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for help articles..."
-                className="w-full pl-12 pr-4 py-4 rounded-xl border-0 font-montserrat text-primary-dark placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-accent shadow-xl"
+                className="w-full pl-11 sm:pl-12 pr-4 py-4 rounded-xl border-0 font-montserrat text-base sm:text-base text-primary-dark placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-accent shadow-xl"
               />
             </div>
           </form>
@@ -191,22 +191,22 @@ export default function HelpPage() {
               <Card key={category.id} className="shadow-lg hover:shadow-xl transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 ${category.bgColor} rounded-lg flex items-center justify-center`}>
-                      <category.icon className={`h-6 w-6 ${category.color}`} />
+                    <div className={`w-14 h-14 sm:w-12 sm:h-12 ${category.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                      <category.icon className={`h-7 w-7 sm:h-6 sm:w-6 ${category.color}`} />
                     </div>
                     <h3 className="text-lg font-black font-montserrat text-primary-dark">
                       {category.title}
                     </h3>
                   </div>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1">
                     {category.articles.map((article, index) => (
                       <li key={index}>
                         <Link
                           href={article.url}
-                          className="flex items-center justify-between text-sm font-montserrat text-neutral-700 hover:text-primary-accent transition-colors group"
+                          className="flex items-center justify-between py-3 text-base sm:text-sm font-montserrat text-neutral-700 hover:text-primary-accent active:bg-primary-accent/5 transition-colors group rounded-md -mx-1 px-1"
                         >
-                          <span>{article.title}</span>
-                          <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:text-primary-accent transition-colors" />
+                          <span className="flex-1">{article.title}</span>
+                          <ChevronRight className="h-5 w-5 text-neutral-400 group-hover:text-primary-accent transition-colors flex-shrink-0 ml-2" />
                         </Link>
                       </li>
                     ))}
@@ -229,22 +229,22 @@ export default function HelpPage() {
               <Link
                 key={index}
                 href={article.url}
-                className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:border-primary-accent hover:bg-primary-accent/5 transition-colors group"
+                className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:border-primary-accent hover:bg-primary-accent/5 active:bg-primary-accent/10 transition-colors group min-h-[80px]"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-primary-accent/10 rounded-full flex items-center justify-center">
-                    <Book className="h-4 w-4 text-primary-accent" />
+                <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                  <div className="w-10 h-10 sm:w-8 sm:h-8 bg-primary-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Book className="h-5 w-5 sm:h-4 sm:w-4 text-primary-accent" />
                   </div>
-                  <div>
-                    <p className="font-semibold font-montserrat text-primary-dark group-hover:text-primary-accent">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold font-montserrat text-primary-dark group-hover:text-primary-accent text-sm sm:text-base mb-1">
                       {article.title}
                     </p>
-                    <p className="text-xs font-montserrat text-neutral-500">
+                    <p className="text-xs sm:text-xs font-montserrat text-neutral-500">
                       {article.category} • {article.views.toLocaleString()} views
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-neutral-400 group-hover:text-primary-accent" />
+                <ChevronRight className="h-5 w-5 text-neutral-400 group-hover:text-primary-accent flex-shrink-0 ml-2" />
               </Link>
             ))}
           </div>
@@ -268,16 +268,16 @@ export default function HelpPage() {
               <Card key={index} className="shadow-md overflow-hidden">
                 <button
                   onClick={() => toggleFaq(index)}
-                  className="w-full p-6 text-left flex items-center justify-between hover:bg-neutral-50 transition-colors"
+                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <HelpCircle className="h-5 w-5 text-primary-accent flex-shrink-0" />
-                    <h3 className="font-bold font-montserrat text-primary-dark">
+                  <div className="flex items-center gap-3 sm:gap-3 flex-1 min-w-0">
+                    <HelpCircle className="h-6 w-6 sm:h-5 sm:w-5 text-primary-accent flex-shrink-0" />
+                    <h3 className="font-bold font-montserrat text-primary-dark text-sm sm:text-base">
                       {faq.question}
                     </h3>
                   </div>
                   <ChevronRight
-                    className={`h-5 w-5 text-neutral-400 transition-transform ${
+                    className={`h-6 w-6 sm:h-5 sm:w-5 text-neutral-400 transition-transform flex-shrink-0 ml-3 ${
                       expandedFaq === index ? 'rotate-90' : ''
                     }`}
                   />
@@ -304,15 +304,15 @@ export default function HelpPage() {
           <p className="text-white/80 font-montserrat mb-8">
             Can't find what you're looking for? Our support team is here to help.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
             <Button
               variant="primary"
               size="lg"
               asChild
-              className="bg-primary-accent text-primary-dark hover:bg-primary-accent/90"
+              className="bg-primary-accent text-primary-dark hover:bg-primary-accent/90 active:bg-primary-accent/80 w-full sm:w-auto"
             >
-              <Link href="/contact">
-                <Mail className="h-5 w-5 mr-2" />
+              <Link href="/contact" className="flex items-center justify-center">
+                <Mail className="h-6 w-6 sm:h-5 sm:w-5 mr-2" />
                 Contact Support
               </Link>
             </Button>
@@ -320,10 +320,10 @@ export default function HelpPage() {
               variant="outline"
               size="lg"
               asChild
-              className="border-white text-white hover:bg-white/10"
+              className="border-white text-white hover:bg-white/10 active:bg-white/20 w-full sm:w-auto"
             >
-              <Link href="/faq">
-                <HelpCircle className="h-5 w-5 mr-2" />
+              <Link href="/faq" className="flex items-center justify-center">
+                <HelpCircle className="h-6 w-6 sm:h-5 sm:w-5 mr-2" />
                 View FAQs
               </Link>
             </Button>
@@ -339,9 +339,9 @@ export default function HelpPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Book className="h-8 w-8 text-primary-accent mb-3" />
-                <h3 className="text-lg font-bold font-montserrat text-primary-dark mb-2">
+              <CardContent className="p-6 sm:p-6">
+                <Book className="h-10 w-10 sm:h-8 sm:w-8 text-primary-accent mb-3" />
+                <h3 className="text-lg sm:text-lg font-bold font-montserrat text-primary-dark mb-2">
                   User Guide
                 </h3>
                 <p className="text-sm font-montserrat text-neutral-600 mb-4">
@@ -349,7 +349,7 @@ export default function HelpPage() {
                 </p>
                 <Link
                   href="/help/user-guide"
-                  className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80"
+                  className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80 py-2 active:text-primary-accent/90"
                 >
                   Read Guide <ExternalLink className="h-4 w-4" />
                 </Link>
@@ -357,9 +357,9 @@ export default function HelpPage() {
             </Card>
 
             <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <MessageCircle className="h-8 w-8 text-secondary-accent mb-3" />
-                <h3 className="text-lg font-bold font-montserrat text-primary-dark mb-2">
+              <CardContent className="p-6 sm:p-6">
+                <MessageCircle className="h-10 w-10 sm:h-8 sm:w-8 text-secondary-accent mb-3" />
+                <h3 className="text-lg sm:text-lg font-bold font-montserrat text-primary-dark mb-2">
                   Community Forum
                 </h3>
                 <p className="text-sm font-montserrat text-neutral-600 mb-4">
@@ -367,7 +367,7 @@ export default function HelpPage() {
                 </p>
                 <Link
                   href="/forum"
-                  className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80"
+                  className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80 py-2 active:text-primary-accent/90"
                 >
                   Visit Forum <ExternalLink className="h-4 w-4" />
                 </Link>
@@ -375,9 +375,9 @@ export default function HelpPage() {
             </Card>
 
             <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Shield className="h-8 w-8 text-green-600 mb-3" />
-                <h3 className="text-lg font-bold font-montserrat text-primary-dark mb-2">
+              <CardContent className="p-6 sm:p-6">
+                <Shield className="h-10 w-10 sm:h-8 sm:w-8 text-green-600 mb-3" />
+                <h3 className="text-lg sm:text-lg font-bold font-montserrat text-primary-dark mb-2">
                   Safety Center
                 </h3>
                 <p className="text-sm font-montserrat text-neutral-600 mb-4">
@@ -385,7 +385,7 @@ export default function HelpPage() {
                 </p>
                 <Link
                   href="/safety"
-                  className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80"
+                  className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80 py-2 active:text-primary-accent/90"
                 >
                   Learn More <ExternalLink className="h-4 w-4" />
                 </Link>
