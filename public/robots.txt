@@ -1,0 +1,31 @@
+# *
+User-agent: *
+Allow: /
+
+# Allow all crawlers to access public pages
+Allow: /browse-mentors
+Allow: /get-started
+Allow: /about
+Allow: /contact
+Allow: /help
+Allow: /faq
+Allow: /terms
+Allow: /privacy
+
+# Disallow admin and private areas
+Disallow: /administration
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /dashboard/mentor
+Disallow: /dashboard/mentee
+Disallow: /messages/
+Disallow: /profile/edit
+Disallow: /settings/
+Disallow: /onboarding/
+Disallow: /analytics/
+
+# Sitemap location
+Sitemap: https://look4mentors.com/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1

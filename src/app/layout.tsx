@@ -62,8 +62,55 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Structured Data for Organization
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Look 4 Mentors",
+    "alternateName": "Look4Mentors",
+    "url": "https://look4mentors.com",
+    "logo": "https://look4mentors.com/logo.svg",
+    "description": "Professional mentorship platform connecting experienced mentors with mentees across all industries for career growth and personal development.",
+    "foundingDate": "2024",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "email": "support@look4mentors.com"
+    },
+    "sameAs": [
+      "https://twitter.com/look4mentors",
+      "https://linkedin.com/company/look4mentors",
+      "https://facebook.com/look4mentors"
+    ]
+  };
+
+  // WebSite Schema for Search
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Look 4 Mentors",
+    "url": "https://look4mentors.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://look4mentors.com/browse-mentors?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="en">
+      <head>
+        {/* Organization Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        {/* Website Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body
         className={`${montserrat.variable} antialiased bg-white text-primary-dark`}
       >

@@ -1,0 +1,33 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0A2540"/>
+
+  <!-- Accent Circle -->
+  <circle cx="900" cy="450" r="250" fill="#FFDD57" opacity="0.15"/>
+
+  <!-- Main Content -->
+  <text x="100" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="900" fill="#FFDD57">
+    Look 4 Mentors
+  </text>
+
+  <text x="100" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="400" fill="#FFFFFF" opacity="0.9">
+    Connect with experienced mentors
+  </text>
+
+  <text x="100" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="400" fill="#FFFFFF" opacity="0.9">
+    for career growth and development
+  </text>
+
+  <!-- Stats -->
+  <g transform="translate(100, 450)">
+    <text font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#FFDD57">
+      10,000+ Mentors
+    </text>
+    <text x="250" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#FFDD57">
+      50,000+ Matches
+    </text>
+    <text x="550" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#FFDD57">
+      100% Free
+    </text>
+  </g>
+</svg>
