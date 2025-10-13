@@ -860,7 +860,7 @@ export default function BrowseMentorsNew() {
                       className="border-2 border-primary-accent text-primary-accent hover:bg-primary-accent/10"
                     >
                       <RotateCcw className="mr-2 h-5 w-5" />
-                      Start Over
+                      Restart
                     </Button>
                     <Button
                       variant="primary"
@@ -869,7 +869,7 @@ export default function BrowseMentorsNew() {
                       className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark"
                     >
                       <SlidersHorizontal className="mr-2 h-5 w-5" />
-                      Change Filters
+                      Filters
                     </Button>
                   </div>
                 </div>
@@ -1070,7 +1070,7 @@ export default function BrowseMentorsNew() {
                 onClick={applyFiltersAndClose}
                 className="flex-1 bg-primary-accent hover:bg-primary-accent/90 text-primary-dark"
               >
-                Show {mentors.length} Mentors
+                Show ({mentors.length})
               </Button>
             </div>
           </div>
@@ -1208,7 +1208,7 @@ export default function BrowseMentorsNew() {
                 className="flex-1 bg-secondary-accent hover:bg-secondary-accent/90 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all font-bold"
               >
                 <Send className="mr-2 h-5 w-5" />
-                Send Request
+                Request
               </Button>
             </div>
           </div>

@@ -90,7 +90,7 @@ export function HelpArticle({
             className="mb-6 sm:h-9 sm:px-3 sm:text-sm"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Help Center
+            Back
           </Button>
 
           {/* Article Header */}
@@ -111,7 +111,7 @@ export function HelpArticle({
                 className="bg-secondary-accent hover:bg-secondary-accent/90 active:bg-secondary-accent/80 text-white w-full sm:w-auto"
               >
                 <Play className="h-5 w-5 mr-2" />
-                Start Interactive Guide
+                Guide
               </Button>
             )}
             <div className="flex items-center gap-2 mt-4">
@@ -174,7 +174,7 @@ export function HelpArticle({
                 asChild
                 className="w-full sm:w-auto sm:h-9 sm:px-3 sm:text-sm bg-primary-accent hover:bg-primary-accent/90 active:bg-primary-accent/80 text-primary-dark"
               >
-                <Link href="/contact">Contact Support</Link>
+                <Link href="/contact">Support</Link>
               </Button>
             </div>
           </div>

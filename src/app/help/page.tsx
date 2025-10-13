@@ -313,7 +313,7 @@ export default function HelpPage() {
             >
               <Link href="/contact" className="flex items-center justify-center">
                 <Mail className="h-6 w-6 sm:h-5 sm:w-5 mr-2" />
-                Contact Support
+                Support
               </Link>
             </Button>
             <Button
@@ -324,7 +324,7 @@ export default function HelpPage() {
             >
               <Link href="/faq" className="flex items-center justify-center">
                 <HelpCircle className="h-6 w-6 sm:h-5 sm:w-5 mr-2" />
-                View FAQs
+                FAQs
               </Link>
             </Button>
           </div>
@@ -351,7 +351,7 @@ export default function HelpPage() {
                   href="/help/user-guide"
                   className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80 py-2 active:text-primary-accent/90"
                 >
-                  Read Guide <ExternalLink className="h-4 w-4" />
+                  Guide <ExternalLink className="h-4 w-4" />
                 </Link>
               </CardContent>
             </Card>
@@ -369,7 +369,7 @@ export default function HelpPage() {
                   href="/forum"
                   className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80 py-2 active:text-primary-accent/90"
                 >
-                  Visit Forum <ExternalLink className="h-4 w-4" />
+                  Forum <ExternalLink className="h-4 w-4" />
                 </Link>
               </CardContent>
             </Card>
@@ -387,7 +387,7 @@ export default function HelpPage() {
                   href="/safety"
                   className="flex items-center gap-2 text-sm font-semibold font-montserrat text-primary-accent hover:text-primary-accent/80 py-2 active:text-primary-accent/90"
                 >
-                  Learn More <ExternalLink className="h-4 w-4" />
+                  Learn <ExternalLink className="h-4 w-4" />
                 </Link>
               </CardContent>
             </Card>
