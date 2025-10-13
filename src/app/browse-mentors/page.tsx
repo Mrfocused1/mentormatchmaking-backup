@@ -888,27 +888,21 @@ export default function BrowseMentorsNew() {
                   </div>
                 </>
               ) : (
-                // All Done State
-                <div className="text-center py-20">
-                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-vibrant-accent/10 mb-6">
-                    <CheckCircle className="h-12 w-12 text-vibrant-accent" />
+                // All Done State - No More Mentors
+                <div className="text-center py-20 px-4">
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-accent/10 mb-6">
+                    <SlidersHorizontal className="h-12 w-12 text-primary-accent" />
                   </div>
-                  <h3 className="text-3xl font-bold font-montserrat text-primary-dark mb-3">
-                    You've Seen All Mentors!
+                  <h3 className="text-2xl sm:text-3xl font-bold font-montserrat text-primary-dark mb-4">
+                    No More Mentors Available
                   </h3>
-                  <p className="text-lg text-neutral-600 font-montserrat mb-8">
-                    Check back later for new mentors or adjust your filters
+                  <p className="text-base sm:text-lg text-neutral-600 font-montserrat mb-3 max-w-md mx-auto leading-relaxed">
+                    The mentors you're looking for may not be in this search right now.
+                  </p>
+                  <p className="text-base sm:text-lg text-neutral-600 font-montserrat mb-8 max-w-md mx-auto leading-relaxed">
+                    Please adjust your filters to explore more options, or come back and try again later.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => setCurrentCardIndex(0)}
-                      className="border-2 border-primary-accent text-primary-accent hover:bg-primary-accent/10"
-                    >
-                      <RotateCcw className="mr-2 h-5 w-5" />
-                      Restart
-                    </Button>
                     <Button
                       variant="primary"
                       size="lg"
@@ -916,7 +910,16 @@ export default function BrowseMentorsNew() {
                       className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark"
                     >
                       <SlidersHorizontal className="mr-2 h-5 w-5" />
-                      Filters
+                      Adjust Filters
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setCurrentCardIndex(0)}
+                      className="border-2 border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+                    >
+                      <RotateCcw className="mr-2 h-5 w-5" />
+                      Start Over
                     </Button>
                   </div>
                 </div>

@@ -164,63 +164,61 @@ const industries = [
   'Film',
 ]
 
-const testimonials = [
-  {
-    content: "Finding my mentor through Look 4 Mentors was a game-changer for my career. The personalized guidance helped me land my dream job!",
-    author: "Sarah Chen",
-    role: "Software Engineer",
-    company: "Tech Startup",
-    rating: 5,
-    avatar: null,
-  },
-  {
-    content: "As a mentor, this platform makes it incredibly easy to share my knowledge and give back to the community. The scheduling features are fantastic!",
-    author: "Michael Rodriguez",
-    role: "Senior Marketing Director",
-    company: "Fortune 500",
-    rating: 5,
-    avatar: null,
-  },
-  {
-    content: "The quality of mentors on this platform is exceptional. I've learned more in 3 months than I did in the previous year!",
-    author: "Emily Thompson",
-    role: "Product Manager",
-    company: "SaaS Company",
-    rating: 5,
-    avatar: null,
-  },
-  {
-    content: "The mentorship I received helped me transition into a new career field. Forever grateful for this amazing platform!",
-    author: "David Kim",
-    role: "Data Analyst",
-    company: "FinTech Corp",
-    rating: 5,
-    avatar: null,
-  },
-  {
-    content: "Being able to connect with industry experts has accelerated my professional growth beyond my expectations.",
-    author: "Jessica Martinez",
-    role: "UX Designer",
-    company: "Design Studio",
-    rating: 5,
-    avatar: null,
-  },
-  {
-    content: "This platform connected me with a mentor who truly understood my goals and challenges. Highly recommend!",
-    author: "Alex Johnson",
-    role: "Marketing Specialist",
-    company: "E-commerce Co",
-    rating: 5,
-    avatar: null,
-  },
-]
-
-const firstColumn = testimonials.slice(0, 3)
-const secondColumn = testimonials.slice(3, 6)
-const thirdColumn = testimonials.slice(0, 3)
-
-
 export default function Home() {
+  const [testimonials, setTestimonials] = useState([
+    {
+      content: "Finding my mentor through Look 4 Mentors was a game-changer for my career. The personalized guidance helped me land my dream job!",
+      author: "Sarah Chen",
+      role: "Software Engineer",
+      company: "Tech Startup",
+      rating: 5,
+      avatar: null,
+    },
+    {
+      content: "As a mentor, this platform makes it incredibly easy to share my knowledge and give back to the community. The scheduling features are fantastic!",
+      author: "Michael Rodriguez",
+      role: "Senior Marketing Director",
+      company: "Fortune 500",
+      rating: 5,
+      avatar: null,
+    },
+    {
+      content: "The quality of mentors on this platform is exceptional. I've learned more in 3 months than I did in the previous year!",
+      author: "Emily Thompson",
+      role: "Product Manager",
+      company: "SaaS Company",
+      rating: 5,
+      avatar: null,
+    },
+    {
+      content: "The mentorship I received helped me transition into a new career field. Forever grateful for this amazing platform!",
+      author: "David Kim",
+      role: "Data Analyst",
+      company: "FinTech Corp",
+      rating: 5,
+      avatar: null,
+    },
+    {
+      content: "Being able to connect with industry experts has accelerated my professional growth beyond my expectations.",
+      author: "Jessica Martinez",
+      role: "UX Designer",
+      company: "Design Studio",
+      rating: 5,
+      avatar: null,
+    },
+    {
+      content: "This platform connected me with a mentor who truly understood my goals and challenges. Highly recommend!",
+      author: "Alex Johnson",
+      role: "Marketing Specialist",
+      company: "E-commerce Co",
+      rating: 5,
+      avatar: null,
+    },
+  ])
+
+  const firstColumn = testimonials.slice(0, 3)
+  const secondColumn = testimonials.slice(3, 6)
+  const thirdColumn = testimonials.slice(0, 3)
   const [stats, setStats] = useState([
     { label: 'Active Mentors', value: 20, suffix: '+', decimals: 0, icon: Users },
     { label: 'Successful Matches', value: 15, suffix: '+', decimals: 0, icon: Heart },
@@ -239,6 +237,32 @@ export default function Home() {
       { label: 'Industries Covered', value: 25, suffix: '+', decimals: 0, icon: Globe },
       { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
     ])
+
+    // Fetch Pexels images for testimonial avatars
+    const fetchTestimonialImages = async () => {
+      try {
+        const response = await fetch('https://api.pexels.com/v1/search?query=professional+headshot+portrait&per_page=20&orientation=square', {
+          headers: {
+            Authorization: '8sLoMXg5fX4DKdmX8sSFxebcYNbdcwU6VizqTp4YRdrJ7a3MVlwc9qpp'
+          }
+        })
+
+        const data = await response.json()
+
+        if (data.photos && data.photos.length >= 6) {
+          setTestimonials(prevTestimonials =>
+            prevTestimonials.map((testimonial, index) => ({
+              ...testimonial,
+              avatar: data.photos[index + 6]?.src?.medium || null // Use offset to get different images than mentors
+            }))
+          )
+        }
+      } catch (error) {
+        console.error('Error fetching testimonial images:', error)
+      }
+    }
+
+    fetchTestimonialImages()
   }, [])
 
   return (
@@ -613,14 +637,14 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="bg-primary-accent py-24 sm:py-32 overflow-hidden">
+      <section className="bg-neutral-50 py-24 sm:py-32 overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <FadeIn className="mx-auto max-w-2xl text-center mb-16">
             <SlideUp>
               <h2 className="text-3xl font-bold font-montserrat tracking-tight text-primary-dark sm:text-4xl">
                 Success Stories
               </h2>
-              <p className="mt-4 text-lg text-primary-dark/80 font-montserrat">
+              <p className="mt-4 text-lg text-neutral-600 font-montserrat">
                 Hear from our community of mentors and mentees
               </p>
             </SlideUp>
