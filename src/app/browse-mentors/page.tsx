@@ -67,6 +67,16 @@ export default function BrowseMentorsNew() {
   // Onboarding overlay state (mobile only)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
+  // Set initial view mode based on screen size
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isDesktop = window.innerWidth >= 768
+      if (isDesktop) {
+        setViewMode('list')
+      }
+    }
+  }, [])
+
   // Show onboarding overlay when entering results view on mobile
   useEffect(() => {
     if (currentStep === 'results' && viewMode === 'swipe') {
@@ -83,8 +93,8 @@ export default function BrowseMentorsNew() {
     setShowOnboarding(false)
   }
 
-  // Mock data
-  const mentors = [
+  // Mock data with Pexels avatars
+  const [mentors, setMentors] = useState([
     {
       id: 1,
       name: 'Sarah Chen',
@@ -193,7 +203,35 @@ export default function BrowseMentorsNew() {
       languages: ['English (Native)'],
       industries: ['Technology', 'E-commerce', 'AI/ML'],
     },
-  ]
+  ])
+
+  // Fetch Pexels images for avatars
+  useEffect(() => {
+    const fetchPexelsImages = async () => {
+      try {
+        const response = await fetch('https://api.pexels.com/v1/search?query=professional+business+portrait&per_page=20&orientation=square', {
+          headers: {
+            Authorization: '8sLoMXg5fX4DKdmX8sSFxebcYNbdcwU6VizqTp4YRdrJ7a3MVlwc9qpp'
+          }
+        })
+
+        const data = await response.json()
+
+        if (data.photos && data.photos.length >= 6) {
+          setMentors(prevMentors =>
+            prevMentors.map((mentor, index) => ({
+              ...mentor,
+              avatar: data.photos[index]?.src?.medium || null
+            }))
+          )
+        }
+      } catch (error) {
+        console.error('Error fetching Pexels images:', error)
+      }
+    }
+
+    fetchPexelsImages()
+  }, [])
 
   const industries = [
     'All',
