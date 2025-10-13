@@ -60,7 +60,7 @@ const mockPendingApprovals = [
     },
     preferredNotification: 'email',
     numberOfMentees: 0,
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
     id: 2,
@@ -81,7 +81,7 @@ const mockPendingApprovals = [
     },
     preferredNotification: 'sms',
     numberOfMentees: 0,
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
     id: 3,
@@ -102,7 +102,7 @@ const mockPendingApprovals = [
     },
     preferredNotification: 'email',
     numberOfMentees: 0,
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
 ]
 
@@ -119,7 +119,7 @@ const mockAllUsers = [
     lastActive: '2 hours ago',
     totalSessions: 24,
     numberOfMentees: 12,
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
     id: 2,
@@ -132,7 +132,7 @@ const mockAllUsers = [
     lastActive: '1 day ago',
     totalSessions: 18,
     numberOfMentees: 9,
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
     id: 3,
@@ -145,7 +145,7 @@ const mockAllUsers = [
     lastActive: '5 hours ago',
     totalSessions: 8,
     numberOfMentees: 0,
-    avatar: null,
+    avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
 ]
 
@@ -177,7 +177,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'Hi Sarah! Thanks for accepting my connection request. I\'m really excited to learn from you.',
         timestamp: '2025-10-12 09:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 2,
@@ -185,7 +185,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Hi Michael! I\'m happy to help. Tell me a bit about your career goals and what you\'re hoping to achieve.',
         timestamp: '2025-10-12 09:15 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 3,
@@ -193,7 +193,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'I\'m currently a junior developer and I want to transition into a senior role within the next 2 years. I\'m particularly interested in improving my system design skills.',
         timestamp: '2025-10-12 09:30 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 4,
@@ -201,7 +201,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'That\'s a great goal! System design is crucial for senior roles. I recommend starting with understanding distributed systems fundamentals. Have you worked with microservices before?',
         timestamp: '2025-10-12 10:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 5,
@@ -209,7 +209,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'I\'ve read about them but haven\'t implemented any real projects yet. Do you have any resources you\'d recommend?',
         timestamp: '2025-10-12 10:15 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 6,
@@ -217,7 +217,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Absolutely! I\'ll send you a list of books and online courses. Also, I think we should schedule a session to discuss your learning roadmap in detail.',
         timestamp: '2025-10-12 11:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 7,
@@ -225,7 +225,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'That would be amazing! When are you available next week?',
         timestamp: '2025-10-12 02:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 8,
@@ -233,7 +233,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'I\'m free Tuesday afternoon or Thursday morning. Which works better for you?',
         timestamp: '2025-10-12 03:30 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 9,
@@ -241,7 +241,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'Tuesday afternoon would be perfect! Looking forward to it.',
         timestamp: '2025-10-12 04:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 10,
@@ -249,7 +249,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Great! I\'ve sent you a calendar invite for Tuesday at 2 PM. In the meantime, check out "Designing Data-Intensive Applications" by Martin Kleppmann.',
         timestamp: '2025-10-13 09:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 11,
@@ -257,7 +257,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'Thank you for the career advice!',
         timestamp: '2025-10-13 09:02 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
     ],
   },
@@ -275,7 +275,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'Hi Emily! I\'m working on a React project and running into some performance issues. Would you have time to help?',
         timestamp: '2025-10-12 02:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 2,
@@ -283,7 +283,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Of course! Can you describe what kind of performance issues you\'re experiencing?',
         timestamp: '2025-10-12 02:15 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 3,
@@ -291,7 +291,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'The app is really slow when rendering large lists. I\'m using map() to render about 1000 items.',
         timestamp: '2025-10-12 02:20 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 4,
@@ -299,7 +299,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Ah, that\'s a common issue! You should implement virtualization. Have you heard of react-window or react-virtualized?',
         timestamp: '2025-10-12 02:30 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 5,
@@ -307,7 +307,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'I\'ve heard of them but never used them. How do they work?',
         timestamp: '2025-10-12 02:45 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 6,
@@ -315,7 +315,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'They only render the items that are currently visible in the viewport, which drastically improves performance. Let me share some code examples with you.',
         timestamp: '2025-10-12 03:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 7,
@@ -323,7 +323,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'That would be super helpful! Thank you so much.',
         timestamp: '2025-10-12 03:15 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 8,
@@ -331,7 +331,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'I\'ve sent you a CodeSandbox link with a working example. Try implementing it in your project and let me know how it goes!',
         timestamp: '2025-10-13 10:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 9,
@@ -339,7 +339,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'I appreciate your guidance on the project.',
         timestamp: '2025-10-13 11:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
     ],
   },
@@ -357,7 +357,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'Hi Alex! I just finished the product strategy course you recommended. It was incredibly insightful!',
         timestamp: '2025-10-11 03:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 2,
@@ -365,7 +365,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'That\'s wonderful to hear! What were your key takeaways from the course?',
         timestamp: '2025-10-11 04:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 3,
@@ -373,7 +373,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'I learned a lot about user research methodologies and how to validate product ideas before building them. I want to apply this to my current project.',
         timestamp: '2025-10-11 04:30 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 4,
@@ -381,7 +381,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Excellent! User research is so important. What\'s your current project about?',
         timestamp: '2025-10-11 05:00 PM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 5,
@@ -389,7 +389,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'We\'re building a productivity app for remote teams. I want to make sure we\'re solving real problems, not just building features.',
         timestamp: '2025-10-12 09:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 6,
@@ -397,7 +397,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Smart approach! Let\'s schedule a session to discuss your research plan. I can share some frameworks I\'ve used at Amazon.',
         timestamp: '2025-10-12 10:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 7,
@@ -405,7 +405,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'That would be amazing! How about next Wednesday?',
         timestamp: '2025-10-12 11:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 8,
@@ -413,7 +413,7 @@ const mockConversations = [
         senderRole: 'mentor',
         content: 'Wednesday works great! I\'ll send you a meeting invite.',
         timestamp: '2025-10-13 08:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
       {
         id: 9,
@@ -421,7 +421,7 @@ const mockConversations = [
         senderRole: 'mentee',
         content: 'Looking forward to our next session!',
         timestamp: '2025-10-13 09:00 AM',
-        avatar: null,
+        avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
       },
     ],
   },
@@ -435,6 +435,7 @@ const mockAdminConversations = [
     userName: 'Sarah Chen',
     userRole: 'mentor',
     userEmail: 'sarah.chen@email.com',
+    userAvatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Thank you for approving my account!',
     timestamp: '1 hour ago',
     unread: false,
@@ -482,6 +483,7 @@ const mockAdminConversations = [
     userName: 'Michael Rodriguez',
     userRole: 'mentee',
     userEmail: 'michael.r@email.com',
+    userAvatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Can you help me with a technical issue?',
     timestamp: '30 min ago',
     unread: true,
@@ -529,6 +531,7 @@ const mockAdminConversations = [
     userName: 'Emily Thompson',
     userRole: 'mentee',
     userEmail: 'emily.t@email.com',
+    userAvatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'I have a question about session scheduling',
     timestamp: '2 days ago',
     unread: false,
@@ -575,6 +578,7 @@ const mockAdminConversations = [
     userName: 'Alex Johnson',
     userRole: 'mentor',
     userEmail: 'alex.johnson@email.com',
+    userAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'I need to report inappropriate behavior',
     timestamp: '5 min ago',
     unread: true,
@@ -907,7 +911,7 @@ export default function AdministrationPage() {
                     <div className="space-y-4">
                       {mockPendingApprovals.slice(0, 3).map((user) => (
                         <div key={user.id} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
-                          <Avatar fallback={user.name} size="sm" />
+                          <Avatar src={user.avatar} fallback={user.name} size="sm" />
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold font-montserrat text-primary-dark text-sm">
                               {user.name}
@@ -983,7 +987,7 @@ export default function AdministrationPage() {
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
                         {/* Avatar - Centered on mobile, left on desktop */}
                         <div className="flex justify-center sm:justify-start">
-                          <Avatar fallback={user.name} size="lg" className="flex-shrink-0" />
+                          <Avatar src={user.avatar} fallback={user.name} size="lg" className="flex-shrink-0" />
                         </div>
 
                         {/* User Info */}
@@ -1210,7 +1214,7 @@ export default function AdministrationPage() {
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         {/* Avatar - Centered on mobile */}
                         <div className="flex justify-center sm:justify-start">
-                          <Avatar fallback={user.name} size="md" className="flex-shrink-0" />
+                          <Avatar src={user.avatar} fallback={user.name} size="md" className="flex-shrink-0" />
                         </div>
 
                         <div className="flex-1 min-w-0 space-y-3">
@@ -1419,7 +1423,7 @@ export default function AdministrationPage() {
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
-                            <Avatar fallback={conversation.userName} size="sm" className="flex-shrink-0" />
+                            <Avatar src={conversation.userAvatar} fallback={conversation.userName} size="sm" className="flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <p className={`text-sm font-montserrat ${conversation.unread ? 'font-bold' : 'font-semibold'} text-primary-dark truncate`}>
@@ -1463,7 +1467,7 @@ export default function AdministrationPage() {
                         >
                           <XCircle className="h-4 w-4" />
                         </Button>
-                        <Avatar fallback={selectedAdminConversation.userName} size="md" />
+                        <Avatar src={selectedAdminConversation.userAvatar} fallback={selectedAdminConversation.userName} size="md" />
                         <div>
                           <h3 className="text-lg font-bold font-montserrat text-primary-dark">
                             {selectedAdminConversation.userName}
@@ -1682,6 +1686,7 @@ export default function AdministrationPage() {
               {/* User Header */}
               <div className="flex items-start gap-6">
                 <Avatar
+                  src={selectedUser.avatar}
                   fallback={selectedUser.name}
                   size="lg"
                   className="flex-shrink-0"
