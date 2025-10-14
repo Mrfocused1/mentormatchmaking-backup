@@ -95,36 +95,40 @@ AvailabilitySlot {
 }
 ```
 
-### 2. Connection-Based Booking System (Option C)
+### 2. Connection-Based Booking System with Public Availability
 
-**Critical Flow - Users MUST be connected before booking:**
+**Availability is PUBLIC - Connection required for BOOKING**
 
 ```
 Step 1: Browse & Discover
 ├─ Mentee browses mentor profiles
 ├─ Views mentor's basic info (name, expertise, bio, rating)
-└─ CANNOT see availability calendar yet
+├─ ✅ CAN see mentor's FULL availability calendar (PUBLIC)
+├─ Sees available slots: "Mon 10am - CV Review", "Wed 2pm - Career Coaching"
+└─ Makes INFORMED decision about connection request
 
 Step 2: Connection Request
-├─ Mentee sends connection request to mentor
-├─ Mentor receives notification
-└─ Mentor approves or denies request
+├─ Mentee found mentor with compatible schedule
+├─ Sends connection request to mentor
+├─ Mentor receives notification with mentee's profile
+└─ Mentor approves or denies based on fit
 
 Step 3: Connection Established
 ├─ Connection is confirmed
-├─ NOW mentee can view mentor's full availability calendar
-└─ Mentee can browse available time slots
+├─ Mentee can now REQUEST specific sessions
+└─ Availability was always visible, now can book
 
 Step 4: Session Request
-├─ Mentee selects a specific time slot
-├─ Mentee requests the session
-└─ Request sent to mentor for approval
+├─ Mentee selects a specific available time slot
+├─ Mentee requests the session with optional message
+└─ Request sent to mentor for final approval
 
 Step 5: Session Approval
 ├─ Mentor approves or denies session request
 ├─ If approved → Session is confirmed
 ├─ Both users receive notifications
-└─ Calendar slot is marked as booked
+├─ Calendar slot is marked as booked
+└─ Slot no longer shows as available to other mentees
 ```
 
 **Database Schema Needed:**
@@ -198,14 +202,15 @@ MenteeGoal {
 **Connection Management:**
 - [ ] Connection request system (send, accept, reject)
 - [ ] Connection status tracking
-- [ ] Prerequisite check: Verify connection exists before showing availability
 - [ ] Prerequisite check: Verify connection exists before allowing session request
+- [ ] Connection serves as quality control for mentor
 
 **Availability Management:**
 - [ ] Mentors can create availability slots with mentorship types
 - [ ] Support one-time and recurring slots
 - [ ] Prevent double-booking (currentBookings vs maxBookings)
-- [ ] Only show availability to connected mentees
+- [ ] ✅ Availability is PUBLIC - visible to all mentees (no connection required to VIEW)
+- [ ] Connection required to BOOK sessions, not to view availability
 
 **Session Workflow:**
 - [ ] Session request creation (mentee → mentor)
@@ -229,12 +234,13 @@ POST   /api/connections/:id/reject       // Mentor rejects
 GET    /api/connections                  // List user's connections
 GET    /api/connections/:userId/status   // Check connection status
 
-// Mentor Availability
+// Mentor Availability (PUBLIC)
 POST   /api/availability                 // Mentor creates slots
-GET    /api/availability/mentor/:id      // Get mentor's slots (only if connected)
+GET    /api/availability/mentor/:id      // Get mentor's slots (PUBLIC - no auth required)
 PUT    /api/availability/:id             // Update slot
 DELETE /api/availability/:id             // Delete slot
 GET    /api/availability/types           // Get mentorship types list
+GET    /api/mentors/search?availableOn=YYYY-MM-DD  // Search mentors by availability
 
 // Session Requests
 POST   /api/sessions/request             // Mentee requests session
@@ -252,14 +258,7 @@ DELETE /api/goals/:id                    // Delete goal
 
 ### 6. Validation Rules
 
-**Before Showing Availability:**
-```typescript
-// Check if mentee is connected to mentor
-const canViewAvailability = await checkConnection(menteeId, mentorId)
-if (!canViewAvailability) {
-  return { error: "You must be connected to view availability" }
-}
-```
+**Availability is PUBLIC - No validation needed for viewing**
 
 **Before Requesting Session:**
 ```typescript
