@@ -48,6 +48,236 @@ This document provides a comprehensive guide for integrating the backend with th
 
 ---
 
+## 🎯 Core System Architecture (CRITICAL)
+
+### Calendar-First Mentorship System
+
+This platform is built around a specialized calendar/scheduling system that differs from standard booking platforms. Understanding this architecture is **critical** for backend implementation.
+
+### 1. Mentor Availability Calendar
+
+**How It Works:**
+- Mentors create **time slots** with **specific mentorship types**
+- Each slot includes:
+  - Date & Time
+  - Duration
+  - Mentorship Type/Category
+  - Availability status
+
+**Example Mentor Schedule:**
+```
+Monday, Jan 15
+├─ 10:00-11:00 → Career Transition Advice
+├─ 14:00-15:00 → CV/Resume Review
+└─ 16:00-16:30 → Quick Questions
+
+Tuesday, Jan 16
+├─ 09:00-10:00 → Interview Preparation
+└─ 15:00-16:00 → LinkedIn Profile Optimization
+```
+
+**Database Schema Needed:**
+```typescript
+AvailabilitySlot {
+  id: string
+  mentorId: string
+  date: Date
+  startTime: string  // "10:00"
+  endTime: string    // "11:00"
+  duration: number   // minutes
+  mentorshipType: string  // "CV Review", "Career Advice", etc.
+  isRecurring: boolean
+  recurringPattern?: string  // "weekly", "biweekly"
+  maxBookings: number  // usually 1
+  currentBookings: number
+  isAvailable: boolean
+  createdAt: Date
+}
+```
+
+### 2. Connection-Based Booking System (Option C)
+
+**Critical Flow - Users MUST be connected before booking:**
+
+```
+Step 1: Browse & Discover
+├─ Mentee browses mentor profiles
+├─ Views mentor's basic info (name, expertise, bio, rating)
+└─ CANNOT see availability calendar yet
+
+Step 2: Connection Request
+├─ Mentee sends connection request to mentor
+├─ Mentor receives notification
+└─ Mentor approves or denies request
+
+Step 3: Connection Established
+├─ Connection is confirmed
+├─ NOW mentee can view mentor's full availability calendar
+└─ Mentee can browse available time slots
+
+Step 4: Session Request
+├─ Mentee selects a specific time slot
+├─ Mentee requests the session
+└─ Request sent to mentor for approval
+
+Step 5: Session Approval
+├─ Mentor approves or denies session request
+├─ If approved → Session is confirmed
+├─ Both users receive notifications
+└─ Calendar slot is marked as booked
+```
+
+**Database Schema Needed:**
+```typescript
+Connection {
+  id: string
+  mentorId: string
+  menteeId: string
+  status: 'pending' | 'accepted' | 'rejected'
+  requestedBy: string  // menteeId
+  createdAt: Date
+  acceptedAt: Date?
+}
+
+SessionRequest {
+  id: string
+  connectionId: string  // Must have active connection
+  mentorId: string
+  menteeId: string
+  availabilitySlotId: string
+  mentorshipType: string
+  status: 'pending' | 'approved' | 'denied' | 'completed' | 'cancelled'
+  requestMessage?: string
+  createdAt: Date
+  approvedAt: Date?
+}
+```
+
+### 3. Mentee Goals Calendar (Private Planning Tool)
+
+**Purpose:** Personal organization tool for mentees to plan their mentorship needs
+
+**Key Features:**
+- **Private** - Only visible to the mentee who created it
+- **Not visible to mentors** - Mentors cannot see mentee goals
+- Used for planning what help they need and when
+- Helps mentees organize their learning journey
+
+**Example Mentee Goals:**
+```
+Monday, Jan 15
+├─ 12:00-12:30 → GOAL: CV preparation help
+├─ 14:00-14:30 → GOAL: Networking strategies
+└─ 18:00-19:00 → GOAL: Interview practice
+
+Wednesday, Jan 17
+├─ 10:00-11:00 → GOAL: Salary negotiation guidance
+└─ 15:00-16:00 → GOAL: Career transition planning
+```
+
+**Database Schema Needed:**
+```typescript
+MenteeGoal {
+  id: string
+  menteeId: string  // Owner only
+  date: Date
+  startTime: string
+  endTime: string
+  goalType: string  // "CV Help", "Interview Prep", etc.
+  description?: string
+  priority: 'low' | 'medium' | 'high'
+  status: 'planned' | 'in-progress' | 'completed'
+  linkedSessionId?: string  // If they booked a session for this goal
+  createdAt: Date
+  completedAt: Date?
+}
+```
+
+### 4. Critical Backend Requirements
+
+**Connection Management:**
+- [ ] Connection request system (send, accept, reject)
+- [ ] Connection status tracking
+- [ ] Prerequisite check: Verify connection exists before showing availability
+- [ ] Prerequisite check: Verify connection exists before allowing session request
+
+**Availability Management:**
+- [ ] Mentors can create availability slots with mentorship types
+- [ ] Support one-time and recurring slots
+- [ ] Prevent double-booking (currentBookings vs maxBookings)
+- [ ] Only show availability to connected mentees
+
+**Session Workflow:**
+- [ ] Session request creation (mentee → mentor)
+- [ ] Session approval/denial (mentor decision)
+- [ ] Session confirmation and notifications
+- [ ] Session completion and review triggering
+
+**Goals Management:**
+- [ ] Mentees can create private goals
+- [ ] Goals are NEVER visible to mentors
+- [ ] Goals can be linked to booked sessions
+- [ ] Goal progress tracking
+
+### 5. API Endpoints Required
+
+```typescript
+// Connections
+POST   /api/connections/request          // Mentee sends request
+POST   /api/connections/:id/accept       // Mentor accepts
+POST   /api/connections/:id/reject       // Mentor rejects
+GET    /api/connections                  // List user's connections
+GET    /api/connections/:userId/status   // Check connection status
+
+// Mentor Availability
+POST   /api/availability                 // Mentor creates slots
+GET    /api/availability/mentor/:id      // Get mentor's slots (only if connected)
+PUT    /api/availability/:id             // Update slot
+DELETE /api/availability/:id             // Delete slot
+GET    /api/availability/types           // Get mentorship types list
+
+// Session Requests
+POST   /api/sessions/request             // Mentee requests session
+POST   /api/sessions/:id/approve         // Mentor approves
+POST   /api/sessions/:id/deny            // Mentor denies
+GET    /api/sessions/pending             // Get pending requests
+GET    /api/sessions/upcoming            // Get confirmed sessions
+
+// Mentee Goals (Private)
+POST   /api/goals                        // Create goal
+GET    /api/goals                        // Get user's goals only
+PUT    /api/goals/:id                    // Update goal
+DELETE /api/goals/:id                    // Delete goal
+```
+
+### 6. Validation Rules
+
+**Before Showing Availability:**
+```typescript
+// Check if mentee is connected to mentor
+const canViewAvailability = await checkConnection(menteeId, mentorId)
+if (!canViewAvailability) {
+  return { error: "You must be connected to view availability" }
+}
+```
+
+**Before Requesting Session:**
+```typescript
+// 1. Verify connection exists and is accepted
+const connection = await getConnection(menteeId, mentorId)
+if (!connection || connection.status !== 'accepted') {
+  return { error: "Connection required" }
+}
+
+// 2. Verify availability slot is still open
+const slot = await getAvailabilitySlot(slotId)
+if (slot.currentBookings >= slot.maxBookings) {
+  return { error: "This slot is no longer available" }
+}
+```
+
+---
+
 ## 📋 Backend Integration Roadmap
 
 ### Phase 1: Database Setup & Models
