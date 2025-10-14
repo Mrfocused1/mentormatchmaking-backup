@@ -46,7 +46,7 @@ export interface MentorProfile extends User {
   timezone: string
   linkedIn?: string
   twitter?: string
-  github?: string
+  facebook?: string
   website?: string
   verified: boolean
   rating: number

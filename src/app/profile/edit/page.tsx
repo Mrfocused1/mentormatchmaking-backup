@@ -21,7 +21,7 @@ import {
   Globe,
   Linkedin,
   Twitter,
-  Github,
+  Facebook,
   Link2
 } from 'lucide-react'
 
@@ -39,7 +39,7 @@ export default function EditProfilePage() {
     availability: 'Part-time',
     linkedIn: 'https://linkedin.com/in/sarahjohnson',
     twitter: 'https://twitter.com/sarahjohnson',
-    github: 'https://github.com/sarahjohnson',
+    facebook: 'https://facebook.com/sarahjohnson',
     website: 'https://sarahjohnson.com',
     education: 'B.S. Computer Science - Stanford University',
     yearsOfExperience: '10+',
@@ -413,14 +413,14 @@ export default function EditProfilePage() {
 
                 <div>
                   <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                    <Github className="inline h-4 w-4 mr-2" />
-                    GitHub
+                    <Facebook className="inline h-4 w-4 mr-2" />
+                    Facebook
                   </label>
                   <input
                     type="url"
-                    value={profileData.github}
-                    onChange={(e) => handleChange('github', e.target.value)}
-                    placeholder="https://github.com/yourusername"
+                    value={profileData.facebook}
+                    onChange={(e) => handleChange('facebook', e.target.value)}
+                    placeholder="https://facebook.com/yourprofile"
                     className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
                   />
                 </div>

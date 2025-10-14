@@ -201,17 +201,17 @@ export function validateTwitterHandle(handle: string): string | null {
   return null
 }
 
-// GitHub username validation
-export function validateGitHubUsername(username: string): string | null {
-  if (!username || username.trim() === '') {
+// Facebook URL validation
+export function validateFacebookUrl(url: string): string | null {
+  if (!url || url.trim() === '') {
     return null
   }
 
-  if (!/^[a-zA-Z0-9-]+$/.test(username)) {
-    return 'GitHub username can only contain letters, numbers, and hyphens'
+  if (!url.includes('facebook.com') && !url.includes('fb.com')) {
+    return 'Please enter a valid Facebook URL'
   }
 
-  return null
+  return validateUrl(url, 'Facebook URL')
 }
 
 // Generic form validation helper

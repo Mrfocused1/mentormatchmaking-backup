@@ -31,7 +31,7 @@ import {
   Globe,
   Linkedin,
   Twitter,
-  Github,
+  Facebook,
   Mail,
   Link as LinkIcon
 } from 'lucide-react'
@@ -120,7 +120,7 @@ export default function BrowseMentorsNew() {
       socialMedia: {
         linkedin: 'https://linkedin.com/in/sarahchen',
         twitter: 'https://twitter.com/sarahchen',
-        github: 'https://github.com/sarahchen',
+        facebook: 'https://facebook.com/sarahchen',
         email: 'sarah.chen@email.com',
         website: 'https://sarahchen.dev'
       },
@@ -169,7 +169,7 @@ export default function BrowseMentorsNew() {
       socialMedia: {
         linkedin: 'https://linkedin.com/in/emilyrodriguez',
         twitter: 'https://twitter.com/emilypm',
-        github: 'https://github.com/emilyrodriguez',
+        facebook: 'https://facebook.com/emilyrodriguez',
         email: 'emily.rodriguez@email.com'
       },
     },
@@ -1549,15 +1549,15 @@ export default function BrowseMentorsNew() {
                         <span>Twitter</span>
                       </a>
                     )}
-                    {profileMentor.socialMedia.github && (
+                    {profileMentor.socialMedia.facebook && (
                       <a
-                        href={profileMentor.socialMedia.github}
+                        href={profileMentor.socialMedia.facebook}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-4 py-2 bg-neutral-800/10 hover:bg-neutral-800/20 border border-neutral-800/30 rounded-full text-sm font-semibold font-montserrat text-neutral-800 transition-all hover:scale-105"
                       >
-                        <Github className="h-4 w-4" />
-                        <span>GitHub</span>
+                        <Facebook className="h-4 w-4" />
+                        <span>Facebook</span>
                       </a>
                     )}
                     {profileMentor.socialMedia.email && (
