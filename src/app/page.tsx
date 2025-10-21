@@ -168,13 +168,15 @@ const industries = [
 export default function Home() {
   // Authentication state for preview access
   const [hasPreviewAccess, setHasPreviewAccess] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isClient, setIsClient] = useState(false)
 
-  // Check if user has preview access on mount
+  // Check if we're on the client and if user has preview access
   useEffect(() => {
-    const previewAccess = localStorage.getItem('preview_access')
-    setHasPreviewAccess(previewAccess === 'true')
-    setIsCheckingAuth(false)
+    setIsClient(true)
+    if (typeof window !== 'undefined') {
+      const previewAccess = localStorage.getItem('preview_access')
+      setHasPreviewAccess(previewAccess === 'true')
+    }
   }, [])
 
   // Handle successful authentication
@@ -182,8 +184,8 @@ export default function Home() {
     setHasPreviewAccess(true)
   }
 
-  // Show loading state briefly while checking auth
-  if (isCheckingAuth) {
+  // Show loading state until client-side hydration is complete
+  if (!isClient) {
     return <div className="min-h-screen bg-primary-dark" />
   }
 
