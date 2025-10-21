@@ -428,7 +428,7 @@ export default function MatchesPage() {
 
                     {/* Expertise Tags */}
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {match.expertise.slice(0, 3).map((skill, index) => (
+                      {match.expertise.slice(0, 3).map((skill: string, index: number) => (
                         <Badge
                           key={index}
                           variant="secondary"
