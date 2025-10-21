@@ -52,7 +52,7 @@ export function ComingSoon({ onAuthenticated }: ComingSoonProps) {
             <Lock className="h-10 w-10 text-vibrant-accent" />
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black font-montserrat text-white mb-4">
-            Look 4 Mentors
+            Look For Mentors
           </h1>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-accent/10 border border-primary-accent/30 rounded-full mb-6">
             <span className="w-2 h-2 bg-primary-accent rounded-full animate-pulse" />
@@ -61,7 +61,7 @@ export function ComingSoon({ onAuthenticated }: ComingSoonProps) {
             </span>
           </div>
           <p className="text-xl text-white/80 font-montserrat max-w-lg mx-auto">
-            We're building something amazing. Connect with mentors who will transform your journey.
+            Looking for mentors or mentees? We're building the ultimate platform to find mentors and connect with mentees who will transform your career journey.
           </p>
         </div>
 
@@ -179,7 +179,10 @@ export function ComingSoon({ onAuthenticated }: ComingSoonProps) {
         {/* Footer */}
         <div className="mt-12 text-center">
           <p className="text-white/50 font-montserrat text-sm">
-            © 2025 Look 4 Mentors. All rights reserved.
+            © 2025 Look For Mentors - Look 4 Mentors. All rights reserved.
+          </p>
+          <p className="text-white/40 font-montserrat text-xs mt-2">
+            The #1 platform for looking for mentors and mentees
           </p>
         </div>
       </div>
