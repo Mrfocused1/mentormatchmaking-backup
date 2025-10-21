@@ -6,10 +6,10 @@ import { prisma } from '@/lib/prisma'
 // GET - Fetch all messages in a conversation with a specific user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params
+    const { userId } = await params
 
     // Create Supabase server client
     const cookieStore = await cookies()

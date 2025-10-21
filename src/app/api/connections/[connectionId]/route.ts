@@ -6,10 +6,10 @@ import { prisma } from '@/lib/prisma'
 // PATCH - Accept or decline a connection request
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { connectionId: string } }
+  { params }: { params: Promise<{ connectionId: string }> }
 ) {
   try {
-    const { connectionId } = params
+    const { connectionId } = await params
     const body = await request.json()
     const { action } = body // 'accept' or 'decline'
 
@@ -169,10 +169,10 @@ export async function PATCH(
 // DELETE - Cancel a sent connection request
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { connectionId: string } }
+  { params }: { params: Promise<{ connectionId: string }> }
 ) {
   try {
-    const { connectionId } = params
+    const { connectionId } = await params
 
     // Create Supabase server client
     const cookieStore = await cookies()

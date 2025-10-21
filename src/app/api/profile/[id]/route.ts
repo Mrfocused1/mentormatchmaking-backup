@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // Fetch user and profile from database
     const user = await prisma.user.findUnique({
@@ -20,7 +20,7 @@ export async function GET(
         },
         reviewsReceived: {
           include: {
-            fromUser: {
+            reviewer: {
               select: {
                 id: true,
                 name: true,
@@ -97,10 +97,10 @@ export async function GET(
         rating: review.rating,
         comment: review.comment,
         createdAt: review.createdAt,
-        fromUser: {
-          id: review.fromUser.id,
-          name: review.fromUser.name,
-          avatar: review.fromUser.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.fromUser.name)}&background=A3F3C4&color=1B4332&size=400`,
+        reviewer: {
+          id: review.reviewer.id,
+          name: review.reviewer.name,
+          avatar: review.reviewer.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer.name)}&background=A3F3C4&color=1B4332&size=400`,
         },
       })),
     }

@@ -6,10 +6,10 @@ import { prisma } from '@/lib/prisma'
 // PATCH - Update session
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const { sessionId } = params
+    const { sessionId } = await params
     const body = await request.json()
     const { status, scheduledAt, duration, title, notes } = body
 
@@ -79,10 +79,10 @@ export async function PATCH(
 // DELETE - Cancel session
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const { sessionId } = params
+    const { sessionId } = await params
 
     const cookieStore = await cookies()
     const supabase = createServerClient(
