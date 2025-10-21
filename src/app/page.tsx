@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -45,7 +45,7 @@ import {
   X
 } from 'lucide-react'
 
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+const Lottie = dynamicImport(() => import('lottie-react'), { ssr: false })
 
 // Success Message Component (wrapped in Suspense)
 function SuccessMessage() {
