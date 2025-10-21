@@ -55,13 +55,9 @@ export async function PATCH(
       )
     }
 
-    // Fetch the connection
+    // Fetch the connection (without relations for type checking)
     const connection = await prisma.match.findUnique({
       where: { id: connectionId },
-      include: {
-        user1: true,
-        user2: true,
-      },
     })
 
     if (!connection) {
@@ -117,8 +113,9 @@ export async function PATCH(
     })
 
     // Create notification for the initiator
-    const initiatorName = connection.user1Id === user.id ? connection.user1.name : connection.user2.name
-    const currentUserName = connection.user1Id === user.id ? connection.user1.name : connection.user2.name
+    const currentUserName = updatedConnection.user1Id === user.id
+      ? updatedConnection.user1.name
+      : updatedConnection.user2.name
 
     await prisma.notification.create({
       data: {
