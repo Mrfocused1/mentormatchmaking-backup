@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, User } from 'lucide-react'
 
-export default function Signup() {
+function SignupForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const roleParam = searchParams.get('role') // 'mentor' or 'mentee'
@@ -393,5 +393,26 @@ export default function Signup() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-6 py-24 sm:py-32">
+          <div className="w-full max-w-md">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vibrant-accent mx-auto"></div>
+              <p className="mt-4 text-neutral-600 font-montserrat">Loading...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }

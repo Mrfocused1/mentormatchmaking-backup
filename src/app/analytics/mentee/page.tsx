@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,9 @@ import {
   Star,
   Sparkles
 } from 'lucide-react'
+
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic'
 
 export default function MenteeAnalyticsPage() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
