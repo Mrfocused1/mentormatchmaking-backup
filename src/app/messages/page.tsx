@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -21,11 +21,15 @@ import {
   Check,
   Info,
   Flag,
-  Ban
+  Ban,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 
-// Mock conversations data
-const conversations = [
+// Removed mock data - using real API
+
+// Mock conversations data (will be replaced by API data)
+const conversationsMock = [
   {
     id: 1,
     user: {
@@ -143,26 +147,117 @@ const mockMessages = [
 ]
 
 export default function MessagesPage() {
-  const [selectedConversation, setSelectedConversation] = useState(conversations[0])
+  const [conversations, setConversations] = useState<any[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<any>(null)
+  const [messages, setMessages] = useState<any[]>([])
   const [messageText, setMessageText] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileConversationOpen, setIsMobileConversationOpen] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [messagesLoading, setMessagesLoading] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch conversations on mount
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/messages')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch conversations')
+        }
+
+        setConversations(data.conversations)
+        if (data.conversations.length > 0 && !selectedConversation) {
+          setSelectedConversation(data.conversations[0])
+        }
+      } catch (err) {
+        console.error('Error fetching conversations:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load conversations')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchConversations()
+  }, [])
+
+  // Fetch messages when conversation is selected
+  useEffect(() => {
+    if (!selectedConversation) return
+
+    const fetchMessages = async () => {
+      try {
+        setMessagesLoading(true)
+        const response = await fetch(`/api/messages/${selectedConversation.userId}`)
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch messages')
+        }
+
+        setMessages(data.messages)
+      } catch (err) {
+        console.error('Error fetching messages:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load messages')
+      } finally {
+        setMessagesLoading(false)
+      }
+    }
+
+    fetchMessages()
+  }, [selectedConversation])
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter(conv =>
-    conv.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    conv.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conv.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   // Count total unread messages
-  const totalUnread = conversations.reduce((sum, conv) => sum + conv.unread, 0)
+  const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0)
 
-  const handleSendMessage = () => {
-    if (messageText.trim()) {
-      // In production, this would send the message to the backend
-      console.log('Sending message:', messageText)
-      setMessageText('')
+  const handleSendMessage = async () => {
+    if (messageText.trim() && selectedConversation) {
+      try {
+        setSending(true)
+        const response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            receiverId: selectedConversation.userId,
+            content: messageText,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to send message')
+        }
+
+        // Add message to local state
+        setMessages([...messages, data.message])
+        setMessageText('')
+
+        // Refresh conversations to update last message
+        const convResponse = await fetch('/api/messages')
+        const convData = await convResponse.json()
+        if (convResponse.ok) {
+          setConversations(convData.conversations)
+        }
+      } catch (err) {
+        console.error('Error sending message:', err)
+        alert(err instanceof Error ? err.message : 'Failed to send message')
+      } finally {
+        setSending(false)
+      }
     }
   }
 

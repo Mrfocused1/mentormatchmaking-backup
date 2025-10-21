@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { NotificationsDropdown } from '@/components/notifications/notifications-dropdown'
 import { Menu, X, LayoutDashboard, MessageCircle, Bell, User, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const supabase = createClient()
 
   // Check authentication status
@@ -30,9 +32,30 @@ export function Header() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Mock unread counts - in production these would come from API/state management
-  const unreadMessages = 5
-  const unreadNotifications = 3
+  // Fetch unread message count
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch('/api/messages')
+        const data = await response.json()
+
+        if (data.success && data.conversations) {
+          const total = data.conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0)
+          setUnreadMessages(total)
+        }
+      } catch (error) {
+        console.error('Error fetching unread messages:', error)
+      }
+    }
+
+    fetchUnreadCount()
+
+    // Poll for new messages every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated])
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -93,18 +116,7 @@ export function Header() {
                     </Badge>
                   )}
                 </Link>
-                <Link
-                  href="/notifications"
-                  className="relative flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors"
-                >
-                  <Bell className="h-5 w-5" />
-                  <span>Notifications</span>
-                  {unreadNotifications > 0 && (
-                    <Badge variant="secondary" size="sm" className="absolute -top-1 -right-1 bg-red-600 text-white px-1.5 py-0.5 text-xs">
-                      {unreadNotifications}
-                    </Badge>
-                  )}
-                </Link>
+                <NotificationsDropdown />
                 <Link
                   href="/contact-admin"
                   className="flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium font-montserrat text-vibrant-accent hover:bg-vibrant-accent/10 transition-colors"
@@ -191,11 +203,6 @@ export function Header() {
               >
                 <Bell className="h-5 w-5" />
                 <span>Notifications</span>
-                {unreadNotifications > 0 && (
-                  <Badge variant="secondary" size="sm" className="ml-auto bg-red-600 text-white">
-                    {unreadNotifications}
-                  </Badge>
-                )}
               </Link>
               <Link
                 href="/contact-admin"

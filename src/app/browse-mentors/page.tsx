@@ -98,170 +98,48 @@ export default function BrowseMentorsNew() {
     setShowOnboarding(false)
   }
 
-  // Mock data with Pexels avatars
-  const [mentors, setMentors] = useState([
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      title: 'Senior Software Engineer',
-      company: 'Google',
-      location: 'San Francisco, CA',
-      industry: 'Technology',
-      rating: 4.9,
-      reviewCount: 127,
-      mentees: 45,
-      yearsExperience: 8,
-      expertise: ['React', 'Node.js', 'System Design', 'AWS', 'Leadership', 'Career Planning'],
-      availability: 'Available',
-      bio: 'Passionate about helping junior developers navigate their tech careers. Previously at Google and Meta, I have learned valuable lessons I love to share. Specialized in full-stack development and career advancement.',
-      avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English (Native)', 'Mandarin (Fluent)'],
-      industries: ['Technology', 'Startups', 'SaaS'],
-      socialMedia: {
-        linkedin: 'https://linkedin.com/in/sarahchen',
-        twitter: 'https://twitter.com/sarahchen',
-        facebook: 'https://facebook.com/sarahchen',
-        email: 'sarah.chen@email.com',
-        website: 'https://sarahchen.dev'
-      },
-    },
-    {
-      id: 2,
-      name: 'Michael Rodriguez',
-      title: 'Marketing Director',
-      company: 'Fortune 500',
-      location: 'New York, NY',
-      industry: 'Marketing',
-      rating: 5.0,
-      reviewCount: 93,
-      mentees: 28,
-      yearsExperience: 12,
-      expertise: ['Digital Marketing', 'Brand Strategy', 'Social Media', 'Analytics', 'Team Management'],
-      availability: 'Limited',
-      bio: 'Helping marketing professionals grow their careers and master data-driven strategies. 12+ years experience in digital transformation and brand building at Fortune 500 companies.',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English (Native)', 'Spanish (Native)'],
-      industries: ['Marketing', 'Advertising', 'E-commerce'],
-      socialMedia: {
-        linkedin: 'https://linkedin.com/in/mrodriguez',
-        twitter: 'https://twitter.com/mrodriguez',
-        email: 'michael.rodriguez@email.com',
-        website: 'https://michaelrodriguez.com'
-      },
-    },
-    {
-      id: 3,
-      name: 'Emily Rodriguez',
-      title: 'Product Manager',
-      company: 'Microsoft',
-      location: 'Seattle, WA',
-      industry: 'Technology',
-      rating: 4.8,
-      reviewCount: 156,
-      mentees: 52,
-      yearsExperience: 10,
-      expertise: ['Product Strategy', 'User Research', 'Agile', 'Roadmapping', 'Stakeholder Management'],
-      availability: 'Available',
-      bio: 'Helping product managers and aspiring PMs build successful products and advance their careers in tech. Specialized in B2B SaaS and enterprise products.',
-      avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English (Native)', 'French (Conversational)'],
-      industries: ['Technology', 'SaaS', 'Enterprise Software'],
-      socialMedia: {
-        linkedin: 'https://linkedin.com/in/emilyrodriguez',
-        twitter: 'https://twitter.com/emilypm',
-        facebook: 'https://facebook.com/emilyrodriguez',
-        email: 'emily.rodriguez@email.com'
-      },
-    },
-    {
-      id: 4,
-      name: 'David Kim',
-      title: 'Financial Analyst',
-      company: 'Goldman Sachs',
-      location: 'London, UK',
-      industry: 'Finance',
-      rating: 4.7,
-      reviewCount: 82,
-      mentees: 31,
-      yearsExperience: 8,
-      expertise: ['Investment Banking', 'Financial Modeling', 'Career Transition', 'Excel', 'Valuation'],
-      availability: 'Available',
-      bio: 'Former investment banker helping professionals break into finance and advance their careers in financial services. Expert in career transitions and technical skill development.',
-      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English (Fluent)', 'Korean (Native)'],
-      industries: ['Finance', 'Investment Banking', 'Consulting'],
-    },
-    {
-      id: 5,
-      name: 'Jessica Taylor',
-      title: 'UX Design Lead',
-      company: 'Apple',
-      location: 'Cupertino, CA',
-      industry: 'Design',
-      rating: 4.9,
-      reviewCount: 104,
-      mentees: 42,
-      yearsExperience: 11,
-      expertise: ['UX Design', 'Design Thinking', 'Portfolio Building', 'User Research', 'Prototyping'],
-      availability: 'Limited',
-      bio: 'Passionate about mentoring designers at all levels. Specialized in UX research, interaction design, and building stellar portfolios that land dream jobs.',
-      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English (Native)'],
-      industries: ['Design', 'Technology', 'Consumer Products'],
-    },
-    {
-      id: 6,
-      name: 'James Anderson',
-      title: 'Data Science Manager',
-      company: 'Amazon',
-      location: 'Austin, TX',
-      industry: 'Technology',
-      rating: 4.8,
-      reviewCount: 91,
-      mentees: 36,
-      yearsExperience: 13,
-      expertise: ['Machine Learning', 'Data Analytics', 'Python', 'SQL', 'Career Development'],
-      availability: 'Available',
-      bio: 'Data scientist turned manager, helping others navigate careers in data science, ML engineering, and analytics. Expert in technical interview prep and career growth.',
-      avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English (Native)'],
-      industries: ['Technology', 'E-commerce', 'AI/ML'],
-    },
-  ])
+  // Real mentor data from API
+  const [mentors, setMentors] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Fetch Pexels images for avatars
+  // Fetch mentors from API
   useEffect(() => {
-    const fetchPexelsImages = async () => {
+    const fetchMentors = async () => {
       try {
-        console.log('Fetching Pexels images...')
-        const response = await fetch('https://api.pexels.com/v1/search?query=professional+business+portrait&per_page=20&orientation=square', {
-          headers: {
-            Authorization: '8sLoMXg5fX4DKdmX8sSFxebcYNbdcwU6VizqTp4YRdrJ7a3MVlwc9qpp'
-          }
-        })
+        setLoading(true)
+        setError(null)
 
+        // Build query parameters
+        const params = new URLSearchParams()
+        if (searchQuery) params.append('search', searchQuery)
+        if (selectedIndustries.length > 0) params.append('industry', selectedIndustries[0])
+        if (selectedExpertise.length > 0) params.append('interest', selectedExpertise[0])
+        if (selectedExperience.length > 0) params.append('experienceLevel', selectedExperience[0])
+
+        const url = `/api/mentors${params.toString() ? `?${params.toString()}` : ''}`
+        const response = await fetch(url)
         const data = await response.json()
-        console.log('Pexels API response:', data)
 
-        if (data.photos && data.photos.length >= 6) {
-          console.log('Setting mentor avatars with Pexels images')
-          setMentors(prevMentors =>
-            prevMentors.map((mentor, index) => ({
-              ...mentor,
-              avatar: data.photos[index]?.src?.medium || null
-            }))
-          )
-        } else {
-          console.log('Not enough photos returned:', data.photos?.length)
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch mentors')
         }
-      } catch (error) {
-        console.error('Error fetching Pexels images:', error)
+
+        setMentors(data.mentors)
+      } catch (err) {
+        console.error('Error fetching mentors:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load mentors')
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchPexelsImages()
-  }, [])
+    if (currentStep === 'results') {
+      fetchMentors()
+    }
+  }, [currentStep, searchQuery, selectedIndustries, selectedExpertise, selectedExperience])
 
+  // Removed mock data - now using real data from API
   const industries = [
     'All',
     'Technology',
@@ -856,8 +734,62 @@ export default function BrowseMentorsNew() {
             )}
           </AnimatePresence>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center min-h-[60vh] pt-28">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-accent mx-auto mb-4"></div>
+                <p className="text-neutral-600 font-montserrat">Finding mentors for you...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {!loading && error && (
+            <div className="flex items-center justify-center min-h-[60vh] pt-28">
+              <div className="text-center max-w-md">
+                <div className="bg-red-50 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <X className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold font-montserrat text-neutral-900 mb-2">
+                  Oops! Something went wrong
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-6">{error}</p>
+                <Button
+                  onClick={() => window.location.reload()}
+                  className="bg-primary-accent text-primary-dark hover:bg-primary-accent/90"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && mentors.length === 0 && (
+            <div className="flex items-center justify-center min-h-[60vh] pt-28">
+              <div className="text-center max-w-md">
+                <div className="bg-neutral-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Search className="h-8 w-8 text-neutral-400" />
+                </div>
+                <h3 className="text-xl font-bold font-montserrat text-neutral-900 mb-2">
+                  No mentors found
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-6">
+                  Try adjusting your filters or search criteria
+                </p>
+                <Button
+                  onClick={handleBackToFilters}
+                  className="bg-primary-accent text-primary-dark hover:bg-primary-accent/90"
+                >
+                  Update Filters
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Swipe View */}
-          {viewMode === 'swipe' && (
+          {!loading && !error && viewMode === 'swipe' && mentors.length > 0 && (
             <div className="mx-auto max-w-lg px-6 pt-28 pb-8">
               {currentCardIndex < mentors.length ? (
                 <>
@@ -951,7 +883,7 @@ export default function BrowseMentorsNew() {
           )}
 
           {/* List View */}
-          {viewMode === 'list' && (
+          {!loading && !error && viewMode === 'list' && mentors.length > 0 && (
             <div className="mx-auto max-w-5xl px-6 pt-28 pb-8">
               <div className="space-y-6">
                 {mentors.map((mentor) => (

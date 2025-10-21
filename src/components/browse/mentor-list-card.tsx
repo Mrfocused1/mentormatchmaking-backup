@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,35 +13,57 @@ import {
   Users,
   Clock,
   Heart,
-  Eye
+  Eye,
+  UserPlus,
+  CheckCircle,
+  Loader2
 } from 'lucide-react'
 
 interface Mentor {
-  id: number
+  id: number | string
   name: string
   title: string
-  company: string
+  company?: string
   location: string
-  industry: string
+  industry?: string
   rating: number
   reviewCount: number
-  mentees: number
-  yearsExperience: number
+  mentees?: number
+  yearsExperience?: number
   expertise: string[]
-  availability: string
+  availability: string | number
   bio: string
   avatar: string | null
   followers?: number
   isFollowing?: boolean
+  connectionStatus?: 'none' | 'pending' | 'connected'
 }
 
 interface MentorListCardProps {
   mentor: Mentor
-  onShowInterest: (mentor: Mentor) => void
+  onShowInterest?: (mentor: Mentor) => void
   onViewProfile: (mentor: Mentor) => void
+  onConnect?: (mentorId: string) => Promise<void>
 }
 
-export function MentorListCard({ mentor, onShowInterest, onViewProfile }: MentorListCardProps) {
+export function MentorListCard({ mentor, onShowInterest, onViewProfile, onConnect }: MentorListCardProps) {
+  const [connecting, setConnecting] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState(mentor.connectionStatus || 'none')
+
+  const handleConnect = async () => {
+    if (!onConnect) return
+
+    try {
+      setConnecting(true)
+      await onConnect(mentor.id.toString())
+      setConnectionStatus('pending')
+    } catch (error) {
+      console.error('Failed to connect:', error)
+    } finally {
+      setConnecting(false)
+    }
+  }
+
   return (
     <Card className="shadow-lg hover:shadow-xl transition-all border-neutral-200 hover:border-primary-accent">
       <CardContent className="p-6">
@@ -133,15 +156,47 @@ export function MentorListCard({ mentor, onShowInterest, onViewProfile }: Mentor
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => onShowInterest(mentor)}
-                className="bg-secondary-accent hover:bg-secondary-accent/90 text-white"
-              >
-                <Heart className="mr-2 h-4 w-4" />
-                Show Interest
-              </Button>
+              {connectionStatus === 'connected' ? (
+                <Button
+                  variant="primary"
+                  size="md"
+                  disabled
+                  className="bg-success hover:bg-success/90 text-white"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Connected
+                </Button>
+              ) : connectionStatus === 'pending' ? (
+                <Button
+                  variant="outline"
+                  size="md"
+                  disabled
+                  className="border-warning text-warning"
+                >
+                  <Clock className="mr-2 h-4 w-4" />
+                  Request Sent
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={onConnect ? handleConnect : () => onShowInterest?.(mentor)}
+                  disabled={connecting}
+                  className="bg-secondary-accent hover:bg-secondary-accent/90 text-white disabled:opacity-50"
+                >
+                  {connecting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      {onConnect ? 'Connect' : 'Show Interest'}
+                    </>
+                  )}
+                </Button>
+              )}
               <FollowButton
                 mentorId={mentor.id.toString()}
                 initialIsFollowing={mentor.isFollowing || false}

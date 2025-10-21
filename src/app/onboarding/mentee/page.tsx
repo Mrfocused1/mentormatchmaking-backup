@@ -17,7 +17,8 @@ import {
   CheckCircle,
   Sparkles,
   X,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react'
 
 const TOTAL_STEPS = 4
@@ -25,6 +26,8 @@ const TOTAL_STEPS = 4
 export default function MenteeOnboarding() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     // Step 1: Personal Info
     firstName: '',
@@ -64,17 +67,52 @@ export default function MenteeOnboarding() {
     }
   }
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData)
-    // Here you would typically send the data to your backend
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true)
+      setError(null)
 
-    // Set localStorage to mark user as logged in
-    localStorage.setItem('isLoggedIn', 'true')
-    localStorage.setItem('userEmail', formData.email)
-    localStorage.setItem('userRole', 'mentee')
+      // Call API to create profile
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: 'mentee',
+          careerGoals: formData.careerGoals,
+          areasOfInterest: formData.areasOfInterest,
+          specificGoals: formData.specificGoals,
+          currentStatus: formData.currentStatus,
+          jobTitle: formData.jobTitle,
+          company: formData.company,
+          industry: formData.industry,
+          experienceLevel: formData.experienceLevel,
+          hoursPerMonth: formData.hoursPerMonth,
+          preferredMeetingFormat: formData.preferredMeetingFormat,
+          timezone: formData.timezone,
+          location: formData.location,
+          mentorPreferences: formData.mentorPreferences,
+        }),
+      })
 
-    // Redirect to dashboard with success message
-    router.push('/dashboard?success=mentee-signup')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create profile')
+      }
+
+      // Success! Redirect to dashboard
+      router.push('/dashboard?success=mentee-signup')
+      router.refresh()
+    } catch (err) {
+      console.error('Error submitting form:', err)
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const renderStepContent = () => {
@@ -168,13 +206,20 @@ export default function MenteeOnboarding() {
             </CardContent>
           </Card>
 
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+              <p className="text-sm text-red-800 font-montserrat">{error}</p>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex justify-between items-center">
             <Button
               variant="outline"
               size="lg"
               onClick={handlePrevious}
-              disabled={currentStep === 1}
+              disabled={currentStep === 1 || isSubmitting}
               className="gap-2"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -186,6 +231,7 @@ export default function MenteeOnboarding() {
                 variant="primary"
                 size="lg"
                 onClick={handleNext}
+                disabled={isSubmitting}
                 className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark gap-2"
               >
                 Next
@@ -196,10 +242,20 @@ export default function MenteeOnboarding() {
                 variant="primary"
                 size="lg"
                 onClick={handleSubmit}
+                disabled={isSubmitting}
                 className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark gap-2"
               >
-                Complete Profile
-                <CheckCircle className="h-5 w-5" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Creating Profile...
+                  </>
+                ) : (
+                  <>
+                    Complete Profile
+                    <CheckCircle className="h-5 w-5" />
+                  </>
+                )}
               </Button>
             )}
           </div>

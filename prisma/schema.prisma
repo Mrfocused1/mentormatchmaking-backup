@@ -180,27 +180,31 @@ enum InterestRequestStatus {
 
 // Matches between users
 model Match {
-  id            String      @id @default(cuid())
-  user1Id       String
-  user2Id       String
-  matchedAt     DateTime    @default(now())
-  endedAt       DateTime?
-  status        MatchStatus @default(ACTIVE)
-  endedByUserId String?
+  id              String      @id @default(cuid())
+  user1Id         String
+  user2Id         String
+  initiatedById   String      // Who sent the connection request
+  matchedAt       DateTime    @default(now())
+  acceptedAt      DateTime?   // When connection was accepted
+  endedAt         DateTime?
+  status          MatchStatus @default(PENDING)
+  endedByUserId   String?
 
-  user1         User        @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2         User        @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+  user1           User        @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2           User        @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
 
   @@unique([user1Id, user2Id])
   @@index([user1Id])
   @@index([user2Id])
   @@index([status])
+  @@index([initiatedById])
 }
 
 enum MatchStatus {
-  ACTIVE
-  ENDED
-  UNMATCHED
+  PENDING    // Connection request sent, awaiting acceptance
+  ACTIVE     // Connection accepted, actively matched
+  ENDED      // Match ended by one or both users
+  UNMATCHED  // Users unmatched or declined
 }
 
 // Chat messages
@@ -273,6 +277,18 @@ model SavedProfile {
 
   @@unique([userId, savedUserId])
   @@index([userId])
+}
+
+// Profile views tracking
+model ProfileView {
+  id          String    @id @default(cuid())
+  viewerId    String?   // null for anonymous views
+  viewedId    String    // Profile being viewed
+  viewedAt    DateTime  @default(now())
+  ipAddress   String?   // Optional for anonymous tracking
+
+  @@index([viewedId, viewedAt])
+  @@index([viewerId])
 }
 
 // Notifications

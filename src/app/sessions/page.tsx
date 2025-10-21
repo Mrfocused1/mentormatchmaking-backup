@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -21,157 +21,95 @@ import {
   ChevronRight,
   Plus,
   Filter,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react'
 
-// Mock session data
-const mockSessions = {
-  upcoming: [
-    {
-      id: 1,
-      mentorName: 'Sarah Thompson',
-      menteeName: 'Michael Chen',
-      userRole: 'mentee',
-      date: '2025-10-15',
-      time: '2:00 PM - 3:00 PM',
-      duration: '60 minutes',
-      topic: 'Product Roadmap Review',
-      status: 'confirmed',
-      notes: 'Bring your product roadmap and key metrics for review'
-    },
-    {
-      id: 2,
-      mentorName: 'Emily Rodriguez',
-      menteeName: 'You',
-      userRole: 'mentee',
-      date: '2025-10-18',
-      time: '10:00 AM - 11:00 AM',
-      duration: '60 minutes',
-      topic: 'Career Development Discussion',
-      status: 'confirmed',
-      notes: 'Discuss career transition strategy'
-    },
-    {
-      id: 3,
-      mentorName: 'You',
-      menteeName: 'David Kim',
-      userRole: 'mentor',
-      date: '2025-10-20',
-      time: '3:00 PM - 4:00 PM',
-      duration: '60 minutes',
-      topic: 'Interview Preparation',
-      status: 'confirmed',
-      notes: 'Mock technical interview session'
-    }
-  ],
-  pending: [
-    {
-      id: 4,
-      mentorName: 'You',
-      menteeName: 'Jessica Liu',
-      userRole: 'mentor',
-      date: '2025-10-22',
-      time: '1:00 PM - 2:00 PM',
-      duration: '60 minutes',
-      topic: 'Product Strategy Session',
-      status: 'pending',
-      requestedBy: 'mentee',
-      notes: 'Would love to discuss go- strategy for my new feature'
-    },
-    {
-      id: 5,
-      mentorName: 'Robert Taylor',
-      menteeName: 'You',
-      userRole: 'mentee',
-      date: '2025-10-25',
-      time: '11:00 AM - 12:00 PM',
-      duration: '60 minutes',
-      topic: 'Technical Architecture Review',
-      status: 'pending',
-      requestedBy: 'you',
-      notes: 'Review system design for scalability'
-    }
-  ],
-  past: [
-    {
-      id: 6,
-      mentorName: 'Sarah Thompson',
-      menteeName: 'You',
-      userRole: 'mentee',
-      date: '2025-10-05',
-      time: '2:00 PM - 3:00 PM',
-      duration: '60 minutes',
-      topic: 'Stakeholder Management',
-      status: 'completed',
-      rating: 5,
-      reviewed: true,
-      markedComplete: true
-    },
-    {
-      id: 7,
-      mentorName: 'You',
-      menteeName: 'Alex Martinez',
-      userRole: 'mentor',
-      date: '2025-10-01',
-      time: '10:00 AM - 11:00 AM',
-      duration: '60 minutes',
-      topic: 'Resume Review',
-      status: 'completed',
-      rating: 5,
-      reviewed: true,
-      markedComplete: true
-    },
-    {
-      id: 8,
-      mentorName: 'Emily Rodriguez',
-      menteeName: 'You',
-      userRole: 'mentee',
-      date: '2025-09-28',
-      time: '3:00 PM - 4:00 PM',
-      duration: '60 minutes',
-      topic: 'Negotiation Strategies',
-      status: 'completed',
-      rating: 0,
-      reviewed: false,
-      markedComplete: false
-    }
-  ]
-}
+type SessionFilter = 'all' | 'scheduled' | 'completed' | 'cancelled'
 
-type SessionFilter = 'upcoming' | 'pending' | 'past'
+interface Session {
+  id: string
+  mentorId: string
+  menteeId: string
+  title: string
+  scheduledAt: string
+  duration: number
+  status: string
+  notes?: string | null
+  mentor: {
+    id: string
+    name: string | null
+    profile: {
+      profilePicture?: string | null
+    } | null
+  }
+  mentee: {
+    id: string
+    name: string | null
+    profile: {
+      profilePicture?: string | null
+    } | null
+  }
+}
 
 export default function SessionsPage() {
   const router = useRouter()
-  const [activeFilter, setActiveFilter] = useState<SessionFilter>('upcoming')
+  const [activeFilter, setActiveFilter] = useState<SessionFilter>('all')
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [loading, setLoading] = useState(true)
+  const [cancelling, setCancelling] = useState<string | null>(null)
 
-  // Get sessions based on filter
-  const displayedSessions = mockSessions[activeFilter]
+  // Fetch sessions
+  useEffect(() => {
+    fetchSessions()
+  }, [activeFilter])
 
-  // Handle session actions
-  const handleAcceptSession = (sessionId: number) => {
-    alert('Session request accepted!')
-  }
+  const fetchSessions = async () => {
+    try {
+      setLoading(true)
+      const url = activeFilter === 'all'
+        ? '/api/sessions'
+        : `/api/sessions?status=${activeFilter.toUpperCase()}`
 
-  const handleDeclineSession = (sessionId: number) => {
-    if (confirm('Are you sure you want to decline this session request?')) {
-      alert('Session request declined.')
+      const response = await fetch(url)
+      const data = await response.json()
+
+      if (data.success) {
+        setSessions(data.sessions)
+      }
+    } catch (error) {
+      console.error('Error fetching sessions:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleCancelSession = (sessionId: number) => {
-    if (confirm('Are you sure you want to cancel this session? The other person will be notified.')) {
-      alert('Session cancelled.')
+  // Handle session cancellation
+  const handleCancelSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to cancel this session? The other person will be notified.')) {
+      return
     }
-  }
 
-  const handleLeaveReview = (sessionId: number) => {
-    router.push(`/sessions/${sessionId}/review`)
-  }
+    try {
+      setCancelling(sessionId)
+      const response = await fetch(`/api/sessions/${sessionId}`, {
+        method: 'DELETE',
+      })
 
-  const handleMarkComplete = (sessionId: number) => {
-    if (confirm('Mark this session as completed? Both parties need to confirm completion before you can leave a review.')) {
-      alert('Session marked as complete!')
+      const data = await response.json()
+
+      if (data.success) {
+        alert('Session cancelled successfully')
+        fetchSessions() // Refresh the list
+      } else {
+        alert(data.error || 'Failed to cancel session')
+      }
+    } catch (error) {
+      console.error('Error cancelling session:', error)
+      alert('Failed to cancel session')
+    } finally {
+      setCancelling(null)
     }
   }
 
@@ -213,8 +151,36 @@ export default function SessionsPage() {
   // Check if a day has sessions
   const hasSessionOnDay = (day: number | null) => {
     if (!day) return false
-    const dateStr = `2025-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return mockSessions.upcoming.some(s => s.date === dateStr)
+    const dateStr = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+      .toISOString()
+      .split('T')[0]
+
+    return sessions.some(s => {
+      const sessionDate = new Date(s.scheduledAt).toISOString().split('T')[0]
+      return sessionDate === dateStr && s.status === 'SCHEDULED'
+    })
+  }
+
+  // Filter sessions based on active filter
+  const displayedSessions = sessions.filter(session => {
+    if (activeFilter === 'all') return true
+    return session.status === activeFilter.toUpperCase()
+  })
+
+  // Group sessions by date
+  const groupedSessions = displayedSessions.reduce((acc, session) => {
+    const date = new Date(session.scheduledAt).toLocaleDateString()
+    if (!acc[date]) acc[date] = []
+    acc[date].push(session)
+    return acc
+  }, {} as Record<string, Session[]>)
+
+  // Count sessions by status
+  const sessionCounts = {
+    all: sessions.length,
+    scheduled: sessions.filter(s => s.status === 'SCHEDULED').length,
+    completed: sessions.filter(s => s.status === 'COMPLETED').length,
+    cancelled: sessions.filter(s => s.status === 'CANCELLED').length,
   }
 
   return (
@@ -312,21 +278,27 @@ export default function SessionsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-montserrat text-neutral-600">Upcoming</span>
-                      <Badge variant="default" className="bg-primary-accent text-primary-dark">
-                        {mockSessions.upcoming.length}
+                      <span className="text-sm font-montserrat text-neutral-600">All Sessions</span>
+                      <Badge variant="default" className="bg-neutral-600 text-white">
+                        {sessionCounts.all}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-montserrat text-neutral-600">Pending</span>
-                      <Badge variant="secondary" className="bg-yellow-500 text-white">
-                        {mockSessions.pending.length}
+                      <span className="text-sm font-montserrat text-neutral-600">Scheduled</span>
+                      <Badge variant="default" className="bg-primary-accent text-primary-dark">
+                        {sessionCounts.scheduled}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-montserrat text-neutral-600">Completed</span>
                       <Badge variant="secondary" className="bg-green-600 text-white">
-                        {mockSessions.past.length}
+                        {sessionCounts.completed}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-montserrat text-neutral-600">Cancelled</span>
+                      <Badge variant="secondary" className="bg-red-600 text-white">
+                        {sessionCounts.cancelled}
                       </Badge>
                     </div>
                   </div>
@@ -340,201 +312,164 @@ export default function SessionsPage() {
               <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
                 <Filter className="h-5 w-5 text-neutral-400 flex-shrink-0" />
                 <Button
-                  variant={activeFilter === 'upcoming' ? 'primary' : 'ghost'}
+                  variant={activeFilter === 'all' ? 'primary' : 'ghost'}
                   size="sm"
-                  onClick={() => setActiveFilter('upcoming')}
-                  className={activeFilter === 'upcoming' ? 'bg-primary-accent text-primary-dark' : ''}
+                  onClick={() => setActiveFilter('all')}
+                  className={activeFilter === 'all' ? 'bg-neutral-600 text-white' : ''}
+                >
+                  All ({sessionCounts.all})
+                </Button>
+                <Button
+                  variant={activeFilter === 'scheduled' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveFilter('scheduled')}
+                  className={activeFilter === 'scheduled' ? 'bg-primary-accent text-primary-dark' : ''}
                 >
                   <Calendar className="h-4 w-4 mr-1" />
-                  Upcoming ({mockSessions.upcoming.length})
+                  Scheduled ({sessionCounts.scheduled})
                 </Button>
                 <Button
-                  variant={activeFilter === 'pending' ? 'primary' : 'ghost'}
+                  variant={activeFilter === 'completed' ? 'primary' : 'ghost'}
                   size="sm"
-                  onClick={() => setActiveFilter('pending')}
-                  className={activeFilter === 'pending' ? 'bg-yellow-500 text-white' : ''}
-                >
-                  <Clock className="h-4 w-4 mr-1" />
-                  Pending ({mockSessions.pending.length})
-                </Button>
-                <Button
-                  variant={activeFilter === 'past' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveFilter('past')}
-                  className={activeFilter === 'past' ? 'bg-green-600 text-white' : ''}
+                  onClick={() => setActiveFilter('completed')}
+                  className={activeFilter === 'completed' ? 'bg-green-600 text-white' : ''}
                 >
                   <Check className="h-4 w-4 mr-1" />
-                  Past ({mockSessions.past.length})
+                  Completed ({sessionCounts.completed})
+                </Button>
+                <Button
+                  variant={activeFilter === 'cancelled' ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveFilter('cancelled')}
+                  className={activeFilter === 'cancelled' ? 'bg-red-600 text-white' : ''}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancelled ({sessionCounts.cancelled})
                 </Button>
               </div>
 
               {/* Sessions Cards */}
               <div className="space-y-4">
-                {displayedSessions.length > 0 ? (
-                  displayedSessions.map((session: any) => (
-                    <Card key={session.id} className="shadow-md hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          {/* Avatar */}
-                          <Avatar
-                            fallback={session.userRole === 'mentor' ? session.menteeName : session.mentorName}
-                            size="md"
-                            className="flex-shrink-0"
-                          />
+                {loading ? (
+                  <Card className="shadow-md">
+                    <CardContent className="p-12 text-center">
+                      <Loader2 className="h-12 w-12 text-primary-accent mx-auto mb-4 animate-spin" />
+                      <p className="text-neutral-500 font-montserrat">Loading sessions...</p>
+                    </CardContent>
+                  </Card>
+                ) : displayedSessions.length > 0 ? (
+                  displayedSessions.map((session) => {
+                    const sessionDate = new Date(session.scheduledAt)
+                    const sessionTime = sessionDate.toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })
 
-                          {/* Session Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <div>
-                                <h3 className="font-bold font-montserrat text-primary-dark text-lg">
-                                  {session.topic}
-                                </h3>
-                                <p className="text-sm font-montserrat text-neutral-600">
-                                  with {session.userRole === 'mentor' ? session.menteeName : session.mentorName}
+                    return (
+                      <Card key={session.id} className="shadow-md hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            {/* Avatar */}
+                            <Avatar
+                              src={session.mentor.profile?.profilePicture || undefined}
+                              fallback={session.mentor.name || 'M'}
+                              size="md"
+                              className="flex-shrink-0"
+                            />
+
+                            {/* Session Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div>
+                                  <h3 className="font-bold font-montserrat text-primary-dark text-lg">
+                                    {session.title}
+                                  </h3>
+                                  <p className="text-sm font-montserrat text-neutral-600">
+                                    with {session.mentor.name} and {session.mentee.name}
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant="secondary"
+                                  className={
+                                    session.status === 'SCHEDULED'
+                                      ? 'bg-green-100 text-green-700'
+                                      : session.status === 'COMPLETED'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'bg-neutral-100 text-neutral-700'
+                                  }
+                                >
+                                  {session.status}
+                                </Badge>
+                              </div>
+
+                              {/* Session Details */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600">
+                                  <Calendar className="h-4 w-4 text-primary-accent" />
+                                  {sessionDate.toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600">
+                                  <Clock className="h-4 w-4 text-secondary-accent" />
+                                  {sessionTime}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600">
+                                  <Clock className="h-4 w-4 text-blue-600" />
+                                  {session.duration} minutes
+                                </div>
+                              </div>
+
+                              {/* Session Notes */}
+                              {session.notes && (
+                                <p className="text-sm font-montserrat text-neutral-600 bg-neutral-50 p-3 rounded-lg mb-3">
+                                  <span className="font-semibold">Notes:</span> {session.notes}
                                 </p>
-                              </div>
-                              <Badge
-                                variant="secondary"
-                                className={
-                                  session.status === 'confirmed'
-                                    ? 'bg-green-100 text-green-700'
-                                    : session.status === 'pending'
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-neutral-100 text-neutral-700'
-                                }
-                              >
-                                {session.status}
-                              </Badge>
-                            </div>
+                              )}
 
-                            {/* Session Details */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                              <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600">
-                                <Calendar className="h-4 w-4 text-primary-accent" />
-                                {new Date(session.date).toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                              </div>
-                              <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600">
-                                <Clock className="h-4 w-4 text-secondary-accent" />
-                                {session.time}
-                              </div>
-                              <div className="flex items-center gap-2 text-sm font-montserrat text-neutral-600">
-                                <Clock className="h-4 w-4 text-blue-600" />
-                                {session.duration}
-                              </div>
-                            </div>
-
-                            {/* Session Notes */}
-                            {session.notes && (
-                              <p className="text-sm font-montserrat text-neutral-600 bg-neutral-50 p-3 rounded-lg mb-3">
-                                <span className="font-semibold">Notes:</span> {session.notes}
-                              </p>
-                            )}
-
-                            {/* Session Rating (for completed sessions) */}
-                            {session.status === 'completed' && session.reviewed && (
-                              <div className="flex items-center gap-1 mb-3">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`h-4 w-4 ${
-                                      i < session.rating
-                                        ? 'text-yellow-500 fill-yellow-500'
-                                        : 'text-neutral-300'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2">
-                              {session.status === 'confirmed' && activeFilter === 'upcoming' && (
-                                <>
+                              {/* Action Buttons */}
+                              <div className="flex flex-wrap gap-2">
+                                {session.status === 'SCHEDULED' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleCancelSession(session.id)}
+                                    disabled={cancelling === session.id}
                                     className="text-red-600 hover:bg-red-50"
                                   >
-                                    Cancel
-                                  </Button>
-                                </>
-                              )}
-
-                              {session.status === 'pending' && (
-                                <>
-                                  {session.requestedBy === 'mentee' && session.userRole === 'mentor' && (
-                                    <>
-                                      <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={() => handleAcceptSession(session.id)}
-                                        className="bg-green-600 text-white hover:bg-green-700"
-                                      >
-                                        <Check className="h-4 w-4 mr-1" />
-                                        Accept
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleDeclineSession(session.id)}
-                                        className="text-red-600 border-red-600 hover:bg-red-50"
-                                      >
+                                    {cancelling === session.id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                        Cancelling...
+                                      </>
+                                    ) : (
+                                      <>
                                         <X className="h-4 w-4 mr-1" />
-                                        Decline
-                                      </Button>
-                                    </>
-                                  )}
-                                  {session.requestedBy === 'you' && (
-                                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
-                                      Waiting for response
-                                    </Badge>
-                                  )}
-                                </>
-                              )}
+                                        Cancel
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
 
-                              {session.status === 'completed' && !session.markedComplete && (
                                 <Button
-                                  variant="primary"
+                                  variant="ghost"
                                   size="sm"
-                                  onClick={() => handleMarkComplete(session.id)}
-                                  className="bg-green-600 text-white hover:bg-green-700"
+                                  onClick={() => router.push('/messages')}
                                 >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Mark as Complete
+                                  <MessageCircle className="h-4 w-4 mr-1" />
+                                  Message
                                 </Button>
-                              )}
-
-                              {session.status === 'completed' && session.markedComplete && !session.reviewed && (
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleLeaveReview(session.id)}
-                                  className="bg-secondary-accent text-white hover:bg-secondary-accent/90"
-                                >
-                                  <Star className="h-4 w-4 mr-1" />
-                                  Leave Review
-                                </Button>
-                              )}
-
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => alert('Message feature would open here')}
-                              >
-                                <MessageCircle className="h-4 w-4 mr-1" />
-                                Message
-                              </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                        </CardContent>
+                      </Card>
+                    )
+                  })
                 ) : (
                   <Card className="shadow-md">
                     <CardContent className="p-12 text-center">
@@ -543,16 +478,19 @@ export default function SessionsPage() {
                         No {activeFilter} sessions
                       </h3>
                       <p className="text-neutral-500 font-montserrat mb-4">
-                        {activeFilter === 'upcoming' && "You don't have any upcoming sessions scheduled."}
-                        {activeFilter === 'pending' && "You don't have any pending session requests."}
-                        {activeFilter === 'past' && "You don't have any completed sessions yet."}
+                        {activeFilter === 'all' && "You don't have any sessions yet."}
+                        {activeFilter === 'scheduled' && "You don't have any scheduled sessions."}
+                        {activeFilter === 'completed' && "You don't have any completed sessions yet."}
+                        {activeFilter === 'cancelled' && "You don't have any cancelled sessions."}
                       </p>
-                      {activeFilter === 'upcoming' && (
-                        <Button variant="primary" className="bg-primary-accent text-primary-dark">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Schedule a Session
-                        </Button>
-                      )}
+                      <Button
+                        variant="primary"
+                        className="bg-primary-accent text-primary-dark"
+                        onClick={() => router.push('/browse-mentors')}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Find a Mentor
+                      </Button>
                     </CardContent>
                   </Card>
                 )}

@@ -1,69 +1,95 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { ProfilePhotoUpload } from '@/components/profile/profile-photo-upload'
 import {
   ArrowLeft,
-  Upload,
   Save,
   X,
   Plus,
-  Trash2,
-  MapPin,
-  Briefcase,
-  GraduationCap,
-  Globe,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Upload,
   Linkedin,
   Twitter,
-  Facebook,
-  Link2
+  Instagram
 } from 'lucide-react'
 
 export default function EditProfilePage() {
-  // Mock user data - in production this would come from auth/API
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [userData, setUserData] = useState<any>(null)
+
   const [profileData, setProfileData] = useState({
-    name: 'Sarah Johnson',
-    role: 'mentor', // or 'mentee'
-    title: 'Senior Software Engineer',
-    company: 'Google',
-    location: 'San Francisco, CA',
-    bio: 'Passionate software engineer with 10+ years of experience in full-stack development. I love helping others grow in their tech careers and sharing knowledge about software architecture, clean code, and career development.',
-    expertise: ['JavaScript', 'React', 'Node.js', 'System Design', 'Career Development'],
-    interests: ['Web Development', 'Mentoring', 'Public Speaking', 'Open Source'],
-    availability: 'Part-time',
-    linkedIn: 'https://linkedin.com/in/sarahjohnson',
-    twitter: 'https://twitter.com/sarahjohnson',
-    facebook: 'https://facebook.com/sarahjohnson',
-    website: 'https://sarahjohnson.com',
-    education: 'B.S. Computer Science - Stanford University',
-    yearsOfExperience: '10+',
+    bio: '',
+    workExperience: '',
+    city: '',
+    timezone: '',
+    linkedIn: '',
+    twitter: '',
+    instagram: '',
+    availableHours: '',
+    helpsWith: '',
+    lookingFor: '',
+    goals: '',
+    interests: [] as string[],
+    industries: [] as string[],
   })
 
-  const [newSkill, setNewSkill] = useState('')
   const [newInterest, setNewInterest] = useState('')
+  const [newIndustry, setNewIndustry] = useState('')
 
-  const handleAddSkill = () => {
-    if (newSkill.trim() && !profileData.expertise.includes(newSkill.trim())) {
-      setProfileData({
-        ...profileData,
-        expertise: [...profileData.expertise, newSkill.trim()]
-      })
-      setNewSkill('')
+  // Fetch current profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/profile/me')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch profile')
+        }
+
+        setUserData(data.user)
+
+        // Populate form with existing data
+        setProfileData({
+          bio: data.user.profile?.bio || '',
+          workExperience: data.user.profile?.workExperience || '',
+          city: data.user.profile?.city || '',
+          timezone: data.user.profile?.timezone || '',
+          linkedIn: data.user.profile?.linkedIn || '',
+          twitter: data.user.profile?.twitter || '',
+          instagram: data.user.profile?.instagram || '',
+          availableHours: data.user.profile?.availableHours?.toString() || '',
+          helpsWith: data.user.profile?.helpsWith || '',
+          lookingFor: data.user.profile?.lookingFor || '',
+          goals: data.user.profile?.goals || '',
+          interests: data.user.profile?.interests?.map((i: any) => i.name) || [],
+          industries: data.user.profile?.industries?.map((i: any) => i.name) || [],
+        })
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load profile')
+      } finally {
+        setLoading(false)
+      }
     }
-  }
 
-  const handleRemoveSkill = (skill: string) => {
-    setProfileData({
-      ...profileData,
-      expertise: profileData.expertise.filter(s => s !== skill)
-    })
-  }
+    fetchProfile()
+  }, [])
 
   const handleAddInterest = () => {
     if (newInterest.trim() && !profileData.interests.includes(newInterest.trim())) {
@@ -82,10 +108,67 @@ export default function EditProfilePage() {
     })
   }
 
-  const handleSave = () => {
-    // In production, this would save to backend
-    console.log('Saving profile:', profileData)
-    alert('Profile updated successfully!')
+  const handleAddIndustry = () => {
+    if (newIndustry.trim() && !profileData.industries.includes(newIndustry.trim())) {
+      setProfileData({
+        ...profileData,
+        industries: [...profileData.industries, newIndustry.trim()]
+      })
+      setNewIndustry('')
+    }
+  }
+
+  const handleRemoveIndustry = (industry: string) => {
+    setProfileData({
+      ...profileData,
+      industries: profileData.industries.filter(i => i !== industry)
+    })
+  }
+
+  const handleSave = async () => {
+    try {
+      setSaving(true)
+      setError(null)
+      setSuccess(false)
+
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bio: profileData.bio,
+          workExperience: profileData.workExperience,
+          city: profileData.city,
+          timezone: profileData.timezone,
+          linkedIn: profileData.linkedIn,
+          twitter: profileData.twitter,
+          instagram: profileData.instagram,
+          availableHours: profileData.availableHours ? parseInt(profileData.availableHours) : null,
+          helpsWith: profileData.helpsWith,
+          lookingFor: profileData.lookingFor,
+          goals: profileData.goals,
+          interests: profileData.interests,
+          industries: profileData.industries,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile')
+      }
+
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+    } catch (err) {
+      console.error('Error saving profile:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save profile')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleChange = (field: string, value: string) => {
@@ -93,6 +176,37 @@ export default function EditProfilePage() {
       ...profileData,
       [field]: value
     })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary-accent mx-auto mb-4" />
+            <p className="text-neutral-600 font-montserrat">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !userData) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-neutral-600 font-montserrat mb-4">{error}</p>
+            <Button onClick={() => router.back()} className="bg-primary-accent text-primary-dark">
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -123,10 +237,20 @@ export default function EditProfilePage() {
             <Button
               onClick={handleSave}
               size="lg"
-              className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-lg"
+              disabled={saving}
+              className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-lg disabled:opacity-50"
             >
-              <Save className="mr-2 h-5 w-5" />
-              Save Changes
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-5 w-5" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -135,6 +259,22 @@ export default function EditProfilePage() {
       {/* Edit Form */}
       <section className="py-8">
         <div className="mx-auto max-w-4xl px-6 lg:px-8">
+          {/* Success Message */}
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <p className="text-green-800 font-montserrat">Profile updated successfully! Redirecting to dashboard...</p>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <p className="text-red-800 font-montserrat">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-6">
             {/* Profile Photo */}
             <Card className="shadow-lg">
@@ -142,18 +282,23 @@ export default function EditProfilePage() {
                 <CardTitle className="text-lg">Profile Photo</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="flex items-center gap-6">
-                  <Avatar fallback={profileData.name} size="2xl" className="border-4 border-neutral-200" />
-                  <div className="flex-1">
-                    <p className="text-sm text-neutral-600 font-montserrat mb-3">
-                      Upload a professional photo that represents you well. This will be visible to all users.
-                    </p>
-                    <Button variant="outline" size="sm">
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload New Photo
-                    </Button>
-                  </div>
-                </div>
+                {userData && (
+                  <ProfilePhotoUpload
+                    currentPhotoUrl={userData.profile?.profilePicture}
+                    userId={userData.id}
+                    userName={userData.name || ''}
+                    onUploadSuccess={(url) => {
+                      // Update local state
+                      setUserData({
+                        ...userData,
+                        profile: {
+                          ...userData.profile,
+                          profilePicture: url,
+                        },
+                      })
+                    }}
+                  />
+                )}
               </CardContent>
             </Card>
 
@@ -163,55 +308,19 @@ export default function EditProfilePage() {
                 <CardTitle className="text-lg">Basic Information</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.name}
-                      onChange={(e) => handleChange('name', e.target.value)}
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                      Job Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.title}
-                      onChange={(e) => handleChange('title', e.target.value)}
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                      Company
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.company}
-                      onChange={(e) => handleChange('company', e.target.value)}
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.location}
-                      onChange={(e) => handleChange('location', e.target.value)}
-                      placeholder="City, State/Country"
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={userData?.name || ''}
+                    disabled
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm bg-neutral-100 text-neutral-500 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-neutral-500 font-montserrat mt-1">
+                    Name cannot be changed here. Contact support to update.
+                  </p>
                 </div>
 
                 <div>
@@ -229,6 +338,46 @@ export default function EditProfilePage() {
                     {profileData.bio.length} / 500 characters
                   </p>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                      Work Experience / Job Title
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.workExperience}
+                      onChange={(e) => handleChange('workExperience', e.target.value)}
+                      placeholder="e.g., Senior Software Engineer at Google"
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.city}
+                      onChange={(e) => handleChange('city', e.target.value)}
+                      placeholder="e.g., San Francisco, CA"
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                    Timezone
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.timezone}
+                    onChange={(e) => handleChange('timezone', e.target.value)}
+                    placeholder="e.g., PST, EST, GMT"
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -238,104 +387,51 @@ export default function EditProfilePage() {
                 <CardTitle className="text-lg">Professional Details</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                      Years of Experience
-                    </label>
-                    <select
-                      value={profileData.yearsOfExperience}
-                      onChange={(e) => handleChange('yearsOfExperience', e.target.value)}
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    >
-                      <option value="0-1">0-1 years</option>
-                      <option value="1-3">1-3 years</option>
-                      <option value="3-5">3-5 years</option>
-                      <option value="5-10">5-10 years</option>
-                      <option value="10+">10+ years</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                      Availability
-                    </label>
-                    <select
-                      value={profileData.availability}
-                      onChange={(e) => handleChange('availability', e.target.value)}
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    >
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Weekends">Weekends only</option>
-                      <option value="Flexible">Flexible</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                    Available Hours Per Month
+                  </label>
+                  <input
+                    type="number"
+                    value={profileData.availableHours}
+                    onChange={(e) => handleChange('availableHours', e.target.value)}
+                    placeholder="e.g., 10"
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                    Education
+                    {userData?.role === 'MENTOR' ? 'What I Can Help With' : 'What I\'m Looking For'}
                   </label>
-                  <input
-                    type="text"
-                    value={profileData.education}
-                    onChange={(e) => handleChange('education', e.target.value)}
-                    placeholder="e.g., B.S. Computer Science - Stanford University"
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                  <textarea
+                    value={userData?.role === 'MENTOR' ? profileData.helpsWith : profileData.lookingFor}
+                    onChange={(e) => handleChange(userData?.role === 'MENTOR' ? 'helpsWith' : 'lookingFor', e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                    placeholder={userData?.role === 'MENTOR' ? 'Describe what you can help mentees with...' : 'Describe what kind of mentorship you\'re looking for...'}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                    Goals
+                  </label>
+                  <textarea
+                    value={profileData.goals}
+                    onChange={(e) => handleChange('goals', e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                    placeholder="What are your professional goals?"
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Skills & Expertise */}
+            {/* Interests & Expertise */}
             <Card className="shadow-lg">
               <CardHeader className="border-b border-neutral-200">
-                <CardTitle className="text-lg">Skills & Expertise</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                    Add Skills
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
-                      placeholder="e.g., JavaScript, React, Leadership"
-                      className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                    />
-                    <Button onClick={handleAddSkill} variant="outline">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {profileData.expertise.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="outline"
-                      className="px-3 py-1 text-sm bg-primary-accent/10 border-primary-accent/30 text-primary-dark"
-                    >
-                      {skill}
-                      <button
-                        onClick={() => handleRemoveSkill(skill)}
-                        className="ml-2 hover:text-red-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Interests */}
-            <Card className="shadow-lg">
-              <CardHeader className="border-b border-neutral-200">
-                <CardTitle className="text-lg">Interests</CardTitle>
+                <CardTitle className="text-lg">Interests & Expertise</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <div>
@@ -348,7 +444,7 @@ export default function EditProfilePage() {
                       value={newInterest}
                       onChange={(e) => setNewInterest(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleAddInterest()}
-                      placeholder="e.g., Web Development, AI, Design"
+                      placeholder="e.g., Web Development, AI, Design, Leadership"
                       className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
                     />
                     <Button onClick={handleAddInterest} variant="outline">
@@ -358,21 +454,74 @@ export default function EditProfilePage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {profileData.interests.map((interest) => (
-                    <Badge
-                      key={interest}
-                      variant="outline"
-                      className="px-3 py-1 text-sm bg-secondary-accent/10 border-secondary-accent/30 text-primary-dark"
-                    >
-                      {interest}
-                      <button
-                        onClick={() => handleRemoveInterest(interest)}
-                        className="ml-2 hover:text-red-600"
+                  {profileData.interests.length > 0 ? (
+                    profileData.interests.map((interest) => (
+                      <Badge
+                        key={interest}
+                        variant="outline"
+                        className="px-3 py-1 text-sm bg-primary-accent/10 border-primary-accent/30 text-primary-dark"
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
+                        {interest}
+                        <button
+                          onClick={() => handleRemoveInterest(interest)}
+                          className="ml-2 hover:text-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-neutral-500 font-montserrat">No interests added yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Industries */}
+            <Card className="shadow-lg">
+              <CardHeader className="border-b border-neutral-200">
+                <CardTitle className="text-lg">Industries</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
+                    Add Industries
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newIndustry}
+                      onChange={(e) => setNewIndustry(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddIndustry()}
+                      placeholder="e.g., Technology, Healthcare, Finance"
+                      className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+                    />
+                    <Button onClick={handleAddIndustry} variant="outline">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {profileData.industries.length > 0 ? (
+                    profileData.industries.map((industry) => (
+                      <Badge
+                        key={industry}
+                        variant="outline"
+                        className="px-3 py-1 text-sm bg-secondary-accent/10 border-secondary-accent/30 text-primary-dark"
+                      >
+                        {industry}
+                        <button
+                          onClick={() => handleRemoveIndustry(industry)}
+                          className="ml-2 hover:text-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-neutral-500 font-montserrat">No industries added yet</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -413,28 +562,14 @@ export default function EditProfilePage() {
 
                 <div>
                   <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                    <Facebook className="inline h-4 w-4 mr-2" />
-                    Facebook
+                    <Instagram className="inline h-4 w-4 mr-2" />
+                    Instagram
                   </label>
                   <input
                     type="url"
-                    value={profileData.facebook}
-                    onChange={(e) => handleChange('facebook', e.target.value)}
-                    placeholder="https://facebook.com/yourprofile"
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold font-montserrat text-neutral-700 mb-2">
-                    <Link2 className="inline h-4 w-4 mr-2" />
-                    Personal Website
-                  </label>
-                  <input
-                    type="url"
-                    value={profileData.website}
-                    onChange={(e) => handleChange('website', e.target.value)}
-                    placeholder="https://yourwebsite.com"
+                    value={profileData.instagram}
+                    onChange={(e) => handleChange('instagram', e.target.value)}
+                    placeholder="https://instagram.com/yourhandle"
                     className="w-full px-4 py-2 border border-neutral-300 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary-accent focus:border-transparent"
                   />
                 </div>
@@ -446,17 +581,28 @@ export default function EditProfilePage() {
               <Button
                 variant="outline"
                 size="lg"
-                asChild
+                disabled={saving}
+                asChild={!saving}
               >
                 <Link href="/dashboard">Cancel</Link>
               </Button>
               <Button
                 onClick={handleSave}
                 size="lg"
-                className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-lg"
+                disabled={saving}
+                className="bg-primary-accent hover:bg-primary-accent/90 text-primary-dark shadow-lg disabled:opacity-50"
               >
-                <Save className="mr-2 h-5 w-5" />
-                Save Changes
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-5 w-5" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </div>
           </div>

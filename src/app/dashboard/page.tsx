@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -29,31 +30,120 @@ import {
   ThumbsUp,
   UserPlus,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
+  const [loading, setLoading] = useState(true)
+  const [userData, setUserData] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [matches, setMatches] = useState<any[]>([])
+  const [sessions, setSessions] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [profileViews, setProfileViews] = useState(0)
 
-  // Mock user data - in production this would come from auth/API
+  // Fetch all dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+
+        // Fetch user profile, matches, sessions, and notifications in parallel
+        const [profileRes, matchesRes, sessionsRes, notificationsRes] = await Promise.all([
+          fetch('/api/profile/me'),
+          fetch('/api/matches'),
+          fetch('/api/sessions'),
+          fetch('/api/notifications'),
+        ])
+
+        const profileData = await profileRes.json()
+        const matchesData = await matchesRes.json()
+        const sessionsData = await sessionsRes.json()
+        const notificationsData = await notificationsRes.json()
+
+        if (!profileRes.ok) {
+          throw new Error(profileData.error || 'Failed to fetch profile')
+        }
+
+        setUserData(profileData.user)
+        setMatches(matchesData.success ? matchesData.matches : [])
+        setSessions(sessionsData.success ? sessionsData.sessions : [])
+        setNotifications(notificationsData.success ? notificationsData.notifications : [])
+
+        // Fetch profile views count for the current user
+        if (profileData.user?.id) {
+          const viewsRes = await fetch(`/api/profile/views?userId=${profileData.user.id}&period=30d`)
+          const viewsData = await viewsRes.json()
+          if (viewsData.success) {
+            setProfileViews(viewsData.viewCount || 0)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-primary-dark">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary-accent mx-auto mb-4" />
+            <p className="text-white font-montserrat">Loading your dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error || !userData) {
+    return (
+      <div className="min-h-screen bg-primary-dark">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-white font-montserrat mb-4">{error || 'Failed to load profile'}</p>
+            <Button onClick={() => window.location.reload()} className="bg-primary-accent text-primary-dark">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Extract user data
   const user = {
-    name: 'Sarah Johnson',
-    role: 'mentor', // or 'mentee'
-    title: 'Senior Software Engineer',
-    company: 'Google',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
-    joinDate: 'January 2024',
-    rating: 4.9,
-    totalMentees: 12,
-    completedSessions: 45,
+    name: userData.name || 'User',
+    role: userData.role?.toLowerCase() || 'mentee',
+    title: userData.profile?.workExperience || 'No title set',
+    company: userData.profile?.city || 'Not specified',
+    avatar: userData.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=A3F3C4&color=1B4332&size=400`,
+    joinDate: new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    rating: 4.9, // TODO: Calculate from reviews
+    totalMentees: 0, // TODO: Count from matches
+    completedSessions: 0, // TODO: Count from sessions
     // Profile completeness fields
-    hasAvatar: true,
-    hasBio: true,
-    hasSkills: true,
-    hasExperience: true,
-    hasEducation: true,
-    hasSocialLinks: false,
-    hasAvailability: true,
+    hasAvatar: !!userData.profile?.profilePicture,
+    hasBio: !!userData.profile?.bio,
+    hasSkills: userData.profile?.interests && userData.profile.interests.length > 0,
+    hasExperience: !!userData.profile?.workExperience,
+    hasEducation: !!userData.profile?.yearsOfExperience,
+    hasSocialLinks: !!(userData.profile?.linkedIn || userData.profile?.twitter),
+    hasAvailability: !!userData.profile?.availableHours,
   }
 
   // Calculate profile completeness
@@ -75,82 +165,54 @@ export default function DashboardPage() {
   const profileCompleteness = calculateProfileCompleteness()
   const isProfileComplete = profileCompleteness === 100
 
-  // Mock analytics data
+  // Calculate analytics from real data
   const analytics = {
-    newInterests: 8,
-    totalMatches: 12,
-    unreadMessages: 5,
-    profileViews: 124,
-    upcomingSessions: 3,
-    completedSessions: 45,
+    newInterests: matches.filter(m => m.status === 'PENDING').length,
+    totalMatches: matches.filter(m => m.status === 'ACTIVE').length,
+    unreadMessages: matches.reduce((sum, match) => sum + (match.unreadMessages || 0), 0),
+    profileViews: profileViews,
+    upcomingSessions: sessions.filter(s => s.status === 'SCHEDULED' && new Date(s.scheduledAt) > new Date()).length,
+    completedSessions: sessions.filter(s => s.status === 'COMPLETED').length,
   }
 
-  // Mock recent activity
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'interest',
-      user: 'Alex Thompson',
-      action: 'showed interest in your profile',
-      time: '2 hours ago',
-      unread: true,
-    },
-    {
-      id: 2,
-      type: 'message',
-      user: 'Emily Rodriguez',
-      action: 'sent you a message',
-      time: '5 hours ago',
-      unread: true,
-    },
-    {
-      id: 3,
-      type: 'match',
-      user: 'Michael Chen',
-      action: 'You matched with',
-      time: '1 day ago',
-      unread: false,
-    },
-    {
-      id: 4,
-      type: 'session',
-      user: 'Jessica Taylor',
-      action: 'completed a session with you',
-      time: '2 days ago',
-      unread: false,
-    },
-  ]
+  // Convert notifications to activity feed
+  const recentActivity = notifications.slice(0, 4).map(notification => {
+    let type = 'notification'
+    if (notification.type === 'CONNECTION_REQUEST') type = 'interest'
+    if (notification.type === 'MESSAGE') type = 'message'
+    if (notification.type === 'SESSION_SCHEDULED') type = 'session'
+    if (notification.type === 'MATCH_ACCEPTED') type = 'match'
 
-  // Mock matches
-  const matches = [
-    {
-      id: 1,
-      name: 'Alex Thompson',
-      title: 'Software Developer',
-      matchDate: '2 days ago',
-      lastMessage: 'Thank you for accepting! Looking forward to our first session.',
-      unread: true,
-      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-    {
-      id: 2,
-      name: 'Emily Rodriguez',
-      title: 'Product Manager',
-      matchDate: '5 days ago',
-      lastMessage: 'Great session today! See you next week.',
-      unread: false,
-      avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-    {
-      id: 3,
-      name: 'Michael Chen',
-      title: 'Marketing Specialist',
-      matchDate: '1 week ago',
-      lastMessage: 'Can we schedule a call for next Tuesday?',
-      unread: true,
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-  ]
+    return {
+      id: notification.id,
+      type,
+      user: notification.title,
+      action: notification.message,
+      time: new Date(notification.createdAt).toLocaleDateString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }),
+      unread: !notification.read,
+    }
+  })
+
+  // Get recent matches for display
+  const recentMatches = matches.filter(m => m.status === 'ACTIVE').slice(0, 3).map(match => {
+    const otherUser = match.user1Id === userData?.id ? match.user2 : match.user1
+    return {
+      id: match.id,
+      name: otherUser?.name || 'Unknown User',
+      title: otherUser?.profile?.workExperience || 'No title',
+      matchDate: new Date(match.matchedAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      }),
+      lastMessage: '',
+      unread: match.unreadMessages > 0,
+      avatar: otherUser?.profile?.profilePicture || null,
+    }
+  })
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/header'
@@ -22,11 +22,16 @@ import {
   UserPlus,
   Clock,
   TrendingUp,
-  Users
+  Users,
+  Loader2,
+  AlertCircle,
+  Sparkles
 } from 'lucide-react'
 
-// Mock matches data
-const mockMatches = [
+// Removed mock data - using real API
+
+// Mock matches data (will be replaced by API)
+const mockMatchesBackup = [
   {
     id: 1,
     userId: '1',
@@ -177,32 +182,56 @@ type FilterType = 'all' | 'mentors' | 'mentees' | 'active' | 'inactive'
 
 export default function MatchesPage() {
   const router = useRouter()
+  const [matches, setMatches] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch matches from API
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/matches')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch matches')
+        }
+
+        setMatches(data.matches)
+      } catch (err) {
+        console.error('Error fetching matches:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load matches')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMatches()
+  }, [])
 
   // Filter matches
-  const filteredMatches = mockMatches.filter((match) => {
+  const filteredMatches = matches.filter((match) => {
     // Search filter
     const matchesSearch = searchQuery === '' ||
-      match.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.company.toLowerCase().includes(searchQuery.toLowerCase())
+      match.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.title?.toLowerCase().includes(searchQuery.toLowerCase())
 
-    // Role/status filter
+    // Role filter
     let matchesFilter = true
-    if (activeFilter === 'mentors') matchesFilter = match.role === 'mentor'
-    if (activeFilter === 'mentees') matchesFilter = match.role === 'mentee'
-    if (activeFilter === 'active') matchesFilter = match.status === 'active'
-    if (activeFilter === 'inactive') matchesFilter = match.status === 'inactive'
+    if (activeFilter === 'mentors') matchesFilter = match.role === 'MENTOR'
+    if (activeFilter === 'mentees') matchesFilter = match.role === 'MENTEE'
 
     return matchesSearch && matchesFilter
   })
 
   // Calculate stats
-  const totalMatches = mockMatches.length
-  const activeMentors = mockMatches.filter(m => m.role === 'mentor' && m.status === 'active').length
-  const activeMentees = mockMatches.filter(m => m.role === 'mentee' && m.status === 'active').length
-  const totalUnread = mockMatches.reduce((sum, m) => sum + m.unreadMessages, 0)
+  const totalMatches = matches.length
+  const activeMentors = matches.filter(m => m.role === 'MENTOR').length
+  const activeMentees = matches.filter(m => m.role === 'MENTEE').length
+  const totalUnread = matches.reduce((sum, match) => sum + (match.unreadMessages || 0), 0)
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -303,7 +332,7 @@ export default function MatchesPage() {
                 onClick={() => setActiveFilter('all')}
                 className={activeFilter === 'all' ? 'bg-primary-accent text-primary-dark' : ''}
               >
-                All ({mockMatches.length})
+                All ({matches.length})
               </Button>
               <Button
                 variant={activeFilter === 'mentors' ? 'primary' : 'ghost'}
@@ -312,7 +341,7 @@ export default function MatchesPage() {
                 className={activeFilter === 'mentors' ? 'bg-primary-accent text-primary-dark' : ''}
               >
                 <Star className="h-4 w-4 mr-1" />
-                Mentors ({mockMatches.filter(m => m.role === 'mentor').length})
+                Mentors ({matches.filter(m => m.role === 'MENTOR').length})
               </Button>
               <Button
                 variant={activeFilter === 'mentees' ? 'primary' : 'ghost'}
@@ -321,7 +350,7 @@ export default function MatchesPage() {
                 className={activeFilter === 'mentees' ? 'bg-secondary-accent text-white' : ''}
               >
                 <TrendingUp className="h-4 w-4 mr-1" />
-                Mentees ({mockMatches.filter(m => m.role === 'mentee').length})
+                Mentees ({matches.filter(m => m.role === 'MENTEE').length})
               </Button>
               <Button
                 variant={activeFilter === 'active' ? 'primary' : 'ghost'}
@@ -329,7 +358,7 @@ export default function MatchesPage() {
                 onClick={() => setActiveFilter('active')}
                 className={activeFilter === 'active' ? 'bg-green-600 text-white' : ''}
               >
-                Active ({mockMatches.filter(m => m.status === 'active').length})
+                Active ({matches.filter(m => m.status === 'ACTIVE').length})
               </Button>
             </div>
           </div>
