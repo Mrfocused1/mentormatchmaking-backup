@@ -263,10 +263,9 @@ export async function POST(request: NextRequest) {
     await prisma.notification.create({
       data: {
         userId: recipientId,
-        type: 'CONNECTION_REQUEST',
+        type: 'INTEREST_REQUEST',
         title: 'New Connection Request',
         message: `${connection.user1Id === user.id ? connection.user1.name : connection.user2.name} sent you a connection request`,
-        actionUrl: '/connections',
       },
     })
 

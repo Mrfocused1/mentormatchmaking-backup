@@ -91,10 +91,9 @@ export async function POST(request: NextRequest) {
     await prisma.notification.create({
       data: {
         userId: reviewedId,
-        type: 'MESSAGE',
+        type: 'REVIEW_RECEIVED',
         title: 'New Review',
         message: `${review.reviewer.name} left you a ${rating}-star review`,
-        actionUrl: `/profile/${user.id}`,
       },
     })
 

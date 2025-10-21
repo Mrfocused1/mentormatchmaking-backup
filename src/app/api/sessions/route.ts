@@ -175,10 +175,9 @@ export async function POST(request: NextRequest) {
     await prisma.notification.create({
       data: {
         userId: otherUserId,
-        type: 'SESSION_SCHEDULED',
+        type: 'SESSION_CONFIRMED',
         title: 'New Session Scheduled',
         message: `${user.id === mentorId ? session.mentor.name : session.mentee.name} scheduled a session with you`,
-        actionUrl: `/sessions/${session.id}`,
       },
     })
 
