@@ -59,12 +59,8 @@ export async function PATCH(
     const connection = await prisma.match.findUnique({
       where: { id: connectionId },
       include: {
-        user1: {
-          select: { id: true, name: true },
-        },
-        user2: {
-          select: { id: true, name: true },
-        },
+        user1: true,
+        user2: true,
       },
     })
 
@@ -108,29 +104,13 @@ export async function PATCH(
       },
       include: {
         user1: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-            profile: {
-              select: {
-                profilePicture: true,
-                workExperience: true,
-              },
-            },
+          include: {
+            profile: true,
           },
         },
         user2: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-            profile: {
-              select: {
-                profilePicture: true,
-                workExperience: true,
-              },
-            },
+          include: {
+            profile: true,
           },
         },
       },
