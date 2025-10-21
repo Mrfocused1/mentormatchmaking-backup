@@ -535,7 +535,6 @@ export default function BrowseMentorsNew() {
     'Therapy',
     'Counseling',
     'Life Coaching',
-    'Executive Coaching',
     'Career Coaching',
     'Fitness Training',
     'Personal Training',
