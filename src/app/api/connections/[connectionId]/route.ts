@@ -120,12 +120,11 @@ export async function PATCH(
     await prisma.notification.create({
       data: {
         userId: connection.initiatedById,
-        type: action === 'accept' ? 'CONNECTION_ACCEPTED' : 'MESSAGE',
+        type: action === 'accept' ? 'MATCH' : 'MESSAGE',
         title: action === 'accept' ? 'Connection Accepted!' : 'Connection Declined',
         message: action === 'accept'
           ? `${currentUserName} accepted your connection request`
           : `${currentUserName} declined your connection request`,
-        actionUrl: action === 'accept' ? '/matches' : '/connections',
       },
     })
 
