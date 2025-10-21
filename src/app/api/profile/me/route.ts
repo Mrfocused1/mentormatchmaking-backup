@@ -7,9 +7,12 @@ export async function GET(request: NextRequest) {
   try {
     // Create Supabase server client
     const cookieStore = await cookies()
+    const supabaseUrl = 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw'
+
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         cookies: {
           getAll() {
@@ -43,8 +46,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch user and profile from database
-    const dbUser = await prisma.user.findUnique({
+    // Fetch user and profile from database, create if doesn't exist
+    let dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
         profile: {
@@ -56,11 +59,26 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    // If user doesn't exist in database, create them
     if (!dbUser) {
-      return NextResponse.json(
-        { error: 'User not found in database' },
-        { status: 404 }
-      )
+      dbUser = await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email!,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          age: user.user_metadata?.age || 18,
+          role: user.user_metadata?.role || 'MENTEE',
+          emailVerified: user.email_confirmed_at ? new Date(user.email_confirmed_at) : null,
+        },
+        include: {
+          profile: {
+            include: {
+              industries: true,
+              interests: true,
+            },
+          },
+        },
+      })
     }
 
     return NextResponse.json({
