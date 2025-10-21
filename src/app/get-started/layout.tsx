@@ -70,14 +70,14 @@ export default function GetStartedLayout({
         "name": "Mentor Registration",
         "description": "Become a mentor and share your expertise with mentees",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "GBP"
       },
       {
         "@type": "Offer",
         "name": "Mentee Registration",
         "description": "Find a mentor to guide your personal and professional growth",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "GBP"
       }
     ]
   };

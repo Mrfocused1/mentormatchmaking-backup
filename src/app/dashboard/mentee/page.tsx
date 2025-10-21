@@ -31,7 +31,8 @@ import {
   HelpCircle,
   AlertCircle,
   BarChart3,
-  Target
+  Target,
+  UserCheck
 } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -85,6 +86,7 @@ export default function DashboardPage() {
     profileViews: 124,
     upcomingSessions: 3,
     completedSessions: 45,
+    followingCount: 15,
   }
 
   // Mock recent activity
@@ -315,21 +317,21 @@ export default function DashboardPage() {
                 <Card className="border-primary-accent/20 hover:border-primary-accent hover:shadow-lg transition-all">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 bg-warning/10 rounded-full">
-                        <Eye className="h-6 w-6 text-warning" />
+                      <div className="p-3 bg-vibrant-accent/10 rounded-full">
+                        <UserCheck className="h-6 w-6 text-vibrant-accent" />
                       </div>
                     </div>
                     <p className="text-3xl font-black font-montserrat text-primary-dark">
-                      {analytics.profileViews}
+                      {analytics.followingCount}
                     </p>
                     <p className="text-sm text-neutral-600 font-montserrat mt-1">
-                      Profile Views (30 days)
+                      Mentors Following
                     </p>
                     <Link
-                      href="/profile/views"
+                      href="/following"
                       className="text-xs text-primary-accent hover:underline font-semibold font-montserrat mt-2 inline-block"
                     >
-                      View analytics →
+                      View all →
                     </Link>
                   </CardContent>
                 </Card>
@@ -512,12 +514,20 @@ export default function DashboardPage() {
                         </Link>
                       </Button>
                       {user.role === 'mentee' && (
-                        <Button variant="outline" size="md" fullWidth asChild>
-                          <Link href="/browse-mentors">
-                            <Users className="mr-2 h-4 w-4" />
-                            Find Mentors
-                          </Link>
-                        </Button>
+                        <>
+                          <Button variant="outline" size="md" fullWidth asChild>
+                            <Link href="/browse-mentors">
+                              <Users className="mr-2 h-4 w-4" />
+                              Find Mentors
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="md" fullWidth asChild>
+                            <Link href="/following">
+                              <UserCheck className="mr-2 h-4 w-4" />
+                              Following ({analytics.followingCount})
+                            </Link>
+                          </Button>
+                        </>
                       )}
                       <Button variant="ghost" size="md" fullWidth asChild className="text-neutral-600">
                         <Link href="/help">

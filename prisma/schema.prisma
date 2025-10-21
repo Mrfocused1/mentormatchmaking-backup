@@ -43,6 +43,8 @@ model User {
   blockedBy         Block[]            @relation("Blocked")
   blogPosts         BlogPost[]
   ageVerification   AgeVerification?
+  following         Follow[]           @relation("Follower")
+  followers         Follow[]           @relation("Following")
 
   @@index([email])
   @@index([role])
@@ -427,4 +429,19 @@ enum AgeVerificationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// Follow system (social media style)
+model Follow {
+  id          String    @id @default(cuid())
+  followerId  String    // User who is following
+  followingId String    // User being followed (typically a mentor)
+  followedAt  DateTime  @default(now())
+
+  follower    User      @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User      @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

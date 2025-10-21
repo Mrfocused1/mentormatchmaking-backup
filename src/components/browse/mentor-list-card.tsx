@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { FollowButton } from '@/components/ui/follow-button'
 import {
   MapPin,
   Star,
@@ -29,6 +30,8 @@ interface Mentor {
   availability: string
   bio: string
   avatar: string | null
+  followers?: number
+  isFollowing?: boolean
 }
 
 interface MentorListCardProps {
@@ -139,6 +142,13 @@ export function MentorListCard({ mentor, onShowInterest, onViewProfile }: Mentor
                 <Heart className="mr-2 h-4 w-4" />
                 Show Interest
               </Button>
+              <FollowButton
+                mentorId={mentor.id.toString()}
+                initialIsFollowing={mentor.isFollowing || false}
+                initialFollowerCount={mentor.followers || 0}
+                size="md"
+                onWhiteBackground={true}
+              />
               <Button
                 variant="outline"
                 size="md"

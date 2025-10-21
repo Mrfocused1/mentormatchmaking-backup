@@ -6,6 +6,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { ComingSoon } from '@/components/coming-soon'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -165,6 +166,32 @@ const industries = [
 ]
 
 export default function Home() {
+  // Authentication state for preview access
+  const [hasPreviewAccess, setHasPreviewAccess] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
+  // Check if user has preview access on mount
+  useEffect(() => {
+    const previewAccess = localStorage.getItem('preview_access')
+    setHasPreviewAccess(previewAccess === 'true')
+    setIsCheckingAuth(false)
+  }, [])
+
+  // Handle successful authentication
+  const handleAuthenticated = () => {
+    setHasPreviewAccess(true)
+  }
+
+  // Show loading state briefly while checking auth
+  if (isCheckingAuth) {
+    return <div className="min-h-screen bg-primary-dark" />
+  }
+
+  // Show Coming Soon page if not authenticated
+  if (!hasPreviewAccess) {
+    return <ComingSoon onAuthenticated={handleAuthenticated} />
+  }
+
   const [testimonials, setTestimonials] = useState([
     {
       content: "Finding my mentor through Look 4 Mentors was a game-changer for my career. The personalized guidance helped me land my dream job!",

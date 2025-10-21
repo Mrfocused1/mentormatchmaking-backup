@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ReviewCard, Review } from '@/components/reviews/review-card'
+import { FollowButton } from '@/components/ui/follow-button'
 import {
   Star,
   MapPin,
@@ -68,10 +69,10 @@ const mockMentor = {
     },
   ],
   sessionTypes: [
-    { name: 'Career Guidance', price: '$150', duration: '60 min' },
-    { name: 'Portfolio Review', price: '$120', duration: '45 min' },
-    { name: 'Design Critique', price: '$100', duration: '30 min' },
-    { name: 'Career Transition', price: '$180', duration: '90 min' },
+    { name: 'Career Guidance', price: '£150', duration: '60 min' },
+    { name: 'Portfolio Review', price: '£120', duration: '45 min' },
+    { name: 'Design Critique', price: '£100', duration: '30 min' },
+    { name: 'Career Transition', price: '£180', duration: '90 min' },
   ],
   stats: {
     totalSessions: 156,
@@ -79,9 +80,11 @@ const mockMentor = {
     averageRating: 4.8,
     totalReviews: 42,
     responseTime: '2 hours',
+    followers: 328,
   },
   availability: 'Usually responds within 2 hours',
   isAvailable: true,
+  isFollowing: false,
 }
 
 // Mock reviews
@@ -309,6 +312,13 @@ export default function MentorProfilePage() {
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Send Message
                     </Button>
+                    <FollowButton
+                      mentorId={mentorId}
+                      initialIsFollowing={mockMentor.isFollowing}
+                      initialFollowerCount={mockMentor.stats.followers}
+                      size="md"
+                      onWhiteBackground={false}
+                    />
                     <Button
                       onClick={() => setIsSaved(!isSaved)}
                       variant="outline"
@@ -366,6 +376,14 @@ export default function MentorProfilePage() {
                     </span>
                     <span className="text-xl font-black font-montserrat text-primary-dark">
                       {mockMentor.stats.totalMentees}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-montserrat text-neutral-600">
+                      Followers
+                    </span>
+                    <span className="text-xl font-black font-montserrat text-primary-dark">
+                      {mockMentor.stats.followers}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
