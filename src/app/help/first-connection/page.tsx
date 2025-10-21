@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { HelpArticle } from '@/components/help/HelpArticle'
 
 export default function FirstConnectionArticle() {
