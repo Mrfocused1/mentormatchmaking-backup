@@ -170,30 +170,7 @@ export default function Home() {
   const [hasPreviewAccess, setHasPreviewAccess] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
-  // Check if we're on the client and if user has preview access
-  useEffect(() => {
-    setIsClient(true)
-    if (typeof window !== 'undefined') {
-      const previewAccess = localStorage.getItem('preview_access')
-      setHasPreviewAccess(previewAccess === 'true')
-    }
-  }, [])
-
-  // Handle successful authentication
-  const handleAuthenticated = () => {
-    setHasPreviewAccess(true)
-  }
-
-  // Show loading state until client-side hydration is complete
-  if (!isClient) {
-    return <div className="min-h-screen bg-primary-dark" />
-  }
-
-  // Show Coming Soon page if not authenticated
-  if (!hasPreviewAccess) {
-    return <ComingSoon onAuthenticated={handleAuthenticated} />
-  }
-
+  // All useState hooks must be at the top before any conditional returns
   const [testimonials, setTestimonials] = useState([
     {
       content: "Finding my mentor through Look 4 Mentors was a game-changer for my career. The personalized guidance helped me land my dream job!",
@@ -245,15 +222,21 @@ export default function Home() {
     },
   ])
 
-  const firstColumn = testimonials.slice(0, 3)
-  const secondColumn = testimonials.slice(3, 6)
-  const thirdColumn = testimonials.slice(0, 3)
   const [stats, setStats] = useState([
     { label: 'Active Mentors', value: 20, suffix: '+', decimals: 0, icon: Users },
     { label: 'Successful Matches', value: 15, suffix: '+', decimals: 0, icon: Heart },
     { label: 'Industries Covered', value: 25, suffix: '+', decimals: 0, icon: Globe },
     { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
   ])
+
+  // Check if we're on the client and if user has preview access
+  useEffect(() => {
+    setIsClient(true)
+    if (typeof window !== 'undefined') {
+      const previewAccess = localStorage.getItem('preview_access')
+      setHasPreviewAccess(previewAccess === 'true')
+    }
+  }, [])
 
   useEffect(() => {
     // Load stats from localStorage
@@ -293,6 +276,26 @@ export default function Home() {
 
     fetchTestimonialImages()
   }, [])
+
+  // Handle successful authentication
+  const handleAuthenticated = () => {
+    setHasPreviewAccess(true)
+  }
+
+  // Show loading state until client-side hydration is complete
+  if (!isClient) {
+    return <div className="min-h-screen bg-primary-dark" />
+  }
+
+  // Show Coming Soon page if not authenticated
+  if (!hasPreviewAccess) {
+    return <ComingSoon onAuthenticated={handleAuthenticated} />
+  }
+
+  // Derived values (after all hooks and before JSX)
+  const firstColumn = testimonials.slice(0, 3)
+  const secondColumn = testimonials.slice(3, 6)
+  const thirdColumn = testimonials.slice(0, 3)
 
   return (
     <div className="min-h-screen bg-white">
