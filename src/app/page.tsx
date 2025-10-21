@@ -6,7 +6,6 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { ComingSoon } from '@/components/coming-soon'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -166,10 +165,6 @@ const industries = [
 ]
 
 export default function Home() {
-  // Authentication state for preview access
-  const [hasPreviewAccess, setHasPreviewAccess] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-
   // All useState hooks must be at the top before any conditional returns
   const [testimonials, setTestimonials] = useState([
     {
@@ -229,15 +224,6 @@ export default function Home() {
     { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
   ])
 
-  // Check if we're on the client and if user has preview access
-  useEffect(() => {
-    setIsClient(true)
-    if (typeof window !== 'undefined') {
-      const previewAccess = localStorage.getItem('preview_access')
-      setHasPreviewAccess(previewAccess === 'true')
-    }
-  }, [])
-
   useEffect(() => {
     // Load stats from localStorage
     const activeMentors = getActiveMentors()
@@ -249,48 +235,7 @@ export default function Home() {
       { label: 'Industries Covered', value: 25, suffix: '+', decimals: 0, icon: Globe },
       { label: 'Average Rating', value: 4.8, suffix: '/5', decimals: 1, icon: Star },
     ])
-
-    // Fetch Pexels images for testimonial avatars
-    const fetchTestimonialImages = async () => {
-      try {
-        const response = await fetch('https://api.pexels.com/v1/search?query=professional+headshot+portrait&per_page=20&orientation=square', {
-          headers: {
-            Authorization: '8sLoMXg5fX4DKdmX8sSFxebcYNbdcwU6VizqTp4YRdrJ7a3MVlwc9qpp'
-          }
-        })
-
-        const data = await response.json()
-
-        if (data.photos && data.photos.length >= 6) {
-          setTestimonials(prevTestimonials =>
-            prevTestimonials.map((testimonial, index) => ({
-              ...testimonial,
-              avatar: data.photos[index + 6]?.src?.medium || null // Use offset to get different images than mentors
-            }))
-          )
-        }
-      } catch (error) {
-        console.error('Error fetching testimonial images:', error)
-      }
-    }
-
-    fetchTestimonialImages()
   }, [])
-
-  // Handle successful authentication
-  const handleAuthenticated = () => {
-    setHasPreviewAccess(true)
-  }
-
-  // Show loading state until client-side hydration is complete
-  if (!isClient) {
-    return <div className="min-h-screen bg-primary-dark" />
-  }
-
-  // Show Coming Soon page if not authenticated
-  if (!hasPreviewAccess) {
-    return <ComingSoon onAuthenticated={handleAuthenticated} />
-  }
 
   // Derived values (after all hooks and before JSX)
   const firstColumn = testimonials.slice(0, 3)

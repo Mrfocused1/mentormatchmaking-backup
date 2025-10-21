@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Menu, X, LayoutDashboard, MessageCircle, Bell, User, HelpCircle } from 'lucide-react'
@@ -9,13 +10,25 @@ import { cn } from '@/lib/utils'
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const supabase = createClient()
 
-  // TODO: Replace with actual authentication check
-  const isAuthenticated = () => {
-    // Placeholder: Check if user is logged in
-    // In production, this would check for a valid session/token
-    return typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
-  }
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAuthenticated(!!session)
+    }
+
+    checkAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Mock unread counts - in production these would come from API/state management
   const unreadMessages = 5
@@ -58,7 +71,7 @@ export function Header() {
 
           {/* Desktop CTA - Show different content based on auth */}
           <div className="hidden md:flex items-center space-x-2">
-            {isAuthenticated() ? (
+            {isAuthenticated ? (
               <>
                 {/* Authenticated User Navigation */}
                 <Link
@@ -101,8 +114,9 @@ export function Header() {
                   <span className="hidden lg:inline">Help</span>
                 </Link>
                 <Link
-                  href="/profile"
+                  href="/settings"
                   className="flex items-center justify-center gap-2 px-3 min-h-[44px] min-w-[44px] rounded-lg text-sm font-medium font-montserrat text-primary-dark hover:bg-neutral-100 transition-colors ml-2"
+                  title="Profile & Settings"
                 >
                   <User className="h-5 w-5" />
                 </Link>
@@ -147,7 +161,7 @@ export function Header() {
       >
         <div className="space-y-1 px-4 pb-3 pt-2">
           {/* Authenticated User Navigation - Mobile */}
-          {isAuthenticated() && (
+          {isAuthenticated && (
             <div className="space-y-1 mb-4 pb-4 border-b border-neutral-200">
               <Link
                 href="/dashboard"
@@ -192,12 +206,12 @@ export function Header() {
                 <span>Contact Admin</span>
               </Link>
               <Link
-                href="/profile"
+                href="/settings"
                 className="flex items-center gap-3 rounded-md px-3 min-h-[44px] text-base font-medium font-montserrat text-primary-dark hover:bg-neutral-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <User className="h-5 w-5" />
-                <span>Profile</span>
+                <span>Profile & Settings</span>
               </Link>
             </div>
           )}
@@ -215,7 +229,7 @@ export function Header() {
           ))}
 
           {/* CTA Buttons - Only show if not authenticated */}
-          {!isAuthenticated() && (
+          {!isAuthenticated && (
             <div className="flex flex-col space-y-2 pt-4">
               <Button variant="outline" fullWidth className="min-h-[44px]" asChild>
                 <Link href="/login">Log In</Link>

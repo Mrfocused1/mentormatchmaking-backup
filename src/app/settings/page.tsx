@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -28,7 +30,22 @@ import {
 } from 'lucide-react'
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const supabase = createClient()
   const [activeSection, setActiveSection] = useState('account')
+  const [isSigningOut, setIsSigningOut] = useState(false)
+
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true)
+      await supabase.auth.signOut()
+      router.push('/')
+      router.refresh()
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setIsSigningOut(false)
+    }
+  }
 
   // Mock user data
   const user = {
@@ -280,6 +297,37 @@ export default function SettingsPage() {
                         </div>
                         <Button variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
                           Deactivate
+                        </Button>
+                      </div>
+                      <div className="flex items-start justify-between pt-4 border-t border-neutral-200">
+                        <div>
+                          <h3 className="font-semibold font-montserrat text-neutral-900">
+                            Sign Out
+                          </h3>
+                          <p className="text-sm text-neutral-600 font-montserrat mt-1">
+                            Sign out of your account on this device.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleSignOut}
+                          disabled={isSigningOut}
+                          variant="ghost"
+                          className="text-neutral-900 hover:bg-neutral-100"
+                        >
+                          {isSigningOut ? (
+                            <span className="flex items-center gap-2">
+                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Signing Out...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <LogOut className="h-4 w-4" />
+                              Sign Out
+                            </span>
+                          )}
                         </Button>
                       </div>
                     </CardContent>
