@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       data: {
         viewerId: viewerId || null,
         viewedId,
-        ipAddress: request.ip || request.headers.get('x-forwarded-for') || null,
+        ipAddress: request.headers.get('x-forwarded-for') || null,
       },
     })
 
