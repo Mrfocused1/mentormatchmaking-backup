@@ -36,25 +36,23 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // In real implementation, fetch from API
-    // For now, using mock data
-    setTimeout(() => {
-      setStats({
-        totalUsers: 1247,
-        newUsersThisWeek: 38,
-        totalMentors: 542,
-        totalMentees: 705,
-        activeSessions: 156,
-        completedSessions: 892,
-        upcomingSessions: 45,
-        totalMessages: 5431,
-        pendingReports: 3,
-        openTickets: 7,
-        emailsSentToday: 234,
-        emailsSentThisWeek: 1567
-      })
-      setLoading(false)
-    }, 500)
+    async function fetchStats() {
+      try {
+        const response = await fetch('/api/admin/stats')
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data)
+        } else {
+          console.error('Failed to fetch stats')
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
   }, [])
 
   if (loading) {

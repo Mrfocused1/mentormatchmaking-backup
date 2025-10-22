@@ -405,6 +405,48 @@ model Session {
   @@index([status])
 }
 
+model Ticket {
+  id          String       @id @default(cuid())
+  userId      String?
+  name        String
+  email       String
+  subject     String
+  message     String
+  priority    Priority     @default(MEDIUM)
+  status      TicketStatus @default(OPEN)
+  assignedTo  String?
+  resolution  String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  User        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model EmailLog {
+  id          String      @id @default(cuid())
+  recipient   String
+  subject     String
+  type        EmailType
+  status      EmailStatus @default(PENDING)
+  opened      Boolean     @default(false)
+  clicked     Boolean     @default(false)
+  bouncedAt   DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  errorMessage String?
+  resendId    String?     @unique
+  createdAt   DateTime    @default(now())
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([recipient])
+}
+
 model User {
   id                                               String            @id @default(cuid())
   email                                            String            @unique
@@ -442,6 +484,7 @@ model User {
   SavedProfile                                     SavedProfile[]
   Session_Session_menteeIdToUser                   Session[]         @relation("Session_menteeIdToUser")
   Session_Session_mentorIdToUser                   Session[]         @relation("Session_mentorIdToUser")
+  Ticket                                           Ticket[]
 
   @@index([email])
   @@index([role])
@@ -565,4 +608,46 @@ enum SessionStatus {
 enum UserRole {
   MENTOR
   MENTEE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum EmailType {
+  WELCOME_MENTOR
+  WELCOME_MENTEE
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+  SESSION_REMINDER
+  SESSION_CONFIRMATION
+  SESSION_CANCELLATION
+  NEW_MATCH
+  NEW_MESSAGE
+  CONNECTION_REQUEST
+  REVIEW_REQUEST
+  WEEKLY_SUMMARY
+  ONBOARDING_REMINDER
+  REENGAGEMENT
+  HELP_SUPPORT
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
 }

@@ -2,60 +2,74 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Filter, UserPlus, MoreVertical, Mail, Ban, CheckCircle, XCircle } from 'lucide-react'
 
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  status: string
+  createdAt: string
+  sessionsCount: number
+  rating: number
+  Profile?: {
+    profilePicture?: string
+    status?: string
+  }
+}
+
 export default function UsersAdminPage() {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
 
-  // Mock data - replace with real API call
-  const users = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@example.com',
-      role: 'MENTOR',
-      status: 'active',
-      joinedAt: '2025-09-15',
-      sessions: 24,
-      rating: 4.8,
-      verified: true
-    },
-    {
-      id: '2',
-      name: 'Mike Chen',
-      email: 'mike.chen@example.com',
-      role: 'MENTEE',
-      status: 'active',
-      joinedAt: '2025-10-01',
-      sessions: 8,
-      rating: null,
-      verified: true
-    },
-    {
-      id: '3',
-      name: 'Emma Wilson',
-      email: 'emma.w@example.com',
-      role: 'MENTOR',
-      status: 'inactive',
-      joinedAt: '2025-08-20',
-      sessions: 45,
-      rating: 4.9,
-      verified: true
-    },
-    {
-      id: '4',
-      name: 'Alex Thompson',
-      email: 'alex.t@example.com',
-      role: 'MENTEE',
-      status: 'active',
-      joinedAt: '2025-10-18',
-      sessions: 2,
-      rating: null,
-      verified: false
-    },
-  ]
+  useEffect(() => {
+    async function fetchUsers() {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '20',
+          search: searchTerm,
+          role: filterRole,
+          status: filterStatus
+        })
+
+        const response = await fetch(`/api/admin/users?${params}`)
+        if (response.ok) {
+          const data = await response.json()
+          setUsers(data.users)
+          setTotal(data.total)
+        } else {
+          console.error('Failed to fetch users')
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchUsers()
+    }, 300) // Debounce search
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, filterRole, filterStatus, page])
+
+  if (loading && users.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-accent"></div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -79,10 +93,10 @@ export default function UsersAdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total Users', value: '1,247', color: 'bg-blue-500' },
-            { label: 'Mentors', value: '542', color: 'bg-green-500' },
-            { label: 'Mentees', value: '705', color: 'bg-purple-500' },
-            { label: 'Active Today', value: '328', color: 'bg-cyan-500' },
+            { label: 'Total Users', value: total.toLocaleString(), color: 'bg-blue-500' },
+            { label: 'Mentors', value: users.filter(u => u.role === 'MENTOR').length.toString(), color: 'bg-green-500' },
+            { label: 'Mentees', value: users.filter(u => u.role === 'MENTEE').length.toString(), color: 'bg-purple-500' },
+            { label: 'Active', value: users.filter(u => u.status === 'ACTIVE').length.toString(), color: 'bg-cyan-500' },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-lg border border-gray-200 p-4">
               <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
@@ -122,11 +136,15 @@ export default function UsersAdminPage() {
           </div>
 
           {/* Status Filter */}
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent">
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
-            <option>Suspended</option>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent"
+          >
+            <option value="all">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PAUSED">Paused</option>
+            <option value="PRIVATE">Private</option>
           </select>
         </div>
       </div>
@@ -165,15 +183,20 @@ export default function UsersAdminPage() {
                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-accent flex items-center justify-center text-primary-dark font-bold">
-                        {user.name.charAt(0)}
-                      </div>
+                      {user.Profile?.profilePicture ? (
+                        <img
+                          src={user.Profile.profilePicture}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary-accent flex items-center justify-center text-primary-dark font-bold">
+                          {user.name.charAt(0)}
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-primary-dark flex items-center gap-2">
                           {user.name}
-                          {user.verified && (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          )}
                         </p>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
@@ -190,7 +213,7 @@ export default function UsersAdminPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                      user.status === 'active'
+                      user.status === 'ACTIVE'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
@@ -198,19 +221,19 @@ export default function UsersAdminPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {user.sessions}
+                    {user.sessionsCount}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {user.rating ? (
                       <span className="flex items-center gap-1">
-                        ⭐ {user.rating}
+                        ⭐ {user.rating.toFixed(1)}
                       </span>
                     ) : (
                       <span className="text-gray-400">N/A</span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {new Date(user.joinedAt).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
@@ -234,13 +257,21 @@ export default function UsersAdminPage() {
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing 1-4 of 1,247 users
+            Showing {((page - 1) * 20) + 1}-{Math.min(page * 20, total)} of {total.toLocaleString()} users
           </p>
           <div className="flex gap-2">
-            <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Previous
             </button>
-            <button className="px-4 py-2 bg-primary-accent text-primary-dark rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page * 20 >= total}
+              className="px-4 py-2 bg-primary-accent text-primary-dark rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Next
             </button>
           </div>
