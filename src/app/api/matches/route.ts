@@ -45,12 +45,7 @@ export async function GET(request: NextRequest) {
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
-        Profile: {
-          include: {
-            interests: true,
-            industries: true,
-          },
-        },
+        Profile: true,
       },
     })
 
@@ -91,8 +86,9 @@ export async function GET(request: NextRequest) {
     })
 
     // Calculate match scores
-    const userInterestSlugs = currentUser.Profile.interests.map(i => i.slug)
-    const userIndustrySlugs = currentUser.Profile.industries.map(i => i.slug)
+    // Temporarily set to empty arrays since includes are disabled
+    const userInterestSlugs: string[] = []  // currentUser.Profile.interests.map(i => i.slug)
+    const userIndustrySlugs: string[] = []  // currentUser.Profile.industries.map(i => i.slug)
 
     interface ScoredMatch {
       user: typeof potentialMatches[0]
