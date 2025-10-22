@@ -2,8 +2,10 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -28,11 +30,11 @@ import {
   ArrowLeft
 } from 'lucide-react'
 
-// Notification types
+// Notification types (from Prisma schema)
 type NotificationType = 'interest' | 'match' | 'message' | 'session' | 'review' | 'milestone' | 'system'
 
 interface Notification {
-  id: number
+  id: string
   type: NotificationType
   title: string
   description: string
@@ -46,139 +48,39 @@ interface Notification {
   }
 }
 
-// Mock notifications data
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    type: 'interest',
-    title: 'New Interest Request',
-    description: 'Michael Chen has shown interest in connecting with you',
-    timestamp: '5 minutes ago',
-    isRead: false,
-    actionUrl: '/dashboard',
-    user: {
-      name: 'Michael Chen',
-      avatar: null,
-      role: 'mentee',
-    },
-  },
-  {
-    id: 2,
-    type: 'message',
-    title: 'New Message',
-    description: 'Emily Rodriguez sent you a message',
-    timestamp: '1 hour ago',
-    isRead: false,
-    actionUrl: '/messages',
-    user: {
-      name: 'Emily Rodriguez',
-      avatar: null,
-      role: 'mentor',
-    },
-  },
-  {
-    id: 3,
-    type: 'match',
-    title: 'New Match!',
-    description: 'You and David Kim have been matched! Start your mentorship journey.',
-    timestamp: '3 hours ago',
-    isRead: true,
-    actionUrl: '/messages',
-    user: {
-      name: 'David Kim',
-      avatar: null,
-      role: 'mentee',
-    },
-  },
-  {
-    id: 4,
-    type: 'session',
-    title: 'Session Reminder',
-    description: 'Your session with Sarah Thompson starts in 24 hours',
-    timestamp: '5 hours ago',
-    isRead: true,
-    actionUrl: '/dashboard',
-    user: {
-      name: 'Sarah Thompson',
-      avatar: null,
-      role: 'mentee',
-    },
-  },
-  {
-    id: 5,
-    type: 'review',
-    title: 'New Review Received',
-    description: 'James Wilson left you a 5-star review',
-    timestamp: 'Yesterday',
-    isRead: true,
-    actionUrl: '/profile',
-    user: {
-      name: 'James Wilson',
-      avatar: null,
-      role: 'mentee',
-    },
-  },
-  {
-    id: 6,
-    type: 'milestone',
-    title: 'Milestone Achieved!',
-    description: 'Congratulations! You\'ve completed 50 mentorship sessions.',
-    timestamp: 'Yesterday',
-    isRead: true,
-    actionUrl: '/dashboard',
-  },
-  {
-    id: 7,
-    type: 'interest',
-    title: 'New Interest Request',
-    description: 'Lisa Anderson wants to connect with you',
-    timestamp: '2 days ago',
-    isRead: true,
-    actionUrl: '/dashboard',
-    user: {
-      name: 'Lisa Anderson',
-      avatar: null,
-      role: 'mentee',
-    },
-  },
-  {
-    id: 8,
-    type: 'message',
-    title: 'New Message',
-    description: 'Robert Taylor replied to your message',
-    timestamp: '2 days ago',
-    isRead: true,
-    actionUrl: '/messages',
-    user: {
-      name: 'Robert Taylor',
-      avatar: null,
-      role: 'mentor',
-    },
-  },
-  {
-    id: 9,
-    type: 'system',
-    title: 'Profile Update Reminder',
-    description: 'Keep your profile up to date to attract more matches',
-    timestamp: '3 days ago',
-    isRead: true,
-    actionUrl: '/profile',
-  },
-  {
-    id: 10,
-    type: 'session',
-    title: 'Session Completed',
-    description: 'Your session with Alex Martinez has been marked as complete',
-    timestamp: '4 days ago',
-    isRead: true,
-    actionUrl: '/dashboard',
-    user: {
-      name: 'Alex Martinez',
-      avatar: null,
-      role: 'mentee',
-    },
-  },
-]
+// Helper function to format timestamp
+const formatTimestamp = (createdAt: string): string => {
+  const now = new Date()
+  const created = new Date(createdAt)
+  const diffMs = now.getTime() - created.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`
+  return created.toLocaleDateString()
+}
+
+// Map database NotificationType enum to frontend display types
+const mapNotificationType = (dbType: string): NotificationType => {
+  const typeMap: Record<string, NotificationType> = {
+    'INTEREST_REQUEST': 'interest',
+    'MATCH': 'match',
+    'MESSAGE': 'message',
+    'SESSION_REMINDER': 'session',
+    'SESSION_CONFIRMED': 'session',
+    'REVIEW_RECEIVED': 'review',
+    'PROFILE_VIEW': 'milestone',
+    'NEW_MENTOR': 'milestone',
+    'SYSTEM': 'system',
+  }
+  return typeMap[dbType] || 'system'
+}
 
 // Notification type config
 const notificationConfig: Record<NotificationType, { icon: any; color: string; bgColor: string }> = {
@@ -243,8 +145,84 @@ const groupNotificationsByTime = (notifications: Notification[]) => {
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const router = useRouter()
+  const supabase = createClient()
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [filterType, setFilterType] = useState<NotificationType | 'all'>('all')
+  const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        setCurrentUserId(user.id)
+
+        // Fetch notifications with user data
+        const { data, error } = await supabase
+          .from('Notification')
+          .select(`
+            id,
+            type,
+            title,
+            message,
+            data,
+            read,
+            createdAt,
+            User:userId (
+              id,
+              name,
+              role,
+              Profile (
+                profilePicture
+              )
+            )
+          `)
+          .eq('userId', user.id)
+          .order('createdAt', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching notifications:', error)
+          return
+        }
+
+        // Transform database notifications to match UI format
+        const transformedNotifications: Notification[] = (data || []).map((dbNotification: any) => {
+          const actionUrlFromData = dbNotification.data?.actionUrl
+
+          return {
+            id: dbNotification.id,
+            type: mapNotificationType(dbNotification.type),
+            title: dbNotification.title,
+            description: dbNotification.message,
+            timestamp: formatTimestamp(dbNotification.createdAt),
+            isRead: dbNotification.read,
+            actionUrl: actionUrlFromData,
+            user: dbNotification.User ? {
+              name: dbNotification.User.name,
+              avatar: dbNotification.User.Profile?.profilePicture || null,
+              role: dbNotification.User.role.toLowerCase() as 'mentor' | 'mentee',
+            } : undefined,
+          }
+        })
+
+        setNotifications(transformedNotifications)
+      } catch (error) {
+        console.error('Error in fetchNotifications:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNotifications()
+  }, [supabase, router])
 
   // Filter notifications by type
   const filteredNotifications = filterType === 'all'
@@ -258,20 +236,68 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.isRead).length
 
   // Mark single notification as read
-  const markAsRead = (id: number) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    )
+  const markAsRead = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('Notification')
+        .update({ read: true })
+        .eq('id', id)
+
+      if (error) {
+        console.error('Error marking notification as read:', error)
+        return
+      }
+
+      // Update local state
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+      )
+    } catch (error) {
+      console.error('Error in markAsRead:', error)
+    }
   }
 
   // Mark all as read
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+  const markAllAsRead = async () => {
+    if (!currentUserId) return
+
+    try {
+      const { error } = await supabase
+        .from('Notification')
+        .update({ read: true })
+        .eq('userId', currentUserId)
+        .eq('read', false)
+
+      if (error) {
+        console.error('Error marking all notifications as read:', error)
+        return
+      }
+
+      // Update local state
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    } catch (error) {
+      console.error('Error in markAllAsRead:', error)
+    }
   }
 
   // Delete notification
-  const deleteNotification = (id: number) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
+  const deleteNotification = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('Notification')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Error deleting notification:', error)
+        return
+      }
+
+      // Update local state
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    } catch (error) {
+      console.error('Error in deleteNotification:', error)
+    }
   }
 
   // Render notification item
@@ -492,7 +518,16 @@ export default function NotificationsPage() {
 
             {/* Notifications List */}
             <div className="bg-white">
-              {filteredNotifications.length > 0 ? (
+              {loading ? (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <Bell className="h-8 w-8 text-neutral-400" />
+                  </div>
+                  <p className="text-neutral-500 font-montserrat">
+                    Loading notifications...
+                  </p>
+                </div>
+              ) : filteredNotifications.length > 0 ? (
                 <>
                   {renderGroup('Today', groupedNotifications.today)}
                   {renderGroup('Yesterday', groupedNotifications.yesterday)}

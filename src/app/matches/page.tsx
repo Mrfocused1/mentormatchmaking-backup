@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -30,10 +31,10 @@ import {
   Sparkles
 } from 'lucide-react'
 
-// Removed mock data - using real API
+// Removed mock data - using real Supabase queries
 
-// Mock matches data (will be replaced by API)
-const mockMatchesBackup = [
+// Removed mockMatchesBackup - no longer needed
+/*const mockMatchesBackup = [
   {
     id: 1,
     userId: '1',
@@ -178,33 +179,108 @@ const mockMatchesBackup = [
     lastMessageTime: '1 month ago',
     unreadMessages: 0,
   },
-]
+]*/
 
 type FilterType = 'all' | 'mentors' | 'mentees' | 'active' | 'inactive'
 
 export default function MatchesPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [matches, setMatches] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  // Fetch matches from API
+  // Fetch matches from Supabase
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/matches')
-        const data = await response.json()
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch matches')
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
         }
 
-        setMatches(data.matches)
+        setCurrentUserId(user.id)
+
+        // Fetch matches where current user is either user1 or user2, and status is ACTIVE
+        const { data: matchesData, error: matchesError } = await supabase
+          .from('Match')
+          .select('*')
+          .or(`user1Id.eq.${user.id},user2Id.eq.${user.id}`)
+          .eq('status', 'ACTIVE')
+          .order('matchedAt', { ascending: false })
+
+        if (matchesError) {
+          console.error('Error fetching matches:', matchesError)
+          throw new Error('Failed to fetch matches')
+        }
+
+        if (!matchesData || matchesData.length === 0) {
+          setMatches([])
+          return
+        }
+
+        // Get the IDs of all matched users (excluding current user)
+        const matchedUserIds = matchesData.map(match =>
+          match.user1Id === user.id ? match.user2Id : match.user1Id
+        )
+
+        // Fetch user data for all matched users
+        const { data: usersData, error: usersError } = await supabase
+          .from('User')
+          .select(`
+            id,
+            name,
+            role,
+            Profile (
+              workExperience,
+              city,
+              profilePicture,
+              bio
+            )
+          `)
+          .in('id', matchedUserIds)
+
+        if (usersError) {
+          console.error('Error fetching user data:', usersError)
+          throw new Error('Failed to fetch user data')
+        }
+
+        // Combine match data with user data
+        const enrichedMatches = matchesData.map(match => {
+          const matchedUserId = match.user1Id === user.id ? match.user2Id : match.user1Id
+          const matchedUser = usersData?.find(u => u.id === matchedUserId)
+          const profile = Array.isArray(matchedUser?.Profile) ? matchedUser?.Profile[0] : matchedUser?.Profile
+
+          return {
+            id: match.id,
+            userId: matchedUserId,
+            name: matchedUser?.name || 'Unknown User',
+            role: matchedUser?.role?.toLowerCase() || 'mentee',
+            title: profile?.workExperience || 'User',
+            company: '', // Not available in current schema
+            location: profile?.city || 'Location not set',
+            avatar: profile?.profilePicture || null,
+            matchedDate: match.matchedAt,
+            rating: 0, // Will need to calculate from reviews if needed
+            sessionsCompleted: 0, // Will need to fetch from sessions if needed
+            expertise: [], // Not available in current schema
+            status: match.status,
+            lastMessage: '', // Will need to fetch from messages if needed
+            lastMessageTime: '', // Will need to fetch from messages if needed
+            unreadMessages: 0, // Will need to fetch from messages if needed
+          }
+        })
+
+        setMatches(enrichedMatches)
       } catch (err) {
-        console.error('Error fetching matches:', err)
+        console.error('Error in fetchMatches:', err)
         setError(err instanceof Error ? err.message : 'Failed to load matches')
       } finally {
         setLoading(false)
@@ -212,7 +288,7 @@ export default function MatchesPage() {
     }
 
     fetchMatches()
-  }, [])
+  }, [supabase, router])
 
   // Filter matches
   const filteredMatches = matches.filter((match) => {
@@ -366,7 +442,38 @@ export default function MatchesPage() {
           </div>
 
           {/* Matches Grid */}
-          {filteredMatches.length > 0 ? (
+          {loading ? (
+            <Card className="shadow-md">
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-primary-accent mx-auto mb-4 animate-spin" />
+                <h3 className="text-xl font-bold font-montserrat text-neutral-700 mb-2">
+                  Loading your matches...
+                </h3>
+                <p className="text-neutral-500 font-montserrat">
+                  Please wait while we fetch your connections
+                </p>
+              </CardContent>
+            </Card>
+          ) : error ? (
+            <Card className="shadow-md">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold font-montserrat text-neutral-700 mb-2">
+                  Error loading matches
+                </h3>
+                <p className="text-neutral-500 font-montserrat mb-6">
+                  {error}
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                  className="bg-primary-accent text-primary-dark"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredMatches.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredMatches.map((match) => (
                 <Card key={match.id} className="shadow-md hover:shadow-xl transition-all">
