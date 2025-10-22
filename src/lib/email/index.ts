@@ -1,5 +1,6 @@
 // Email sending utilities using Resend
 import { Resend } from 'resend'
+import { createClient } from '@/lib/supabase/server'
 
 // Import all email templates
 import WelcomeMentorEmail from './templates/welcome-mentor'
@@ -18,12 +19,45 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 // Default from email - Format: "Name <email@domain.com>"
 const FROM_EMAIL = `Look 4 Mentors <${process.env.EMAIL_FROM || 'support@look4mentors.com'}>`
 
-// Email sending helper
-async function sendEmail(to: string, subject: string, html: string) {
+// Email types for logging
+export type EmailType =
+  | 'WELCOME_MENTOR'
+  | 'WELCOME_MENTEE'
+  | 'PASSWORD_RESET'
+  | 'EMAIL_VERIFICATION'
+  | 'PASSWORD_CHANGED'
+  | 'NEW_MATCH'
+  | 'NEW_MESSAGE'
+  | 'CONNECTION_REQUEST'
+  | 'SESSION_REMINDER'
+  | 'SESSION_CONFIRMED'
+  | 'SESSION_CANCELLED'
+  | 'REVIEW_REQUEST'
+  | 'PROFILE_VIEW'
+  | 'CONTACT_FORM_REPLY'
+  | 'REPORT_RECEIVED'
+
+// Email sending helper with logging
+async function sendEmail(to: string, subject: string, html: string, emailType: EmailType) {
+  const supabase = createClient()
+  let status: 'SENT' | 'FAILED' = 'FAILED'
+  let emailData = null
+
   try {
     if (!process.env.RESEND_API_KEY) {
       console.warn('RESEND_API_KEY not set. Email would have been sent to:', to)
       console.warn('Subject:', subject)
+
+      // Log the failed attempt
+      await supabase.from('EmailLog').insert({
+        recipient: to,
+        subject,
+        type: emailType,
+        status: 'FAILED',
+        opened: false,
+        clicked: false
+      })
+
       return { success: false, error: 'RESEND_API_KEY not configured' }
     }
 
@@ -36,13 +70,53 @@ async function sendEmail(to: string, subject: string, html: string) {
 
     if (error) {
       console.error('Error sending email:', error)
+      status = 'FAILED'
+
+      // Log the failed send
+      await supabase.from('EmailLog').insert({
+        recipient: to,
+        subject,
+        type: emailType,
+        status: 'FAILED',
+        opened: false,
+        clicked: false
+      })
+
       return { success: false, error }
     }
 
     console.log('Email sent successfully:', data)
+    status = 'SENT'
+    emailData = data
+
+    // Log the successful send
+    await supabase.from('EmailLog').insert({
+      recipient: to,
+      subject,
+      type: emailType,
+      status: 'SENT',
+      opened: false,
+      clicked: false
+    })
+
     return { success: true, data }
   } catch (error) {
     console.error('Exception sending email:', error)
+
+    // Log the exception
+    try {
+      await supabase.from('EmailLog').insert({
+        recipient: to,
+        subject,
+        type: emailType,
+        status: 'FAILED',
+        opened: false,
+        clicked: false
+      })
+    } catch (logError) {
+      console.error('Failed to log email exception:', logError)
+    }
+
     return { success: false, error }
   }
 }
@@ -53,22 +127,22 @@ async function sendEmail(to: string, subject: string, html: string) {
 
 export async function sendWelcomeMentorEmail(to: string, name: string, profileUrl: string) {
   const html = WelcomeMentorEmail({ name, profileUrl })
-  return sendEmail(to, 'Welcome to Look 4 Mentors - Share Your Expertise! 🎉', html)
+  return sendEmail(to, 'Welcome to Look 4 Mentors - Share Your Expertise! 🎉', html, 'WELCOME_MENTOR')
 }
 
 export async function sendWelcomeMenteeEmail(to: string, name: string, browseMentorsUrl: string) {
   const html = WelcomeMenteeEmail({ name, browseMentorsUrl })
-  return sendEmail(to, 'Welcome to Look 4 Mentors - Find Your Mentor! 🚀', html)
+  return sendEmail(to, 'Welcome to Look 4 Mentors - Find Your Mentor! 🚀', html, 'WELCOME_MENTEE')
 }
 
 export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string, expiresIn: string = '1 hour') {
   const html = PasswordResetEmail({ name, resetUrl, expiresIn })
-  return sendEmail(to, 'Reset Your Password - Look 4 Mentors', html)
+  return sendEmail(to, 'Reset Your Password - Look 4 Mentors', html, 'PASSWORD_RESET')
 }
 
 export async function sendEmailVerificationEmail(to: string, name: string, verificationUrl: string) {
   const html = EmailVerificationEmail({ name, verificationUrl })
-  return sendEmail(to, 'Verify Your Email Address - Look 4 Mentors', html)
+  return sendEmail(to, 'Verify Your Email Address - Look 4 Mentors', html, 'EMAIL_VERIFICATION')
 }
 
 export async function sendPasswordChangedEmail(to: string, name: string) {
@@ -88,7 +162,7 @@ export async function sendPasswordChangedEmail(to: string, name: string) {
       </body>
     </html>
   `
-  return sendEmail(to, 'Your Password Has Been Changed - Look 4 Mentors', html)
+  return sendEmail(to, 'Your Password Has Been Changed - Look 4 Mentors', html, 'PASSWORD_CHANGED')
 }
 
 // ============================================
@@ -114,7 +188,7 @@ export async function sendNewMatchEmail(
     profileUrl,
     messageUrl
   })
-  return sendEmail(to, `You've Got a New Match: ${matchName}! 🎉`, html)
+  return sendEmail(to, `You've Got a New Match: ${matchName}! 🎉`, html, 'NEW_MATCH')
 }
 
 export async function sendNewMessageEmail(
@@ -132,7 +206,7 @@ export async function sendNewMessageEmail(
     messagesUrl,
     senderPhoto
   })
-  return sendEmail(to, `New message from ${senderName} 💬`, html)
+  return sendEmail(to, `New message from ${senderName} 💬`, html, 'NEW_MESSAGE')
 }
 
 export async function sendConnectionRequestEmail(
@@ -152,7 +226,7 @@ export async function sendConnectionRequestEmail(
     requestUrl,
     senderPhoto
   })
-  return sendEmail(to, `${senderName} wants to connect with you! 🤝`, html)
+  return sendEmail(to, `${senderName} wants to connect with you! 🤝`, html, 'CONNECTION_REQUEST')
 }
 
 // ============================================
@@ -178,7 +252,7 @@ export async function sendSessionReminderEmail(
     sessionType,
     sessionUrl
   })
-  return sendEmail(to, `Reminder: Session with ${otherPersonName} Tomorrow ⏰`, html)
+  return sendEmail(to, `Reminder: Session with ${otherPersonName} Tomorrow ⏰`, html, 'SESSION_REMINDER')
 }
 
 export async function sendSessionConfirmedEmail(
@@ -198,7 +272,7 @@ export async function sendSessionConfirmedEmail(
     sessionType,
     sessionUrl
   })
-  return sendEmail(to, `Session Confirmed with ${otherPersonName}! ✨`, html)
+  return sendEmail(to, `Session Confirmed with ${otherPersonName}! ✨`, html, 'SESSION_CONFIRMED')
 }
 
 export async function sendSessionCancelledEmail(
@@ -226,7 +300,7 @@ export async function sendSessionCancelledEmail(
       </body>
     </html>
   `
-  return sendEmail(to, `Session Cancelled - ${sessionDate}`, html)
+  return sendEmail(to, `Session Cancelled - ${sessionDate}`, html, 'SESSION_CANCELLED')
 }
 
 // ============================================
@@ -257,7 +331,7 @@ export async function sendReviewRequestEmail(
       </body>
     </html>
   `
-  return sendEmail(to, `How was your session with ${otherPersonName}?`, html)
+  return sendEmail(to, `How was your session with ${otherPersonName}?`, html, 'REVIEW_REQUEST')
 }
 
 export async function sendProfileViewEmail(to: string, recipientName: string, viewerName: string, profileUrl: string) {
@@ -278,7 +352,7 @@ export async function sendProfileViewEmail(to: string, recipientName: string, vi
       </body>
     </html>
   `
-  return sendEmail(to, `${viewerName} viewed your profile`, html)
+  return sendEmail(to, `${viewerName} viewed your profile`, html, 'PROFILE_VIEW')
 }
 
 // ============================================
@@ -303,7 +377,7 @@ export async function sendContactFormAutoReply(to: string, name: string, subject
       </body>
     </html>
   `
-  return sendEmail(to, 'We received your message - Look 4 Mentors Support', html)
+  return sendEmail(to, 'We received your message - Look 4 Mentors Support', html, 'CONTACT_FORM_REPLY')
 }
 
 export async function sendReportReceivedEmail(to: string, name: string) {
@@ -323,7 +397,7 @@ export async function sendReportReceivedEmail(to: string, name: string) {
       </body>
     </html>
   `
-  return sendEmail(to, 'Report Received - Look 4 Mentors', html)
+  return sendEmail(to, 'Report Received - Look 4 Mentors', html, 'REPORT_RECEIVED')
 }
 
 // Export all functions

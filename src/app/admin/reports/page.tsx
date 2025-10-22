@@ -2,71 +2,87 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
-import { Flag, User, AlertTriangle, CheckCircle, XCircle, MoreVertical } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Flag, AlertTriangle, CheckCircle, XCircle, MoreVertical } from 'lucide-react'
+
+interface Report {
+  id: string
+  reason: string
+  description?: string
+  status: string
+  resolvedNote?: string
+  createdAt: string
+  severity: string
+  reporter: {
+    id: string
+    name: string
+    email: string
+  }
+  reported: {
+    id: string
+    name: string
+    email: string
+  }
+}
 
 export default function ReportsAdminPage() {
+  const [reports, setReports] = useState<Report[]>([])
+  const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('PENDING')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
 
-  // Mock data
-  const reports = [
-    {
-      id: '1',
-      reportedUser: 'Problem User',
-      reportedBy: 'Jane Doe',
-      reason: 'Inappropriate Behavior',
-      details: 'User was rude and unprofessional during our session. Made several inappropriate comments...',
-      status: 'PENDING',
-      createdAt: '2025-10-22T15:30:00',
-      severity: 'high'
-    },
-    {
-      id: '2',
-      reportedUser: 'Spam Account',
-      reportedBy: 'John Smith',
-      reason: 'Spam/Scam',
-      details: 'This user is sending spam messages to multiple users asking for money...',
-      status: 'UNDER_REVIEW',
-      createdAt: '2025-10-22T11:20:00',
-      severity: 'critical'
-    },
-    {
-      id: '3',
-      reportedUser: 'Fake Profile',
-      reportedBy: 'Anonymous',
-      reason: 'Fake Profile',
-      details: 'Profile photo appears to be stolen from stock images. Bio is copied from another site...',
-      status: 'PENDING',
-      createdAt: '2025-10-21T18:45:00',
-      severity: 'medium'
-    },
-    {
-      id: '4',
-      reportedUser: 'Minor Issue',
-      reportedBy: 'Sarah Johnson',
-      reason: 'No-Show',
-      details: 'User did not show up for scheduled session and did not respond to messages...',
-      status: 'RESOLVED',
-      createdAt: '2025-10-20T14:10:00',
-      severity: 'low',
-      resolution: 'Warning issued to user. Monitoring for repeat behavior.'
-    },
-  ]
+  useEffect(() => {
+    async function fetchReports() {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '20',
+          status: filterStatus
+        })
+
+        const response = await fetch(`/api/admin/reports?${params}`)
+        if (response.ok) {
+          const data = await response.json()
+          setReports(data.reports)
+          setTotal(data.total)
+        } else {
+          console.error('Failed to fetch reports')
+        }
+      } catch (error) {
+        console.error('Error fetching reports:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [filterStatus, page])
+
+  if (loading && reports.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-accent"></div>
+      </div>
+    )
+  }
 
   const stats = [
-    { label: 'Pending Reports', value: '3', color: 'bg-red-500' },
-    { label: 'Under Review', value: '5', color: 'bg-yellow-500' },
-    { label: 'Resolved Today', value: '8', color: 'bg-green-500' },
-    { label: 'Total This Month', value: '42', color: 'bg-purple-500' },
+    { label: 'Pending Reports', value: reports.filter(r => r.status === 'PENDING').length.toString(), color: 'bg-red-500' },
+    { label: 'Under Review', value: reports.filter(r => r.status === 'REVIEWING').length.toString(), color: 'bg-yellow-500' },
+    { label: 'Resolved', value: reports.filter(r => r.status === 'RESOLVED').length.toString(), color: 'bg-green-500' },
+    { label: 'Total', value: total.toLocaleString(), color: 'bg-purple-500' },
   ]
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING':
         return 'bg-red-100 text-red-800'
-      case 'UNDER_REVIEW':
+      case 'REVIEWING':
         return 'bg-yellow-100 text-yellow-800'
       case 'RESOLVED':
+      case 'DISMISSED':
         return 'bg-green-100 text-green-800'
       default:
         return 'bg-gray-100 text-gray-800'
@@ -119,26 +135,9 @@ export default function ReportsAdminPage() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent"
           >
             <option value="PENDING">Pending</option>
-            <option value="UNDER_REVIEW">Under Review</option>
+            <option value="REVIEWING">Under Review</option>
             <option value="RESOLVED">Resolved</option>
             <option value="all">All Reports</option>
-          </select>
-
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent">
-            <option>All Severity Levels</option>
-            <option>Critical</option>
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
-
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent">
-            <option>All Reasons</option>
-            <option>Inappropriate Behavior</option>
-            <option>Spam/Scam</option>
-            <option>Fake Profile</option>
-            <option>Harassment</option>
-            <option>No-Show</option>
           </select>
         </div>
       </div>
@@ -158,7 +157,7 @@ export default function ReportsAdminPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="font-bold text-primary-dark">
-                      {report.reason}
+                      {report.reason.replace(/_/g, ' ')}
                     </h3>
                     <span className={`px-2 py-1 rounded text-xs font-semibold ${getSeverityColor(report.severity)}`}>
                       {report.severity.toUpperCase()}
@@ -168,22 +167,24 @@ export default function ReportsAdminPage() {
                   <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
                     <div>
                       <p className="text-gray-500">Reported User</p>
-                      <p className="font-semibold text-red-600">{report.reportedUser}</p>
+                      <p className="font-semibold text-red-600">{report.reported.name}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Reported By</p>
-                      <p className="font-semibold">{report.reportedBy}</p>
+                      <p className="font-semibold">{report.reporter.name}</p>
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-3 rounded-lg">
-                    {report.details}
-                  </p>
+                  {report.description && (
+                    <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-3 rounded-lg">
+                      {report.description}
+                    </p>
+                  )}
 
-                  {report.resolution && (
+                  {report.resolvedNote && (
                     <div className="bg-green-50 border border-green-200 p-3 rounded-lg mb-3">
                       <p className="text-sm font-semibold text-green-800 mb-1">Resolution:</p>
-                      <p className="text-sm text-green-700">{report.resolution}</p>
+                      <p className="text-sm text-green-700">{report.resolvedNote}</p>
                     </div>
                   )}
 
@@ -224,6 +225,31 @@ export default function ReportsAdminPage() {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {total > 20 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Showing {((page - 1) * 20) + 1}-{Math.min(page * 20, total)} of {total.toLocaleString()} reports
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page * 20 >= total}
+              className="px-4 py-2 bg-primary-accent text-primary-dark rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

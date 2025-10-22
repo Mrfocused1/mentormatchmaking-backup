@@ -2,9 +2,57 @@
 
 export const dynamic = 'force-dynamic'
 
+import { useState, useEffect } from 'react'
 import { TrendingUp, Users, Calendar, MessageSquare, Target, Award } from 'lucide-react'
 
+interface Analytics {
+  activeUsers: number
+  completedSessions: number
+  sessionCompletionRate: number
+  totalMessages: number
+  avgRating: number
+  userGrowth: Array<{ month: string, count: number }>
+  topMentors: Array<{ rank: number, name: string, sessions: number, rating: number }>
+}
+
 export default function AnalyticsAdminPage() {
+  const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const response = await fetch('/api/admin/analytics')
+        if (response.ok) {
+          const data = await response.json()
+          setAnalytics(data)
+        } else {
+          console.error('Failed to fetch analytics')
+        }
+      } catch (error) {
+        console.error('Error fetching analytics:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-accent"></div>
+      </div>
+    )
+  }
+
+  if (!analytics) {
+    return <div className="p-8 text-center text-gray-600">Failed to load analytics</div>
+  }
+
+  const maxGrowth = Math.max(...analytics.userGrowth.map(m => m.count), 1)
+
   return (
     <div>
       {/* Header */}
@@ -21,28 +69,25 @@ export default function AnalyticsAdminPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {[
           {
-            label: 'Total Revenue',
-            value: '$45,239',
-            change: '+12.5%',
-            trend: 'up',
-            icon: Target,
-            color: 'bg-green-500'
-          },
-          {
             label: 'Active Users (30d)',
-            value: '892',
+            value: analytics.activeUsers.toString(),
             change: '+8.3%',
-            trend: 'up',
             icon: Users,
             color: 'bg-blue-500'
           },
           {
             label: 'Session Completion Rate',
-            value: '94.2%',
+            value: `${analytics.sessionCompletionRate}%`,
             change: '+2.1%',
-            trend: 'up',
             icon: Award,
             color: 'bg-purple-500'
+          },
+          {
+            label: 'Average Rating',
+            value: analytics.avgRating.toFixed(1),
+            change: 'Platform wide',
+            icon: Target,
+            color: 'bg-green-500'
           },
         ].map((metric) => (
           <div key={metric.label} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -68,43 +113,36 @@ export default function AnalyticsAdminPage() {
             User Growth (Last 6 Months)
           </h2>
           <div className="h-64 flex items-end justify-between gap-2">
-            {[65, 75, 85, 92, 108, 124].map((value, index) => (
+            {analytics.userGrowth.map((data, index) => (
               <div key={index} className="flex-1 flex flex-col items-center">
                 <div
                   className="w-full bg-primary-accent rounded-t-lg transition-all hover:opacity-80"
-                  style={{ height: `${(value / 124) * 100}%` }}
+                  style={{ height: `${(data.count / maxGrowth) * 100}%` }}
                 ></div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'][index]}
-                </p>
-                <p className="text-sm font-semibold text-primary-dark">{value}</p>
+                <p className="text-xs text-gray-500 mt-2">{data.month}</p>
+                <p className="text-sm font-semibold text-primary-dark">{data.count}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Session Distribution */}
+        {/* Top Mentors */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-primary-dark mb-4">
-            Session Type Distribution
+            Top Mentors (This Month)
           </h2>
-          <div className="space-y-4">
-            {[
-              { type: 'Career Coaching', count: 324, percentage: 36, color: 'bg-blue-500' },
-              { type: 'Technical Mentoring', count: 285, percentage: 32, color: 'bg-purple-500' },
-              { type: 'Leadership Skills', count: 198, percentage: 22, color: 'bg-green-500' },
-              { type: 'Interview Prep', count: 85, percentage: 10, color: 'bg-orange-500' },
-            ].map((session) => (
-              <div key={session.type}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">{session.type}</span>
-                  <span className="text-sm text-gray-600">{session.count} sessions</span>
+          <div className="space-y-3">
+            {analytics.topMentors.slice(0, 5).map((mentor) => (
+              <div key={mentor.rank} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-8 h-8 rounded-full bg-primary-accent flex items-center justify-center text-primary-dark font-bold">
+                  {mentor.rank}
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className={`${session.color} h-3 rounded-full transition-all`}
-                    style={{ width: `${session.percentage}%` }}
-                  ></div>
+                <div className="flex-1">
+                  <p className="font-semibold text-primary-dark">{mentor.name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-700">{mentor.sessions} sessions</p>
+                  <p className="text-xs text-gray-600">⭐ {mentor.rating.toFixed(1)}</p>
                 </div>
               </div>
             ))}
@@ -113,12 +151,11 @@ export default function AnalyticsAdminPage() {
       </div>
 
       {/* Engagement Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Avg. Sessions/User', value: '4.2', icon: Calendar },
-          { label: 'Messages Sent/Day', value: '1,245', icon: MessageSquare },
-          { label: 'Mentor Match Rate', value: '87%', icon: Users },
-          { label: 'User Satisfaction', value: '4.7/5', icon: Award },
+          { label: 'Total Messages', value: analytics.totalMessages.toLocaleString(), icon: MessageSquare },
+          { label: 'Completed Sessions', value: analytics.completedSessions.toLocaleString(), icon: Calendar },
+          { label: 'Avg. Rating', value: `${analytics.avgRating.toFixed(1)}/5`, icon: Award },
         ].map((metric) => (
           <div key={metric.label} className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-3 mb-2">
@@ -132,65 +169,6 @@ export default function AnalyticsAdminPage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Top Performers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Mentors */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-primary-dark mb-4">
-            Top Mentors (This Month)
-          </h2>
-          <div className="space-y-3">
-            {[
-              { name: 'Sarah Johnson', sessions: 28, rating: 4.9, specialty: 'Career Coaching' },
-              { name: 'Emma Wilson', sessions: 25, rating: 4.8, specialty: 'Leadership' },
-              { name: 'David Lee', sessions: 22, rating: 4.9, specialty: 'Tech Mentoring' },
-              { name: 'Jennifer Smith', sessions: 20, rating: 4.7, specialty: 'Interview Prep' },
-            ].map((mentor, index) => (
-              <div key={mentor.name} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-8 h-8 rounded-full bg-primary-accent flex items-center justify-center text-primary-dark font-bold">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-primary-dark">{mentor.name}</p>
-                  <p className="text-xs text-gray-600">{mentor.specialty}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-700">{mentor.sessions} sessions</p>
-                  <p className="text-xs text-gray-600">⭐ {mentor.rating}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Popular Times */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-primary-dark mb-4">
-            Peak Session Times
-          </h2>
-          <div className="space-y-3">
-            {[
-              { day: 'Monday', time: '6:00 PM - 8:00 PM', sessions: 45 },
-              { day: 'Tuesday', time: '7:00 PM - 9:00 PM', sessions: 42 },
-              { day: 'Wednesday', time: '6:00 PM - 8:00 PM', sessions: 48 },
-              { day: 'Thursday', time: '7:00 PM - 9:00 PM', sessions: 51 },
-              { day: 'Friday', time: '5:00 PM - 7:00 PM', sessions: 38 },
-            ].map((slot) => (
-              <div key={slot.day} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-primary-dark">{slot.day}</p>
-                  <p className="text-sm text-gray-600">{slot.time}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-primary-dark">{slot.sessions}</p>
-                  <p className="text-xs text-gray-600">sessions</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )

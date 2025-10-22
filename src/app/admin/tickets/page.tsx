@@ -2,61 +2,75 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MessageSquare, Clock, User, Mail, MoreVertical } from 'lucide-react'
 
-export default function TicketsAdminPage() {
-  const [filterStatus, setFilterStatus] = useState('OPEN')
+interface Ticket {
+  id: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  priority: string
+  status: string
+  createdAt: string
+  User?: {
+    id: string
+    name: string
+    email: string
+  }
+}
 
-  // Mock data
-  const tickets = [
-    {
-      id: '1',
-      subject: 'Cannot reset password',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      message: 'I am trying to reset my password but not receiving the email...',
-      status: 'OPEN',
-      createdAt: '2025-10-22T14:30:00',
-      priority: 'high'
-    },
-    {
-      id: '2',
-      subject: 'Session booking issue',
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      message: 'When I try to book a session with a mentor, I get an error message...',
-      status: 'IN_PROGRESS',
-      createdAt: '2025-10-22T10:15:00',
-      priority: 'medium'
-    },
-    {
-      id: '3',
-      subject: 'Profile photo upload problem',
-      name: 'Bob Johnson',
-      email: 'bob.j@example.com',
-      message: 'My profile photo keeps failing to upload. File size is under 5MB...',
-      status: 'OPEN',
-      createdAt: '2025-10-21T16:45:00',
-      priority: 'low'
-    },
-    {
-      id: '4',
-      subject: 'Billing question',
-      name: 'Alice Williams',
-      email: 'alice.w@example.com',
-      message: 'I was charged twice for my subscription this month...',
-      status: 'RESOLVED',
-      createdAt: '2025-10-20T09:20:00',
-      priority: 'high'
-    },
-  ]
+export default function TicketsAdminPage() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filterStatus, setFilterStatus] = useState('OPEN')
+  const [filterPriority, setFilterPriority] = useState('all')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    async function fetchTickets() {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '20',
+          status: filterStatus,
+          priority: filterPriority
+        })
+
+        const response = await fetch(`/api/admin/tickets?${params}`)
+        if (response.ok) {
+          const data = await response.json()
+          setTickets(data.tickets)
+          setTotal(data.total)
+        } else {
+          console.error('Failed to fetch tickets')
+        }
+      } catch (error) {
+        console.error('Error fetching tickets:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTickets()
+  }, [filterStatus, filterPriority, page])
+
+  if (loading && tickets.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-accent"></div>
+      </div>
+    )
+  }
 
   const stats = [
-    { label: 'Open Tickets', value: '7', color: 'bg-red-500' },
-    { label: 'In Progress', value: '5', color: 'bg-yellow-500' },
-    { label: 'Resolved Today', value: '12', color: 'bg-green-500' },
-    { label: 'Avg Response Time', value: '2.3h', color: 'bg-blue-500' },
+    { label: 'Open Tickets', value: tickets.filter(t => t.status === 'OPEN').length.toString(), color: 'bg-red-500' },
+    { label: 'In Progress', value: tickets.filter(t => t.status === 'IN_PROGRESS').length.toString(), color: 'bg-yellow-500' },
+    { label: 'Resolved', value: tickets.filter(t => t.status === 'RESOLVED').length.toString(), color: 'bg-green-500' },
+    { label: 'Total', value: total.toLocaleString(), color: 'bg-blue-500' },
   ]
 
   const getStatusColor = (status: string) => {
@@ -66,6 +80,7 @@ export default function TicketsAdminPage() {
       case 'IN_PROGRESS':
         return 'bg-yellow-100 text-yellow-800'
       case 'RESOLVED':
+      case 'CLOSED':
         return 'bg-green-100 text-green-800'
       default:
         return 'bg-gray-100 text-gray-800'
@@ -74,11 +89,12 @@ export default function TicketsAdminPage() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high':
+      case 'URGENT':
+      case 'HIGH':
         return 'text-red-600'
-      case 'medium':
+      case 'MEDIUM':
         return 'text-yellow-600'
-      case 'low':
+      case 'LOW':
         return 'text-gray-600'
       default:
         return 'text-gray-600'
@@ -121,11 +137,16 @@ export default function TicketsAdminPage() {
             <option value="all">All Tickets</option>
           </select>
 
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent">
-            <option>All Priorities</option>
-            <option>High Priority</option>
-            <option>Medium Priority</option>
-            <option>Low Priority</option>
+          <select
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-accent"
+          >
+            <option value="all">All Priorities</option>
+            <option value="URGENT">Urgent</option>
+            <option value="HIGH">High Priority</option>
+            <option value="MEDIUM">Medium Priority</option>
+            <option value="LOW">Low Priority</option>
           </select>
         </div>
       </div>
@@ -172,7 +193,7 @@ export default function TicketsAdminPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(ticket.status)}`}>
-                  {ticket.status}
+                  {ticket.status.replace('_', ' ')}
                 </span>
                 <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                   <MoreVertical className="w-5 h-5" />
@@ -193,6 +214,31 @@ export default function TicketsAdminPage() {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {total > 20 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Showing {((page - 1) * 20) + 1}-{Math.min(page * 20, total)} of {total.toLocaleString()} tickets
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page * 20 >= total}
+              className="px-4 py-2 bg-primary-accent text-primary-dark rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
