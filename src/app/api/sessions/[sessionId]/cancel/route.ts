@@ -4,9 +4,10 @@ import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params
     const supabase = await createClient()
     const { cancelledBy } = await request.json()
 
@@ -18,7 +19,7 @@ export async function POST(
         mentor:User!mentorId(*),
         mentee:User!menteeId(*)
       `)
-      .eq('id', params.sessionId)
+      .eq('id', sessionId)
       .single()
 
     if (!session) {
@@ -33,7 +34,7 @@ export async function POST(
         cancelledBy,
         cancelledAt: new Date().toISOString()
       })
-      .eq('id', params.sessionId)
+      .eq('id', sessionId)
 
     const sessionDate = new Date(session.scheduledAt)
     const formattedDate = sessionDate.toLocaleDateString('en-US', {

@@ -4,9 +4,10 @@ import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params
     const supabase = await createClient()
 
     // Get session
@@ -17,7 +18,7 @@ export async function POST(
         mentor:User!mentorId(*),
         mentee:User!menteeId(*)
       `)
-      .eq('id', params.sessionId)
+      .eq('id', sessionId)
       .single()
 
     if (!session) {
@@ -31,7 +32,7 @@ export async function POST(
         status: 'COMPLETED',
         completedAt: new Date().toISOString()
       })
-      .eq('id', params.sessionId)
+      .eq('id', sessionId)
 
     // Send review request to mentee
     await sendReviewRequestEmail(

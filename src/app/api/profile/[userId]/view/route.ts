@@ -4,9 +4,10 @@ import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params
     const supabase = await createClient()
     const { viewerId } = await request.json()
 
@@ -14,9 +15,9 @@ export async function POST(
     const { data: users } = await supabase
       .from('User')
       .select('*')
-      .in('id', [params.userId, viewerId])
+      .in('id', [userId, viewerId])
 
-    const profileOwner = users?.find(u => u.id === params.userId)
+    const profileOwner = users?.find(u => u.id === userId)
     const viewer = users?.find(u => u.id === viewerId)
 
     if (!profileOwner || !viewer) {
@@ -25,7 +26,7 @@ export async function POST(
 
     // Record profile view
     await supabase.from('ProfileView').insert({
-      profileOwnerId: params.userId,
+      profileOwnerId: userId,
       viewerId,
       viewedAt: new Date().toISOString()
     })
@@ -34,7 +35,7 @@ export async function POST(
     const { data: preferences } = await supabase
       .from('NotificationPreferences')
       .select('*')
-      .eq('userId', params.userId)
+      .eq('userId', userId)
       .single()
 
     // Send notification if enabled
