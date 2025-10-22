@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -47,42 +48,87 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [profileViews, setProfileViews] = useState(0)
 
-  // Fetch all dashboard data
+  // Fetch all dashboard data using direct Supabase queries
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true)
+        const supabase = createClient()
 
-        // Fetch user profile, matches, sessions, and notifications in parallel
-        const [profileRes, matchesRes, sessionsRes, notificationsRes] = await Promise.all([
-          fetch('/api/profile/me'),
-          fetch('/api/matches'),
-          fetch('/api/sessions'),
-          fetch('/api/notifications'),
-        ])
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-        const profileData = await profileRes.json()
-        const matchesData = await matchesRes.json()
-        const sessionsData = await sessionsRes.json()
-        const notificationsData = await notificationsRes.json()
-
-        if (!profileRes.ok) {
-          throw new Error(profileData.error || 'Failed to fetch profile')
+        if (authError || !user) {
+          console.error('Auth error:', authError)
+          router.push('/login')
+          return
         }
 
-        setUserData(profileData.user)
-        setMatches(matchesData.success ? matchesData.matches : [])
-        setSessions(sessionsData.success ? sessionsData.sessions : [])
-        setNotifications(notificationsData.success ? notificationsData.notifications : [])
+        // Fetch user profile with related data
+        const { data: userProfile, error: profileError } = await supabase
+          .from('User')
+          .select('*, Profile(*)')
+          .eq('id', user.id)
+          .single()
 
-        // Fetch profile views count for the current user
-        if (profileData.user?.id) {
-          const viewsRes = await fetch(`/api/profile/views?userId=${profileData.user.id}&period=30d`)
-          const viewsData = await viewsRes.json()
-          if (viewsData.success) {
-            setProfileViews(viewsData.viewCount || 0)
-          }
+        if (profileError) {
+          console.error('Profile error:', profileError)
+          throw new Error('Failed to fetch profile')
         }
+
+        setUserData(userProfile)
+
+        // Fetch matches where user is either user1 or user2
+        const { data: userMatches, error: matchesError } = await supabase
+          .from('Match')
+          .select(`
+            *,
+            user1:User!Match_user1Id_fkey(*),
+            user2:User!Match_user2Id_fkey(*)
+          `)
+          .or(`user1Id.eq.${user.id},user2Id.eq.${user.id}`)
+
+        if (!matchesError && userMatches) {
+          setMatches(userMatches)
+        }
+
+        // Fetch sessions where user is mentor or mentee
+        const { data: userSessions, error: sessionsError } = await supabase
+          .from('Session')
+          .select('*')
+          .or(`mentorId.eq.${user.id},menteeId.eq.${user.id}`)
+          .order('scheduledAt', { ascending: true })
+
+        if (!sessionsError && userSessions) {
+          setSessions(userSessions)
+        }
+
+        // Fetch notifications
+        const { data: userNotifications, error: notificationsError } = await supabase
+          .from('Notification')
+          .select('*')
+          .eq('userId', user.id)
+          .order('createdAt', { ascending: false })
+          .limit(50)
+
+        if (!notificationsError && userNotifications) {
+          setNotifications(userNotifications)
+        }
+
+        // Fetch profile views count (last 30 days)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+        const { count, error: viewsError } = await supabase
+          .from('ProfileView')
+          .select('*', { count: 'exact', head: true })
+          .eq('viewedId', user.id)
+          .gte('viewedAt', thirtyDaysAgo.toISOString())
+
+        if (!viewsError && count !== null) {
+          setProfileViews(count)
+        }
+
       } catch (err) {
         console.error('Error fetching dashboard data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load dashboard')
