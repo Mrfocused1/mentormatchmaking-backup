@@ -74,7 +74,7 @@ export async function GET() {
                     <strong style="color: #25283D;">Pending Reports</strong>
                   </td>
                   <td style="padding: 15px; text-align: right;">
-                    <span style="color: ${activeReports > 0 ? '#ff6b6b' : '#666666'}; font-size: 24px; font-weight: 700;">${activeReports || 0}</span>
+                    <span style="color: ${(activeReports || 0) > 0 ? '#ff6b6b' : '#666666'}; font-size: 24px; font-weight: 700;">${activeReports || 0}</span>
                   </td>
                 </tr>
               </table>
