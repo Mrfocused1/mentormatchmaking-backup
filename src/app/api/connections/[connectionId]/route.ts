@@ -98,16 +98,13 @@ export async function PATCH(
         status: action === 'accept' ? 'ACTIVE' : 'UNMATCHED',
         acceptedAt: action === 'accept' ? new Date() : null,
       },
-      include: {
-        user1: true,
-        user2: true,
-      },
     })
 
-    // Create notification for the initiator
-    const currentUserName = updatedConnection.user1Id === user.id
-      ? updatedConnection.user1.name
-      : updatedConnection.user2.name
+    // Get current user's name for notification
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { name: true },
+    })
 
     await prisma.notification.create({
       data: {
@@ -115,8 +112,8 @@ export async function PATCH(
         type: action === 'accept' ? 'MATCH' : 'MESSAGE',
         title: action === 'accept' ? 'Connection Accepted!' : 'Connection Declined',
         message: action === 'accept'
-          ? `${currentUserName} accepted your connection request`
-          : `${currentUserName} declined your connection request`,
+          ? `${currentUser?.name || 'Someone'} accepted your connection request`
+          : `${currentUser?.name || 'Someone'} declined your connection request`,
       },
     })
 
