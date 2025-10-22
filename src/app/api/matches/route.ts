@@ -71,12 +71,7 @@ export async function GET(request: NextRequest) {
         },
       },
       include: {
-        Profile: {
-          include: {
-            interests: true,
-            industries: true,
-          },
-        },
+        Profile: true,  // Simplified to avoid TypeScript errors
         reviewsReceived: {
           select: {
             rating: true,
