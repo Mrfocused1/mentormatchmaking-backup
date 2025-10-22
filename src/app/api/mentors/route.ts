@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
         title: mentor.Profile?.workExperience || 'Mentor',
         location: mentor.Profile?.city || 'Location not set',
         bio: mentor.Profile?.bio || '',
-        expertise: mentor.Profile?.interests?.map((i) => i.name) || [],
-        industries: mentor.Profile?.industries?.map((i) => i.name) || [],
+        expertise: [], // mentor.Profile?.interests?.map((i) => i.name) || [] - disabled temporarily
+        industries: [], // mentor.Profile?.industries?.map((i) => i.name) || [] - disabled temporarily
         experience: mentor.Profile?.yearsOfExperience || null,
         rating: avgRating,
         reviewCount: ratings.length,
