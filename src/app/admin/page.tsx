@@ -102,9 +102,9 @@ export default function AdminDashboard() {
       name: 'Pending Reports',
       value: stats?.pendingReports.toLocaleString(),
       change: 'Needs attention',
-      trend: stats?.pendingReports > 0 ? 'down' : 'neutral',
+      trend: (stats?.pendingReports || 0) > 0 ? 'down' : 'neutral',
       icon: Flag,
-      color: stats?.pendingReports > 0 ? 'bg-red-500' : 'bg-gray-500'
+      color: (stats?.pendingReports || 0) > 0 ? 'bg-red-500' : 'bg-gray-500'
     },
     {
       name: 'Open Tickets',
