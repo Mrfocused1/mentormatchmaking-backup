@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -10,6 +10,7 @@ import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft,
   Target,
@@ -25,6 +26,8 @@ import {
   X,
   Flag,
   BarChart3,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
 interface Milestone {
@@ -47,63 +50,6 @@ interface Goal {
   status: 'active' | 'completed' | 'archived'
 }
 
-// Mock goals data
-const mockGoals: Goal[] = [
-  {
-    id: '1',
-    title: 'Build a Strong Design Portfolio',
-    description: 'Create a comprehensive portfolio showcasing 5 case studies',
-    category: 'career',
-    priority: 'high',
-    deadline: '2025-12-31',
-    progress: 60,
-    milestones: [
-      { id: '1', text: 'Complete first case study', completed: true, completedDate: '2025-09-15' },
-      { id: '2', text: 'Complete second case study', completed: true, completedDate: '2025-10-01' },
-      { id: '3', text: 'Complete third case study', completed: true, completedDate: '2025-10-08' },
-      { id: '4', text: 'Complete fourth case study', completed: false },
-      { id: '5', text: 'Complete fifth case study', completed: false },
-    ],
-    createdDate: '2025-08-01',
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'Learn Advanced Figma Techniques',
-    description: 'Master auto-layout, variants, and component properties',
-    category: 'skill',
-    priority: 'high',
-    deadline: '2025-11-30',
-    progress: 75,
-    milestones: [
-      { id: '1', text: 'Complete auto-layout course', completed: true, completedDate: '2025-09-20' },
-      { id: '2', text: 'Master variants system', completed: true, completedDate: '2025-09-28' },
-      { id: '3', text: 'Learn component properties', completed: true, completedDate: '2025-10-05' },
-      { id: '4', text: 'Build practice design system', completed: false },
-    ],
-    createdDate: '2025-09-01',
-    status: 'active',
-  },
-  {
-    id: '3',
-    title: 'Expand Professional Network',
-    description: 'Connect with 20 designers and attend 5 networking events',
-    category: 'networking',
-    priority: 'medium',
-    deadline: '2025-12-31',
-    progress: 40,
-    milestones: [
-      { id: '1', text: 'Attend first networking event', completed: true, completedDate: '2025-09-10' },
-      { id: '2', text: 'Connect with 10 designers on LinkedIn', completed: true, completedDate: '2025-09-25' },
-      { id: '3', text: 'Attend second networking event', completed: false },
-      { id: '4', text: 'Connect with 10 more designers', completed: false },
-      { id: '5', text: 'Attend remaining 3 events', completed: false },
-    ],
-    createdDate: '2025-08-15',
-    status: 'active',
-  },
-]
-
 const categoryConfig = {
   career: { color: 'bg-blue-500', label: 'Career' },
   skill: { color: 'bg-purple-500', label: 'Skill' },
@@ -120,7 +66,8 @@ const priorityConfig = {
 
 export default function GoalsPage() {
   const router = useRouter()
-  const [goals, setGoals] = useState<Goal[]>(mockGoals)
+  const supabase = createClient()
+  const [goals, setGoals] = useState<Goal[]>([])
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<'active' | 'completed' | 'all'>('active')
   const [showNewGoalModal, setShowNewGoalModal] = useState(false)
@@ -131,6 +78,87 @@ export default function GoalsPage() {
     priority: 'medium' as Goal['priority'],
     deadline: '',
   })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Helper functions to convert between database and UI formats
+  const toDbCategory = (cat: string) => cat.toUpperCase()
+  const fromDbCategory = (cat: string) => cat.toLowerCase() as Goal['category']
+  const toDbPriority = (pri: string) => pri.toUpperCase()
+  const fromDbPriority = (pri: string) => pri.toLowerCase() as Goal['priority']
+  const toDbStatus = (stat: string) => stat.toUpperCase()
+  const fromDbStatus = (stat: string) => stat.toLowerCase() as Goal['status']
+
+  // Fetch goals from database
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+        setCurrentUserId(user.id)
+
+        // Fetch goals with milestones
+        const { data: goalsData, error: goalsError } = await supabase
+          .from('Goal')
+          .select(`
+            id,
+            title,
+            description,
+            category,
+            priority,
+            deadline,
+            progress,
+            status,
+            createdAt,
+            Milestone (
+              id,
+              text,
+              completed,
+              completedDate
+            )
+          `)
+          .eq('userId', user.id)
+          .order('createdAt', { ascending: false })
+
+        if (goalsError) throw goalsError
+
+        // Transform to frontend format
+        const transformedGoals: Goal[] = (goalsData || []).map((goal: any) => ({
+          id: goal.id,
+          title: goal.title,
+          description: goal.description || '',
+          category: fromDbCategory(goal.category),
+          priority: fromDbPriority(goal.priority),
+          deadline: new Date(goal.deadline).toISOString().split('T')[0],
+          progress: goal.progress,
+          milestones: (goal.Milestone || []).map((m: any) => ({
+            id: m.id,
+            text: m.text,
+            completed: m.completed,
+            completedDate: m.completedDate ? new Date(m.completedDate).toISOString().split('T')[0] : undefined,
+          })),
+          createdDate: new Date(goal.createdAt).toISOString().split('T')[0],
+          status: fromDbStatus(goal.status),
+        }))
+
+        setGoals(transformedGoals)
+      } catch (err) {
+        console.error('Error fetching goals:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load goals')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchGoals()
+  }, [supabase, router])
 
   // Filter goals
   const filteredGoals = goals.filter(goal => {
@@ -151,51 +179,115 @@ export default function GoalsPage() {
       : 0
 
   // Toggle milestone
-  const toggleMilestone = (goalId: string, milestoneId: string) => {
-    setGoals(prev =>
-      prev.map(goal => {
-        if (goal.id === goalId) {
-          const updatedMilestones = goal.milestones.map(m =>
-            m.id === milestoneId
-              ? {
-                  ...m,
-                  completed: !m.completed,
-                  completedDate: !m.completed ? new Date().toISOString().split('T')[0] : undefined,
-                }
-              : m
-          )
-          const completedCount = updatedMilestones.filter(m => m.completed).length
-          const newProgress = Math.round((completedCount / updatedMilestones.length) * 100)
-          return {
-            ...goal,
-            milestones: updatedMilestones,
-            progress: newProgress,
-            status: newProgress === 100 ? 'completed' : 'active',
-          }
-        }
-        return goal
-      })
-    )
+  const toggleMilestone = async (goalId: string, milestoneId: string) => {
+    try {
+      const goal = goals.find(g => g.id === goalId)
+      const milestone = goal?.milestones.find(m => m.id === milestoneId)
+      if (!goal || !milestone) return
+
+      const newCompleted = !milestone.completed
+      const newCompletedDate = newCompleted ? new Date().toISOString() : null
+
+      // Update milestone in database
+      const { error: milestoneError } = await supabase
+        .from('Milestone')
+        .update({
+          completed: newCompleted,
+          completedDate: newCompletedDate,
+        })
+        .eq('id', milestoneId)
+
+      if (milestoneError) throw milestoneError
+
+      // Calculate new progress
+      const updatedMilestones = goal.milestones.map(m =>
+        m.id === milestoneId
+          ? { ...m, completed: newCompleted, completedDate: newCompletedDate ? newCompletedDate.split('T')[0] : undefined }
+          : m
+      )
+      const completedCount = updatedMilestones.filter(m => m.completed).length
+      const newProgress = Math.round((completedCount / updatedMilestones.length) * 100)
+      const newStatus = newProgress === 100 ? 'completed' : 'active'
+
+      // Update goal progress and status in database
+      const { error: goalError } = await supabase
+        .from('Goal')
+        .update({
+          progress: newProgress,
+          status: toDbStatus(newStatus),
+        })
+        .eq('id', goalId)
+
+      if (goalError) throw goalError
+
+      // Update local state
+      setGoals(prev =>
+        prev.map(g =>
+          g.id === goalId
+            ? { ...g, milestones: updatedMilestones, progress: newProgress, status: newStatus }
+            : g
+        )
+      )
+    } catch (err) {
+      console.error('Error toggling milestone:', err)
+      alert('Failed to update milestone. Please try again.')
+    }
   }
 
   // Delete goal
-  const deleteGoal = (goalId: string) => {
-    if (confirm('Are you sure you want to delete this goal?')) {
+  const deleteGoal = async (goalId: string) => {
+    if (!confirm('Are you sure you want to delete this goal?')) return
+
+    try {
+      const { error } = await supabase
+        .from('Goal')
+        .delete()
+        .eq('id', goalId)
+
+      if (error) throw error
+
       setGoals(prev => prev.filter(g => g.id !== goalId))
+    } catch (err) {
+      console.error('Error deleting goal:', err)
+      alert('Failed to delete goal. Please try again.')
     }
   }
 
   // Create new goal
-  const createGoal = () => {
-    if (newGoal.title.trim() && newGoal.deadline) {
+  const createGoal = async () => {
+    if (!newGoal.title.trim() || !newGoal.deadline || !currentUserId) return
+
+    try {
+      const { data, error } = await supabase
+        .from('Goal')
+        .insert({
+          userId: currentUserId,
+          title: newGoal.title.trim(),
+          description: newGoal.description.trim() || null,
+          category: toDbCategory(newGoal.category),
+          priority: toDbPriority(newGoal.priority),
+          deadline: new Date(newGoal.deadline).toISOString(),
+          progress: 0,
+          status: 'ACTIVE',
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
       const goal: Goal = {
-        id: String(Date.now()),
-        ...newGoal,
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        category: fromDbCategory(data.category),
+        priority: fromDbPriority(data.priority),
+        deadline: new Date(data.deadline).toISOString().split('T')[0],
         progress: 0,
         milestones: [],
-        createdDate: new Date().toISOString().split('T')[0],
+        createdDate: new Date(data.createdAt).toISOString().split('T')[0],
         status: 'active',
       }
+
       setGoals(prev => [goal, ...prev])
       setNewGoal({
         title: '',
@@ -205,6 +297,9 @@ export default function GoalsPage() {
         deadline: '',
       })
       setShowNewGoalModal(false)
+    } catch (err) {
+      console.error('Error creating goal:', err)
+      alert('Failed to create goal. Please try again.')
     }
   }
 
@@ -247,8 +342,36 @@ export default function GoalsPage() {
       {/* Main Content */}
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {loading ? (
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-vibrant-accent mx-auto mb-4 animate-spin" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Loading your goals...
+                </h3>
+              </CardContent>
+            </Card>
+          ) : error ? (
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Error loading goals
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-8">{error}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                  className="bg-vibrant-accent text-white hover:bg-vibrant-accent/90"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="shadow-lg border-2 border-blue-200 bg-blue-50">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
@@ -505,6 +628,8 @@ export default function GoalsPage() {
                 )}
               </CardContent>
             </Card>
+          )}
+            </>
           )}
         </div>
       </section>

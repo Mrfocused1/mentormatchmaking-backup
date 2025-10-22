@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { createClient } from '@/lib/supabase/client'
 import {
   Heart,
   Star,
@@ -29,82 +30,40 @@ import {
   Grid3x3,
   List,
   FolderOpen,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
-// Mock saved mentors data
-const mockSavedMentors = [
-  {
-    id: '1',
-    name: 'Sarah Thompson',
-    avatar: null,
-    role: 'Senior Product Designer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
-    expertise: ['Product Design', 'UX/UI', 'Design Systems'],
-    rating: 4.8,
-    reviewCount: 42,
-    savedDate: '2025-10-01',
-    collections: ['Career Goals', 'Design Mentors'],
-    bio: 'Passionate product designer with 12+ years of experience',
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    avatar: null,
-    role: 'Engineering Manager',
-    company: 'StartupCo',
-    location: 'New York, NY',
-    expertise: ['Leadership', 'Software Engineering', 'System Design'],
-    rating: 4.9,
-    reviewCount: 38,
-    savedDate: '2025-10-05',
-    collections: ['Career Goals'],
-    bio: 'Helping engineers level up their technical and leadership skills',
-  },
-  {
-    id: '3',
-    name: 'Emily Rodriguez',
-    avatar: null,
-    role: 'VP of Product',
-    company: 'GrowthInc',
-    location: 'Austin, TX',
-    expertise: ['Product Strategy', 'Growth', 'Team Building'],
-    rating: 5.0,
-    reviewCount: 56,
-    savedDate: '2025-09-28',
-    collections: ['Design Mentors', 'Product Leaders'],
-    bio: 'Product leader passionate about building great products',
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    avatar: null,
-    role: 'Senior Designer',
-    company: 'CreativeStudio',
-    location: 'Los Angeles, CA',
-    expertise: ['UI Design', 'Branding', 'Illustration'],
-    rating: 4.7,
-    reviewCount: 29,
-    savedDate: '2025-10-08',
-    collections: ['Design Mentors'],
-    bio: 'Creative designer specializing in brand identity and UI',
-  },
-]
+interface SavedMentor {
+  id: string
+  name: string
+  avatar: string | null
+  role: string
+  company: string
+  location: string
+  expertise: string[]
+  rating: number
+  reviewCount: number
+  savedDate: string
+  collections: string[]
+  bio: string
+}
 
-// Mock collections
-const mockCollections = [
-  { id: '1', name: 'Career Goals', color: 'bg-blue-500', count: 2 },
-  { id: '2', name: 'Design Mentors', color: 'bg-purple-500', count: 3 },
-  { id: '3', name: 'Product Leaders', color: 'bg-green-500', count: 1 },
-]
+interface Collection {
+  id: string
+  name: string
+  color: string
+  count: number
+}
 
 type ViewMode = 'grid' | 'list'
 type FilterType = 'all' | string
 
 export default function SavedMentorsPage() {
   const router = useRouter()
-  const [savedMentors, setSavedMentors] = useState(mockSavedMentors)
-  const [collections, setCollections] = useState(mockCollections)
+  const supabase = createClient()
+  const [savedMentors, setSavedMentors] = useState<SavedMentor[]>([])
+  const [collections, setCollections] = useState<Collection[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [filterCollection, setFilterCollection] = useState<FilterType>('all')
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false)
@@ -112,6 +71,121 @@ export default function SavedMentorsPage() {
   const [editingCollection, setEditingCollection] = useState<{ id: string; name: string } | null>(
     null
   )
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Color palette for collections
+  const collectionColors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500']
+
+  // Fetch saved mentors and collections
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+        setCurrentUserId(user.id)
+
+        // Fetch saved profiles
+        const { data: savedData, error: savedError } = await supabase
+          .from('SavedProfile')
+          .select(`
+            id,
+            savedAt,
+            savedUserId,
+            User:savedUserId (
+              id,
+              name,
+              role,
+              Profile (
+                profilePicture,
+                workExperience,
+                city,
+                bio
+              )
+            )
+          `)
+          .eq('userId', user.id)
+          .order('savedAt', { ascending: false })
+
+        if (savedError) throw savedError
+
+        // Fetch collections
+        const { data: collectionsData, error: collectionsError } = await supabase
+          .from('Collection')
+          .select('*')
+          .eq('userId', user.id)
+          .order('createdAt', { ascending: false })
+
+        if (collectionsError) throw collectionsError
+
+        // Get review stats for saved users
+        const savedUserIds = (savedData || []).map((s: any) => s.savedUserId).filter(Boolean)
+
+        const [reviewsData] = await Promise.all([
+          supabase
+            .from('Review')
+            .select('reviewedId, rating')
+            .in('reviewedId', savedUserIds)
+        ])
+
+        // Calculate review stats
+        const reviewStats = (reviewsData.data || []).reduce((acc: any, r: any) => {
+          if (!acc[r.reviewedId]) acc[r.reviewedId] = { total: 0, sum: 0, count: 0 }
+          acc[r.reviewedId].sum += r.rating
+          acc[r.reviewedId].count += 1
+          acc[r.reviewedId].total = acc[r.reviewedId].sum / acc[r.reviewedId].count
+          return acc
+        }, {})
+
+        // Transform saved mentors
+        const transformedMentors: SavedMentor[] = (savedData || []).map((saved: any) => {
+          const user = saved.User
+          const profile = Array.isArray(user?.Profile) ? user.Profile[0] : user?.Profile
+          const stats = reviewStats[saved.savedUserId] || { total: 0, count: 0 }
+
+          return {
+            id: saved.savedUserId || '',
+            name: user?.name || 'Unknown',
+            avatar: profile?.profilePicture || null,
+            role: profile?.workExperience || 'Mentor',
+            company: '',
+            location: profile?.city || 'Location not set',
+            expertise: [],
+            rating: Number(stats.total.toFixed(1)) || 0,
+            reviewCount: stats.count || 0,
+            savedDate: new Date(saved.savedAt).toLocaleDateString(),
+            collections: [],
+            bio: profile?.bio || 'No bio available',
+          }
+        })
+
+        // Transform collections with counts
+        const transformedCollections: Collection[] = (collectionsData || []).map((col: any) => ({
+          id: col.id,
+          name: col.name,
+          color: col.color || collectionColors[Math.floor(Math.random() * collectionColors.length)],
+          count: 0, // Will be calculated below
+        }))
+
+        setSavedMentors(transformedMentors)
+        setCollections(transformedCollections)
+      } catch (err) {
+        console.error('Error fetching saved mentors:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load saved mentors')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [supabase, router])
 
   // Filter mentors by collection
   const filteredMentors =
@@ -120,35 +194,74 @@ export default function SavedMentorsPage() {
       : savedMentors.filter(m => m.collections.includes(filterCollection))
 
   // Handle unsave
-  const handleUnsave = (mentorId: string) => {
-    if (confirm('Remove this mentor from your saved list?')) {
+  const handleUnsave = async (mentorId: string) => {
+    if (!currentUserId || !confirm('Remove this mentor from your saved list?')) return
+
+    try {
+      const { error } = await supabase
+        .from('SavedProfile')
+        .delete()
+        .eq('userId', currentUserId)
+        .eq('savedUserId', mentorId)
+
+      if (error) throw error
+
       setSavedMentors(prev => prev.filter(m => m.id !== mentorId))
+    } catch (err) {
+      console.error('Error unsaving mentor:', err)
+      alert('Failed to unsave mentor. Please try again.')
     }
   }
 
   // Handle create collection
-  const handleCreateCollection = () => {
-    if (newCollectionName.trim()) {
-      const colors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-yellow-500']
-      const randomColor = colors[Math.floor(Math.random() * colors.length)]
+  const handleCreateCollection = async () => {
+    if (!newCollectionName.trim() || !currentUserId) return
+
+    try {
+      const randomColor = collectionColors[Math.floor(Math.random() * collectionColors.length)]
+
+      const { data, error } = await supabase
+        .from('Collection')
+        .insert({
+          userId: currentUserId,
+          name: newCollectionName.trim(),
+          color: randomColor,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
       setCollections(prev => [
         ...prev,
         {
-          id: String(Date.now()),
-          name: newCollectionName.trim(),
-          color: randomColor,
+          id: data.id,
+          name: data.name,
+          color: data.color || randomColor,
           count: 0,
         },
       ])
       setNewCollectionName('')
       setShowNewCollectionModal(false)
+    } catch (err) {
+      console.error('Error creating collection:', err)
+      alert('Failed to create collection. Please try again.')
     }
   }
 
   // Handle delete collection
-  const handleDeleteCollection = (collectionId: string) => {
+  const handleDeleteCollection = async (collectionId: string) => {
     const collection = collections.find(c => c.id === collectionId)
-    if (collection && confirm(`Delete "${collection.name}" collection?`)) {
+    if (!collection || !confirm(`Delete "${collection.name}" collection?`)) return
+
+    try {
+      const { error } = await supabase
+        .from('Collection')
+        .delete()
+        .eq('id', collectionId)
+
+      if (error) throw error
+
       setCollections(prev => prev.filter(c => c.id !== collectionId))
       // Remove collection from all mentors
       setSavedMentors(prev =>
@@ -157,6 +270,9 @@ export default function SavedMentorsPage() {
           collections: m.collections.filter(c => c !== collection.name),
         }))
       )
+    } catch (err) {
+      console.error('Error deleting collection:', err)
+      alert('Failed to delete collection. Please try again.')
     }
   }
 
@@ -169,11 +285,20 @@ export default function SavedMentorsPage() {
   }
 
   // Handle save collection edit
-  const handleSaveCollectionEdit = () => {
-    if (editingCollection && editingCollection.name.trim()) {
+  const handleSaveCollectionEdit = async () => {
+    if (!editingCollection || !editingCollection.name.trim()) return
+
+    try {
+      const { error } = await supabase
+        .from('Collection')
+        .update({ name: editingCollection.name.trim() })
+        .eq('id', editingCollection.id)
+
+      if (error) throw error
+
       const oldCollection = collections.find(c => c.id === editingCollection.id)
       if (oldCollection) {
-        // Update collection name
+        // Update collection name in state
         setCollections(prev =>
           prev.map(c => (c.id === editingCollection.id ? { ...c, name: editingCollection.name } : c))
         )
@@ -188,11 +313,14 @@ export default function SavedMentorsPage() {
         )
       }
       setEditingCollection(null)
+    } catch (err) {
+      console.error('Error updating collection:', err)
+      alert('Failed to update collection. Please try again.')
     }
   }
 
   // Render mentor card
-  const renderMentorCard = (mentor: typeof mockSavedMentors[0]) => {
+  const renderMentorCard = (mentor: SavedMentor) => {
     if (viewMode === 'grid') {
       return (
         <Card key={mentor.id} className="shadow-md hover:shadow-xl transition-all group">
@@ -545,17 +673,45 @@ export default function SavedMentorsPage() {
 
             {/* Main Content - Saved Mentors */}
             <div className="lg:col-span-3">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-black font-montserrat text-primary-dark">
-                  {filterCollection === 'all'
-                    ? `All Saved (${savedMentors.length})`
-                    : `${filterCollection} (${filteredMentors.length})`}
-                </h2>
-              </div>
+              {loading ? (
+                <Card className="shadow-lg">
+                  <CardContent className="p-12 text-center">
+                    <Loader2 className="h-12 w-12 text-vibrant-accent mx-auto mb-4 animate-spin" />
+                    <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                      Loading saved mentors...
+                    </h3>
+                  </CardContent>
+                </Card>
+              ) : error ? (
+                <Card className="shadow-lg">
+                  <CardContent className="p-12 text-center">
+                    <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                    <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                      Error loading saved mentors
+                    </h3>
+                    <p className="text-neutral-600 font-montserrat mb-8">{error}</p>
+                    <Button
+                      variant="primary"
+                      onClick={() => window.location.reload()}
+                      className="bg-vibrant-accent text-white hover:bg-vibrant-accent/90"
+                    >
+                      Try Again
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black font-montserrat text-primary-dark">
+                      {filterCollection === 'all'
+                        ? `All Saved (${savedMentors.length})`
+                        : `${filterCollection} (${filteredMentors.length})`}
+                    </h2>
+                  </div>
 
-              {/* Mentors Grid/List */}
-              {filteredMentors.length > 0 ? (
+                  {/* Mentors Grid/List */}
+                  {filteredMentors.length > 0 ? (
                 <div
                   className={
                     viewMode === 'grid'
@@ -588,6 +744,8 @@ export default function SavedMentorsPage() {
                     </Button>
                   </CardContent>
                 </Card>
+              )}
+                </>
               )}
             </div>
           </div>

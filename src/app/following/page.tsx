@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/header'
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { FollowButton } from '@/components/ui/follow-button'
+import { createClient } from '@/lib/supabase/client'
 import {
   Users,
   Star,
@@ -25,78 +26,133 @@ import {
   Filter,
   SlidersHorizontal,
   UserPlus,
-  ArrowLeft
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
-// Mock data for followed mentors
-const mockFollowedMentors = [
-  {
-    id: '1',
-    name: 'Sarah Thompson',
-    title: 'Senior Product Designer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
-    avatar: null,
-    rating: 4.8,
-    reviewCount: 42,
-    expertise: ['Product Design', 'UX/UI', 'Design Systems'],
-    followers: 328,
-    isFollowing: true,
-    lastActive: '2 hours ago',
-    bio: 'Passionate product designer helping others unlock their creative potential.',
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    title: 'Engineering Manager',
-    company: 'Meta',
-    location: 'New York, NY',
-    avatar: null,
-    rating: 4.9,
-    reviewCount: 67,
-    expertise: ['Leadership', 'Software Engineering', 'Career Growth'],
-    followers: 542,
-    isFollowing: true,
-    lastActive: '1 day ago',
-    bio: 'Helping engineers level up their careers and become better leaders.',
-  },
-  {
-    id: '3',
-    name: 'Emily Rodriguez',
-    title: 'Product Manager',
-    company: 'Google',
-    location: 'Austin, TX',
-    avatar: null,
-    rating: 4.7,
-    reviewCount: 35,
-    expertise: ['Product Management', 'Strategy', 'Agile'],
-    followers: 215,
-    isFollowing: true,
-    lastActive: '3 hours ago',
-    bio: 'Product leader passionate about mentoring the next generation of PMs.',
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    title: 'Marketing Director',
-    company: 'Stripe',
-    location: 'Seattle, WA',
-    avatar: null,
-    rating: 4.6,
-    reviewCount: 28,
-    expertise: ['Digital Marketing', 'Growth', 'Brand Strategy'],
-    followers: 189,
-    isFollowing: true,
-    lastActive: '5 days ago',
-    bio: 'Marketing expert helping professionals navigate their marketing careers.',
-  },
-]
+interface FollowedMentor {
+  id: string
+  name: string
+  title: string
+  company: string
+  location: string
+  avatar: string | null
+  rating: number
+  reviewCount: number
+  expertise: string[]
+  followers: number
+  isFollowing: boolean
+  lastActive: string
+  bio: string
+}
 
 export default function FollowingPage() {
   const router = useRouter()
-  const [mentors, setMentors] = useState(mockFollowedMentors)
+  const supabase = createClient()
+  const [mentors, setMentors] = useState<FollowedMentor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('recent') // recent, name, rating
+
+  useEffect(() => {
+    const fetchFollowing = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Fetch users that current user is following
+        const { data: followData, error: followError } = await supabase
+          .from('Follow')
+          .select(`
+            id,
+            followedAt,
+            User_Follow_followingIdToUser:followingId (
+              id,
+              name,
+              role,
+              Profile (
+                profilePicture,
+                workExperience,
+                city,
+                bio
+              )
+            )
+          `)
+          .eq('followerId', user.id)
+          .order('followedAt', { ascending: false })
+
+        if (followError) throw followError
+
+        // Get review stats and follow counts for each followed user
+        const followedUserIds = (followData || []).map((f: any) => f.User_Follow_followingIdToUser?.id).filter(Boolean)
+
+        const [reviewsData, followersData] = await Promise.all([
+          supabase
+            .from('Review')
+            .select('reviewedId, rating')
+            .in('reviewedId', followedUserIds),
+          supabase
+            .from('Follow')
+            .select('followingId')
+            .in('followingId', followedUserIds)
+        ])
+
+        // Calculate stats
+        const reviewStats = (reviewsData.data || []).reduce((acc: any, r: any) => {
+          if (!acc[r.reviewedId]) acc[r.reviewedId] = { total: 0, sum: 0, count: 0 }
+          acc[r.reviewedId].sum += r.rating
+          acc[r.reviewedId].count += 1
+          acc[r.reviewedId].total = acc[r.reviewedId].sum / acc[r.reviewedId].count
+          return acc
+        }, {})
+
+        const followerCounts = (followersData.data || []).reduce((acc: any, f: any) => {
+          acc[f.followingId] = (acc[f.followingId] || 0) + 1
+          return acc
+        }, {})
+
+        // Transform to FollowedMentor format
+        const transformedMentors: FollowedMentor[] = (followData || []).map((follow: any) => {
+          const user = follow.User_Follow_followingIdToUser
+          const profile = Array.isArray(user?.Profile) ? user.Profile[0] : user?.Profile
+          const stats = reviewStats[user?.id] || { total: 0, count: 0 }
+
+          return {
+            id: user?.id || '',
+            name: user?.name || 'Unknown',
+            title: profile?.workExperience || 'User',
+            company: '',
+            location: profile?.city || 'Location not set',
+            avatar: profile?.profilePicture || null,
+            rating: Number(stats.total.toFixed(1)) || 0,
+            reviewCount: stats.count || 0,
+            expertise: [],
+            followers: followerCounts[user?.id] || 0,
+            isFollowing: true,
+            lastActive: 'Recently',
+            bio: profile?.bio || 'No bio available',
+          }
+        })
+
+        setMentors(transformedMentors)
+      } catch (err) {
+        console.error('Error fetching following:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load following')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFollowing()
+  }, [supabase, router])
 
   // Filter and sort mentors
   const filteredMentors = mentors
@@ -190,7 +246,33 @@ export default function FollowingPage() {
       {/* Main Content */}
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          {filteredMentors.length === 0 ? (
+          {loading ? (
+            <Card className="shadow-lg border-2 border-neutral-200">
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-vibrant-accent mx-auto mb-4 animate-spin" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Loading followed mentors...
+                </h3>
+              </CardContent>
+            </Card>
+          ) : error ? (
+            <Card className="shadow-lg border-2 border-neutral-200">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Error loading following
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-8">{error}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                  className="bg-vibrant-accent text-white hover:bg-vibrant-accent/90"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredMentors.length === 0 ? (
             <Card className="shadow-lg border-2 border-neutral-200">
               <CardContent className="p-12 text-center">
                 <div className="max-w-md mx-auto">

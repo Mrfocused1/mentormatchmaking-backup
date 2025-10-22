@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+export const dynamic = 'force-dynamic'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -12,6 +14,7 @@ import { StatCard } from '@/components/analytics/stat-card'
 import { ProgressMetric } from '@/components/analytics/progress-metric'
 import { SimpleBarChart } from '@/components/analytics/simple-bar-chart'
 import { MetricComparison } from '@/components/analytics/metric-comparison'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft,
   Users,
@@ -25,95 +28,284 @@ import {
   BarChart3,
   Download,
   Star,
-  Sparkles
+  Sparkles,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 
-// Force dynamic rendering to prevent static generation issues
-export const dynamic = 'force-dynamic'
+interface AnalyticsData {
+  totalSessions: number
+  completedSessions: number
+  upcomingSessions: number
+  cancelledSessions: number
+  totalMentors: number
+  activeMentors: number
+  totalHours: number
+  goalsSet: number
+  goalsCompleted: number
+  reviewsGiven: number
+  profileCompleteness: number
+}
+
+interface GoalData {
+  id: string
+  title: string
+  progress: number
+  deadline: string
+  mentor: string
+}
+
+interface SessionData {
+  id: string
+  mentor: string
+  topic: string
+  date: string
+  rating: number | null
+}
 
 export default function MenteeAnalyticsPage() {
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
+  const router = useRouter()
+  const supabase = createClient()
 
-  // Mock analytics data - would come from API
-  const analytics = {
-    totalSessions: 32,
-    completedSessions: 28,
-    upcomingSessions: 3,
-    cancelledSessions: 1,
-    totalMentors: 5,
-    activeMentors: 2,
-    totalHours: 48,
-    goalsSet: 12,
-    goalsCompleted: 8,
-    reviewsGiven: 22,
-    profileCompleteness: 85
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [analytics, setAnalytics] = useState<AnalyticsData>({
+    totalSessions: 0,
+    completedSessions: 0,
+    upcomingSessions: 0,
+    cancelledSessions: 0,
+    totalMentors: 0,
+    activeMentors: 0,
+    totalHours: 0,
+    goalsSet: 0,
+    goalsCompleted: 0,
+    reviewsGiven: 0,
+    profileCompleteness: 0
+  })
+
+  const [sessionActivity, setSessionActivity] = useState<Array<{ label: string; value: number; color: string }>>([])
+  const [learningTopics, setLearningTopics] = useState<Array<{ label: string; value: number; color: string }>>([])
+  const [activeGoals, setActiveGoals] = useState<GoalData[]>([])
+  const [recentSessions, setRecentSessions] = useState<SessionData[]>([])
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Calculate date range
+        const now = new Date()
+        const startDate = new Date()
+        if (timeRange === '7d') {
+          startDate.setDate(now.getDate() - 7)
+        } else if (timeRange === '30d') {
+          startDate.setDate(now.getDate() - 30)
+        } else if (timeRange === '90d') {
+          startDate.setDate(now.getDate() - 90)
+        } else {
+          startDate.setFullYear(1970) // all time
+        }
+
+        // Fetch all sessions (as mentee)
+        const { data: sessionsData } = await supabase
+          .from('Session')
+          .select(`
+            id, status, scheduledAt, duration, mentorId,
+            User_Session_mentorIdToUser:mentorId (name)
+          `)
+          .eq('menteeId', user.id)
+          .gte('scheduledAt', startDate.toISOString())
+
+        const sessions = sessionsData || []
+        const totalSessions = sessions.length
+        const completedSessions = sessions.filter(s => s.status === 'COMPLETED').length
+        const upcomingSessions = sessions.filter(s => s.status === 'SCHEDULED').length
+        const cancelledSessions = sessions.filter(s => s.status === 'CANCELLED').length
+
+        // Calculate total hours
+        const totalMinutes = sessions
+          .filter(s => s.status === 'COMPLETED')
+          .reduce((sum, s) => sum + (s.duration || 0), 0)
+        const totalHours = Math.round(totalMinutes / 60)
+
+        // Calculate unique mentors
+        const uniqueMentorIds = new Set(sessions.map(s => s.mentorId))
+        const totalMentors = uniqueMentorIds.size
+
+        // Fetch goals
+        const { data: goalsData } = await supabase
+          .from('Goal')
+          .select('id, title, progress, deadline, status')
+          .eq('userId', user.id)
+
+        const goals = goalsData || []
+        const goalsSet = goals.length
+        const goalsCompleted = goals.filter(g => g.status === 'COMPLETED').length
+
+        // Fetch reviews given by this user
+        const { data: reviewsData } = await supabase
+          .from('Review')
+          .select('id')
+          .eq('reviewerId', user.id)
+
+        const reviewsGiven = reviewsData?.length || 0
+
+        // Get profile completeness
+        const { data: profileData } = await supabase
+          .from('Profile')
+          .select('*')
+          .eq('userId', user.id)
+          .single()
+
+        const profileCompleteness = profileData?.completionPercentage || 0
+
+        setAnalytics({
+          totalSessions,
+          completedSessions,
+          upcomingSessions,
+          cancelledSessions,
+          totalMentors,
+          activeMentors: uniqueMentorIds.size, // for now, same as total
+          totalHours,
+          goalsSet,
+          goalsCompleted,
+          reviewsGiven,
+          profileCompleteness
+        })
+
+        // Session activity by week (last 4 weeks)
+        const weeklyActivity: Record<number, number> = {}
+        sessions.forEach(s => {
+          const sessionDate = new Date(s.scheduledAt)
+          const weeksDiff = Math.floor((now.getTime() - sessionDate.getTime()) / (7 * 24 * 60 * 60 * 1000))
+          if (weeksDiff >= 0 && weeksDiff < 4) {
+            weeklyActivity[3 - weeksDiff] = (weeklyActivity[3 - weeksDiff] || 0) + 1
+          }
+        })
+
+        setSessionActivity([
+          { label: 'Week 1', value: weeklyActivity[0] || 0, color: 'bg-secondary-accent' },
+          { label: 'Week 2', value: weeklyActivity[1] || 0, color: 'bg-secondary-accent' },
+          { label: 'Week 3', value: weeklyActivity[2] || 0, color: 'bg-secondary-accent' },
+          { label: 'Week 4', value: weeklyActivity[3] || 0, color: 'bg-secondary-accent' }
+        ])
+
+        // Active goals (top 3)
+        const transformedGoals: GoalData[] = goals
+          .filter(g => g.status === 'ACTIVE')
+          .slice(0, 3)
+          .map(g => ({
+            id: g.id,
+            title: g.title,
+            progress: g.progress,
+            deadline: new Date(g.deadline).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            mentor: 'General' // We don't have mentor-goal relationship in schema
+          }))
+
+        setActiveGoals(transformedGoals)
+
+        // Recent sessions (top 3)
+        const transformedSessions: SessionData[] = sessions
+          .slice(0, 3)
+          .map(s => {
+            const mentor = Array.isArray(s.User_Session_mentorIdToUser)
+              ? s.User_Session_mentorIdToUser[0]
+              : s.User_Session_mentorIdToUser
+
+            const sessionDate = new Date(s.scheduledAt)
+            const daysDiff = Math.floor((now.getTime() - sessionDate.getTime()) / (24 * 60 * 60 * 1000))
+            let dateStr = ''
+            if (daysDiff === 0) dateStr = 'Today'
+            else if (daysDiff === 1) dateStr = '1 day ago'
+            else if (daysDiff < 7) dateStr = `${daysDiff} days ago`
+            else if (daysDiff < 14) dateStr = '1 week ago'
+            else dateStr = `${Math.floor(daysDiff / 7)} weeks ago`
+
+            return {
+              id: s.id,
+              mentor: mentor?.name || 'Unknown Mentor',
+              topic: 'General Session', // We don't have topic in schema
+              date: dateStr,
+              rating: null // Would need to fetch from Review table
+            }
+          })
+
+        setRecentSessions(transformedSessions)
+
+        // Learning topics - placeholder since we don't track this
+        setLearningTopics([
+          { label: 'General', value: totalSessions, color: 'bg-primary-accent' }
+        ])
+
+      } catch (err) {
+        console.error('Error fetching analytics:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load analytics')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+  }, [timeRange, supabase, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <section className="pt-24 pb-12 sm:pt-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-vibrant-accent mx-auto mb-4 animate-spin" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Loading analytics...
+                </h3>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <Footer />
+      </div>
+    )
   }
 
-  // Session activity over time
-  const sessionActivity = [
-    { label: 'Week 1', value: 5, color: 'bg-secondary-accent' },
-    { label: 'Week 2', value: 8, color: 'bg-secondary-accent' },
-    { label: 'Week 3', value: 7, color: 'bg-secondary-accent' },
-    { label: 'Week 4', value: 8, color: 'bg-secondary-accent' }
-  ]
-
-  // Learning topics
-  const learningTopics = [
-    { label: 'Career', value: 12, color: 'bg-primary-accent' },
-    { label: 'Technical', value: 9, color: 'bg-vibrant-accent' },
-    { label: 'Product', value: 7, color: 'bg-yellow-500' },
-    { label: 'Interview', value: 4, color: 'bg-green-600' }
-  ]
-
-  // Active goals
-  const activeGoals = [
-    {
-      id: 1,
-      title: 'Land a Senior PM role',
-      progress: 75,
-      deadline: 'Dec 2025',
-      mentor: 'Sarah Johnson'
-    },
-    {
-      id: 2,
-      title: 'Build portfolio website',
-      progress: 60,
-      deadline: 'Nov 2025',
-      mentor: 'Alex Thompson'
-    },
-    {
-      id: 3,
-      title: 'Complete system design course',
-      progress: 40,
-      deadline: 'Jan 2026',
-      mentor: 'Emily Rodriguez'
-    }
-  ]
-
-  // Recent sessions
-  const recentSessions = [
-    {
-      id: 1,
-      mentor: 'Sarah Johnson',
-      topic: 'Career Strategy',
-      date: '2 days ago',
-      rating: 5
-    },
-    {
-      id: 2,
-      mentor: 'Alex Thompson',
-      topic: 'Portfolio Review',
-      date: '5 days ago',
-      rating: 5
-    },
-    {
-      id: 3,
-      mentor: 'Emily Rodriguez',
-      topic: 'Technical Interview Prep',
-      date: '1 week ago',
-      rating: 4
-    }
-  ]
+  if (error) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <section className="pt-24 pb-12 sm:pt-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Error loading analytics
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-8">{error}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                  className="bg-vibrant-accent text-white hover:bg-vibrant-accent/90"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -322,7 +514,7 @@ export default function MenteeAnalyticsPage() {
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < session.rating
+                                i < (session.rating ?? 0)
                                   ? 'fill-yellow-500 text-yellow-500'
                                   : 'text-neutral-300'
                               }`}

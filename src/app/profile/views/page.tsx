@@ -2,12 +2,14 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft,
   Eye,
@@ -17,192 +19,147 @@ import {
   Users,
   Heart,
   MapPin,
-  Filter
+  Filter,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
-// Mock profile views data
-const mockProfileViews = [
-  {
-    id: 1,
-    userId: '101',
-    viewerName: 'Jennifer Williams',
-    viewerRole: 'mentee',
-    viewerTitle: 'Product Designer',
-    viewerCompany: 'Design Co.',
-    viewerLocation: 'London, UK',
-    viewerAvatar: null,
-    viewedAt: '2025-10-10T14:30:00',
-    viewCount: 3,
-    showedInterest: false,
-    sentMessage: false,
-  },
-  {
-    id: 2,
-    userId: '102',
-    viewerName: 'Thomas Anderson',
-    viewerRole: 'mentee',
-    viewerTitle: 'Junior Developer',
-    viewerCompany: 'Tech Startup',
-    viewerLocation: 'Birmingham, UK',
-    viewerAvatar: null,
-    viewedAt: '2025-10-10T11:15:00',
-    viewCount: 1,
-    showedInterest: true,
-    sentMessage: false,
-  },
-  {
-    id: 3,
-    userId: '103',
-    viewerName: 'Maria Garcia',
-    viewerRole: 'mentor',
-    viewerTitle: 'Senior Engineer',
-    viewerCompany: 'BigTech Corp',
-    viewerLocation: 'Manchester, UK',
-    viewerAvatar: null,
-    viewedAt: '2025-10-09T16:45:00',
-    viewCount: 2,
-    showedInterest: false,
-    sentMessage: true,
-  },
-  {
-    id: 4,
-    userId: '104',
-    viewerName: 'Kevin Brown',
-    viewerRole: 'mentee',
-    viewerTitle: 'Marketing Manager',
-    viewerCompany: 'Growth Agency',
-    viewerLocation: 'Edinburgh, Scotland',
-    viewerAvatar: null,
-    viewedAt: '2025-10-09T09:20:00',
-    viewCount: 1,
-    showedInterest: false,
-    sentMessage: false,
-  },
-  {
-    id: 5,
-    userId: '105',
-    viewerName: 'Sophie Chen',
-    viewerRole: 'mentee',
-    viewerTitle: 'UX Researcher',
-    viewerCompany: 'Innovation Labs',
-    viewerLocation: 'Bristol, UK',
-    viewerAvatar: null,
-    viewedAt: '2025-10-08T13:00:00',
-    viewCount: 2,
-    showedInterest: true,
-    sentMessage: true,
-  },
-  {
-    id: 6,
-    userId: '106',
-    viewerName: 'Daniel Martinez',
-    viewerRole: 'mentor',
-    viewerTitle: 'VP of Engineering',
-    viewerCompany: 'CloudScale Inc.',
-    viewerLocation: 'Leeds, UK',
-    viewerAvatar: null,
-    viewedAt: '2025-10-08T10:30:00',
-    viewCount: 1,
-    showedInterest: false,
-    sentMessage: false,
-  },
-  {
-    id: 7,
-    userId: '107',
-    viewerName: 'Rachel Thompson',
-    viewerRole: 'mentee',
-    viewerTitle: 'Data Scientist',
-    viewerCompany: 'AI Solutions',
-    viewerLocation: 'Cardiff, Wales',
-    viewerAvatar: null,
-    viewedAt: '2025-10-07T15:45:00',
-    viewCount: 4,
-    showedInterest: true,
-    sentMessage: false,
-  },
-  {
-    id: 8,
-    userId: '108',
-    viewerName: 'Andrew Lee',
-    viewerRole: 'mentee',
-    viewerTitle: 'Software Engineer',
-    viewerCompany: 'Tech Solutions',
-    viewerLocation: 'Glasgow, Scotland',
-    viewerAvatar: null,
-    viewedAt: '2025-10-07T08:15:00',
-    viewCount: 1,
-    showedInterest: false,
-    sentMessage: false,
-  },
-]
-
-// Mock analytics data
-const viewsAnalytics = {
-  total30Days: 124,
-  total7Days: 42,
-  totalToday: 8,
-  change30Days: 15, // percentage
-  change7Days: -5, // percentage
-  uniqueViewers: 89,
-  returningViewers: 35,
-  conversionRate: 24, // percentage who showed interest or messaged
+interface ViewsAnalytics {
+  total30Days: number
+  total7Days: number
+  totalToday: number
+  change30Days: number
+  change7Days: number
+  uniqueViewers: number
+  returningViewers: number
+  totalAllTime: number
 }
 
-// Time period filter
 type TimePeriod = 'today' | '7days' | '30days' | 'all'
 
 export default function ProfileViewsPage() {
+  const router = useRouter()
+  const supabase = createClient()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('30days')
-  const [filterRole, setFilterRole] = useState<'all' | 'mentees'>('all')
+  const [analytics, setAnalytics] = useState<ViewsAnalytics>({
+    total30Days: 0,
+    total7Days: 0,
+    totalToday: 0,
+    change30Days: 0,
+    change7Days: 0,
+    uniqueViewers: 0,
+    returningViewers: 0,
+    totalAllTime: 0,
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Filter views based on time period
-  const getFilteredViews = () => {
-    const now = new Date()
-    let filteredByTime = mockProfileViews
+  useEffect(() => {
+    const fetchProfileViews = async () => {
+      try {
+        setLoading(true)
 
-    if (timePeriod === 'today') {
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      filteredByTime = mockProfileViews.filter(v => new Date(v.viewedAt) >= today)
-    } else if (timePeriod === '7days') {
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-      filteredByTime = mockProfileViews.filter(v => new Date(v.viewedAt) >= sevenDaysAgo)
-    } else if (timePeriod === '30days') {
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      filteredByTime = mockProfileViews.filter(v => new Date(v.viewedAt) >= thirtyDaysAgo)
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Calculate date boundaries
+        const now = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+
+        // Fetch all views for current user
+        const { data: allViews, error: viewsError } = await supabase
+          .from('ProfileView')
+          .select('id, viewerId, viewedAt')
+          .eq('viewedId', user.id)
+
+        if (viewsError) throw viewsError
+
+        const views = allViews || []
+
+        // Calculate analytics
+        const viewsToday = views.filter(v => new Date(v.viewedAt) >= today)
+        const views7Days = views.filter(v => new Date(v.viewedAt) >= sevenDaysAgo)
+        const views30Days = views.filter(v => new Date(v.viewedAt) >= thirtyDaysAgo)
+        const views30To60Days = views.filter(
+          v => new Date(v.viewedAt) >= sixtyDaysAgo && new Date(v.viewedAt) < thirtyDaysAgo
+        )
+
+        // Calculate unique viewers
+        const uniqueViewerIds = new Set(views30Days.filter(v => v.viewerId).map(v => v.viewerId))
+
+        // Calculate returning viewers (viewers who viewed more than once)
+        const viewerCountMap = views30Days
+          .filter(v => v.viewerId)
+          .reduce((acc, v) => {
+            acc[v.viewerId] = (acc[v.viewerId] || 0) + 1
+            return acc
+          }, {} as Record<string, number>)
+
+        const returningCount = Object.values(viewerCountMap).filter(count => count > 1).length
+
+        // Calculate change percentages
+        const change30Days = views30To60Days.length > 0
+          ? Math.round(((views30Days.length - views30To60Days.length) / views30To60Days.length) * 100)
+          : 0
+
+        const views7To14Days = views.filter(
+          v => {
+            const viewDate = new Date(v.viewedAt)
+            const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+            return viewDate >= fourteenDaysAgo && viewDate < sevenDaysAgo
+          }
+        )
+        const change7Days = views7To14Days.length > 0
+          ? Math.round(((views7Days.length - views7To14Days.length) / views7To14Days.length) * 100)
+          : 0
+
+        setAnalytics({
+          total30Days: views30Days.length,
+          total7Days: views7Days.length,
+          totalToday: viewsToday.length,
+          change30Days,
+          change7Days,
+          uniqueViewers: uniqueViewerIds.size,
+          returningViewers: returningCount,
+          totalAllTime: views.length,
+        })
+      } catch (err) {
+        console.error('Error fetching profile views:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load profile views')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    // For mentor dashboard, only show mentee views (mentors can't view other mentors)
-    filteredByTime = filteredByTime.filter(v => v.viewerRole === 'mentee')
+    fetchProfileViews()
+  }, [supabase, router])
 
-    // Filter by engagement
-    if (filterRole === 'mentees') {
-      return filteredByTime.filter(v => v.showedInterest || v.sentMessage)
+  // Get displayed total based on time period
+  const getDisplayedTotal = () => {
+    switch (timePeriod) {
+      case 'today':
+        return analytics.totalToday
+      case '7days':
+        return analytics.total7Days
+      case '30days':
+        return analytics.total30Days
+      case 'all':
+        return analytics.totalAllTime
+      default:
+        return analytics.total30Days
     }
-
-    return filteredByTime
   }
 
-  const filteredViews = getFilteredViews()
-
-  // Calculate demographics from filtered views
-  const viewersByRole = {
-    mentors: filteredViews.filter(v => v.viewerRole === 'mentor').length,
-    mentees: filteredViews.filter(v => v.viewerRole === 'mentee').length,
-  }
-
-  const viewersWhoEngaged = filteredViews.filter(v => v.showedInterest || v.sentMessage).length
-
-  // Top locations (anonymized)
-  const locationCounts = filteredViews.reduce((acc, view) => {
-    const location = view.viewerLocation
-    acc[location] = (acc[location] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-
-  const topLocations = Object.entries(locationCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([location, count]) => ({ location, count }))
+  const engagementRate = analytics.total30Days > 0
+    ? Math.round((analytics.returningViewers / analytics.uniqueViewers) * 100)
+    : 0
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -224,257 +181,182 @@ export default function ProfileViewsPage() {
             Profile Views
           </h1>
           <p className="mt-2 text-white/80 font-montserrat">
-            See who's been checking out your profile
+            See how many people have viewed your profile
           </p>
         </div>
       </section>
 
-      {/* Analytics Cards */}
+      {/* Main Content */}
       <section className="py-8">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="shadow-md border-primary-accent/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-3 bg-primary-accent/10 rounded-full">
-                    <Eye className="h-6 w-6 text-primary-accent" />
-                  </div>
-                  <div className={`flex items-center gap-1 text-sm font-semibold ${
-                    viewsAnalytics.change30Days >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {viewsAnalytics.change30Days >= 0 ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
-                    )}
-                    {Math.abs(viewsAnalytics.change30Days)}%
-                  </div>
-                </div>
-                <p className="text-3xl font-black font-montserrat text-primary-dark">
-                  {viewsAnalytics.total30Days}
-                </p>
-                <p className="text-sm text-neutral-600 font-montserrat mt-1">
-                  Total Views (30 days)
-                </p>
+          {loading ? (
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-vibrant-accent mx-auto mb-4 animate-spin" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Loading analytics...
+                </h3>
               </CardContent>
             </Card>
-
-            <Card className="shadow-md border-secondary-accent/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-3 bg-secondary-accent/10 rounded-full">
-                    <Users className="h-6 w-6 text-secondary-accent" />
-                  </div>
-                </div>
-                <p className="text-3xl font-black font-montserrat text-primary-dark">
-                  {viewsAnalytics.uniqueViewers}
-                </p>
-                <p className="text-sm text-neutral-600 font-montserrat mt-1">
-                  Unique Viewers
-                </p>
+          ) : error ? (
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Error loading profile views
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-8">{error}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                  className="bg-vibrant-accent text-white hover:bg-vibrant-accent/90"
+                >
+                  Try Again
+                </Button>
               </CardContent>
             </Card>
-
-            <Card className="shadow-md border-green-500/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  </div>
+          ) : (
+            <>
+              {/* Time Period Filter */}
+              <div className="flex items-center gap-2 mb-6">
+                <Calendar className="h-5 w-5 text-neutral-400 flex-shrink-0" />
+                <div className="flex gap-2 overflow-x-auto">
+                  <Button
+                    variant={timePeriod === 'today' ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setTimePeriod('today')}
+                    className={timePeriod === 'today' ? 'bg-primary-accent text-primary-dark' : ''}
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    variant={timePeriod === '7days' ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setTimePeriod('7days')}
+                    className={timePeriod === '7days' ? 'bg-primary-accent text-primary-dark' : ''}
+                  >
+                    7 Days
+                  </Button>
+                  <Button
+                    variant={timePeriod === '30days' ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setTimePeriod('30days')}
+                    className={timePeriod === '30days' ? 'bg-primary-accent text-primary-dark' : ''}
+                  >
+                    30 Days
+                  </Button>
+                  <Button
+                    variant={timePeriod === 'all' ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setTimePeriod('all')}
+                    className={timePeriod === 'all' ? 'bg-primary-accent text-primary-dark' : ''}
+                  >
+                    All Time
+                  </Button>
                 </div>
-                <p className="text-3xl font-black font-montserrat text-primary-dark">
-                  {viewsAnalytics.returningViewers}
-                </p>
-                <p className="text-sm text-neutral-600 font-montserrat mt-1">
-                  Returning Viewers
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-yellow-500/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="p-3 bg-yellow-100 rounded-full">
-                    <Heart className="h-6 w-6 text-yellow-600" />
-                  </div>
-                </div>
-                <p className="text-3xl font-black font-montserrat text-primary-dark">
-                  {viewsAnalytics.conversionRate}%
-                </p>
-                <p className="text-sm text-neutral-600 font-montserrat mt-1">
-                  Engagement Rate
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            {/* Time Period Filter */}
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-neutral-400 flex-shrink-0" />
-              <div className="flex gap-2 overflow-x-auto">
-                <Button
-                  variant={timePeriod === 'today' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setTimePeriod('today')}
-                  className={timePeriod === 'today' ? 'bg-primary-accent text-primary-dark' : ''}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant={timePeriod === '7days' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setTimePeriod('7days')}
-                  className={timePeriod === '7days' ? 'bg-primary-accent text-primary-dark' : ''}
-                >
-                  7 Days
-                </Button>
-                <Button
-                  variant={timePeriod === '30days' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setTimePeriod('30days')}
-                  className={timePeriod === '30days' ? 'bg-primary-accent text-primary-dark' : ''}
-                >
-                  30 Days
-                </Button>
-                <Button
-                  variant={timePeriod === 'all' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setTimePeriod('all')}
-                  className={timePeriod === 'all' ? 'bg-primary-accent text-primary-dark' : ''}
-                >
-                  All Time
-                </Button>
               </div>
-            </div>
 
-            {/* Role Filter - Removed for mentor dashboard as only mentees can view mentor profiles */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-neutral-400 flex-shrink-0" />
-              <div className="flex gap-2">
-                <Button
-                  variant={filterRole === 'all' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setFilterRole('all')}
-                  className={filterRole === 'all' ? 'bg-secondary-accent text-white' : ''}
-                >
-                  All Mentee Views
-                </Button>
-                <Button
-                  variant={filterRole === 'mentees' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setFilterRole('mentees')}
-                  className={filterRole === 'mentees' ? 'bg-secondary-accent text-white' : ''}
-                >
-                  Engaged Only
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Viewer Demographics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <Card className="shadow-md">
-              <CardHeader className="border-b border-neutral-200">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-secondary-accent" />
-                  Mentee Profile Views
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                {filteredViews.length > 0 ? (
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-montserrat text-neutral-600">Total Mentee Views</span>
-                        <span className="text-3xl font-bold font-montserrat text-secondary-accent">
-                          {viewersByRole.mentees}
-                        </span>
+              {/* Analytics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <Card className="shadow-md border-primary-accent/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-3 bg-primary-accent/10 rounded-full">
+                        <Eye className="h-6 w-6 text-primary-accent" />
                       </div>
-                      <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden">
+                      {timePeriod === '30days' && (
                         <div
-                          className="bg-secondary-accent h-3 rounded-full transition-all"
-                          style={{ width: '100%' }}
-                        ></div>
-                      </div>
-                      <p className="text-xs font-montserrat text-neutral-500 mt-2">
-                        Mentees looking for guidance and mentorship
-                      </p>
-                    </div>
-                    <div className="pt-4 border-t border-neutral-200">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-montserrat text-neutral-600">Engaged Viewers</span>
-                        <span className="text-2xl font-bold font-montserrat text-green-600">
-                          {viewersWhoEngaged}
-                        </span>
-                      </div>
-                      <p className="text-xs font-montserrat text-neutral-500 mt-1">
-                        Viewers who showed interest or sent a message
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-neutral-500 font-montserrat">No data available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md">
-              <CardHeader className="border-b border-neutral-200">
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-secondary-accent" />
-                  Top Viewer Locations
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                {topLocations.length > 0 ? (
-                  <div className="space-y-3">
-                    {topLocations.map(({ location, count }, index) => (
-                      <div key={location} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold font-montserrat text-neutral-400">
-                            #{index + 1}
-                          </span>
-                          <span className="text-sm font-montserrat text-neutral-700">
-                            {location}
-                          </span>
+                          className={`flex items-center gap-1 text-sm font-semibold ${
+                            analytics.change30Days >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}
+                        >
+                          {analytics.change30Days >= 0 ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4" />
+                          )}
+                          {Math.abs(analytics.change30Days)}%
                         </div>
-                        <span className="text-sm font-bold font-montserrat text-primary-dark">
-                          {count} {count === 1 ? 'view' : 'views'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-neutral-500 font-montserrat">No data available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                      )}
+                    </div>
+                    <p className="text-3xl font-black font-montserrat text-primary-dark">
+                      {getDisplayedTotal()}
+                    </p>
+                    <p className="text-sm text-neutral-600 font-montserrat mt-1">
+                      Total Views ({timePeriod === 'all' ? 'All Time' : timePeriod === 'today' ? 'Today' : timePeriod === '7days' ? '7 Days' : '30 Days'})
+                    </p>
+                  </CardContent>
+                </Card>
 
-          {/* Privacy Notice */}
-          <Card className="shadow-md bg-blue-50/50 border-blue-200">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Eye className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold font-montserrat text-primary-dark mb-1">
-                    Privacy Protection
-                  </h3>
-                  <p className="text-sm font-montserrat text-neutral-700">
-                    We protect viewer privacy by showing only aggregated, anonymous analytics. Individual viewer identities are kept private to maintain a comfortable browsing experience for everyone.
-                  </p>
-                </div>
+                <Card className="shadow-md border-secondary-accent/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-3 bg-secondary-accent/10 rounded-full">
+                        <Users className="h-6 w-6 text-secondary-accent" />
+                      </div>
+                    </div>
+                    <p className="text-3xl font-black font-montserrat text-primary-dark">
+                      {analytics.uniqueViewers}
+                    </p>
+                    <p className="text-sm text-neutral-600 font-montserrat mt-1">
+                      Unique Viewers (30 days)
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-md border-green-500/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-3 bg-green-100 rounded-full">
+                        <TrendingUp className="h-6 w-6 text-green-600" />
+                      </div>
+                    </div>
+                    <p className="text-3xl font-black font-montserrat text-primary-dark">
+                      {analytics.returningViewers}
+                    </p>
+                    <p className="text-sm text-neutral-600 font-montserrat mt-1">
+                      Returning Viewers (30 days)
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-md border-yellow-500/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-3 bg-yellow-100 rounded-full">
+                        <Heart className="h-6 w-6 text-yellow-600" />
+                      </div>
+                    </div>
+                    <p className="text-3xl font-black font-montserrat text-primary-dark">
+                      {engagementRate}%
+                    </p>
+                    <p className="text-sm text-neutral-600 font-montserrat mt-1">
+                      Return Rate
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Privacy Notice */}
+              <Card className="shadow-md bg-blue-50/50 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <Eye className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold font-montserrat text-primary-dark mb-1">
+                        Privacy Protection
+                      </h3>
+                      <p className="text-sm font-montserrat text-neutral-700">
+                        We protect viewer privacy by showing only aggregated, anonymous analytics. Individual viewer identities are kept private to maintain a comfortable browsing experience for everyone.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </section>
 

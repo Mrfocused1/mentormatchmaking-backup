@@ -2,8 +2,10 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -23,12 +25,13 @@ import {
   Eye,
   Check,
   AlertCircle,
-  X
+  X,
+  Loader2
 } from 'lucide-react'
 
 // Time slot type
 interface TimeSlot {
-  id: number
+  id: string
   dayOfWeek: string
   startTime: string
   endTime: string
@@ -37,55 +40,8 @@ interface TimeSlot {
   price: number
   maxBookings: number
   currentBookings: number
+  isActive: boolean
 }
-
-// Mock availability data
-const mockAvailability: TimeSlot[] = [
-  {
-    id: 1,
-    dayOfWeek: 'Monday',
-    startTime: '09:00 AM',
-    endTime: '12:00 PM',
-    duration: 60,
-    sessionType: 'Career Coaching',
-    price: 0,
-    maxBookings: 3,
-    currentBookings: 1
-  },
-  {
-    id: 2,
-    dayOfWeek: 'Monday',
-    startTime: '02:00 PM',
-    endTime: '05:00 PM',
-    duration: 60,
-    sessionType: 'Technical Review',
-    price: 0,
-    maxBookings: 3,
-    currentBookings: 2
-  },
-  {
-    id: 3,
-    dayOfWeek: 'Wednesday',
-    startTime: '10:00 AM',
-    endTime: '01:00 PM',
-    duration: 60,
-    sessionType: 'Product Strategy',
-    price: 0,
-    maxBookings: 3,
-    currentBookings: 0
-  },
-  {
-    id: 4,
-    dayOfWeek: 'Friday',
-    startTime: '03:00 PM',
-    endTime: '06:00 PM',
-    duration: 60,
-    sessionType: 'Interview Prep',
-    price: 0,
-    maxBookings: 3,
-    currentBookings: 3
-  }
-]
 
 // Default session types that can be customized
 const defaultSessionTypes = [
@@ -98,10 +54,18 @@ const defaultSessionTypes = [
   'General Discussion'
 ]
 
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 export default function AvailabilityPage() {
-  const [availability, setAvailability] = useState<TimeSlot[]>(mockAvailability)
+  const router = useRouter()
+  const supabase = createClient()
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [availability, setAvailability] = useState<TimeSlot[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [sessionTypes, setSessionTypes] = useState<string[]>(defaultSessionTypes)
   const [showSessionTypeManager, setShowSessionTypeManager] = useState(false)
@@ -115,6 +79,66 @@ export default function AvailabilityPage() {
     sessionType: 'Career Coaching',
     maxBookings: 1
   })
+
+  // Fetch availability from database
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+        setCurrentUserId(user.id)
+
+        // Fetch mentor availability
+        const { data: availabilityData, error: availabilityError } = await supabase
+          .from('MentorAvailability')
+          .select('*')
+          .eq('mentorId', user.id)
+          .order('dayOfWeek')
+          .order('startTime')
+
+        if (availabilityError) throw availabilityError
+
+        // Count bookings for each availability slot
+        const slotsWithBookings = await Promise.all(
+          (availabilityData || []).map(async (slot: any) => {
+            const { count: bookingCount } = await supabase
+              .from('TimeSlot')
+              .select('*', { count: 'exact', head: true })
+              .eq('availabilityId', slot.id)
+              .eq('isBooked', true)
+
+            return {
+              id: slot.id,
+              dayOfWeek: dayNames[slot.dayOfWeek],
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              duration: 60, // Default duration
+              sessionType: slot.sessionType || 'General Discussion',
+              price: 0,
+              maxBookings: 10, // Default max bookings
+              currentBookings: bookingCount || 0,
+              isActive: slot.isActive
+            }
+          })
+        )
+
+        setAvailability(slotsWithBookings)
+        setLoading(false)
+      } catch (err: any) {
+        console.error('Error fetching availability:', err)
+        setError(err.message)
+        setLoading(false)
+      }
+    }
+
+    fetchAvailability()
+  }, [])
 
   // Get unique booking link
   const bookingLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/sessions/book/john-smith`
@@ -139,15 +163,43 @@ export default function AvailabilityPage() {
   }
 
   // Add new time slot
-  const handleAddSlot = () => {
-    const slot: TimeSlot = {
-      id: Date.now(),
-      ...newSlot,
-      price: 0,
-      currentBookings: 0
+  const handleAddSlot = async () => {
+    try {
+      if (!currentUserId) return
+
+      // Convert day name to number (0 = Sunday, 1 = Monday, etc.)
+      const dayIndex = dayNames.indexOf(newSlot.dayOfWeek)
+
+      // Insert into database
+      const { data, error } = await supabase
+        .from('MentorAvailability')
+        .insert({
+          mentorId: currentUserId,
+          dayOfWeek: dayIndex,
+          startTime: newSlot.startTime,
+          endTime: newSlot.endTime,
+          sessionType: newSlot.sessionType,
+          isActive: true
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Add to local state
+      const slot: TimeSlot = {
+        id: data.id,
+        ...newSlot,
+        price: 0,
+        currentBookings: 0,
+        isActive: true
+      }
+      setAvailability([...availability, slot])
+      setShowAddForm(false)
+    } catch (err: any) {
+      console.error('Error adding slot:', err)
+      alert('Failed to add time slot. Please try again.')
     }
-    setAvailability([...availability, slot])
-    setShowAddForm(false)
     // Reset form
     setNewSlot({
       dayOfWeek: 'Monday',
@@ -160,9 +212,23 @@ export default function AvailabilityPage() {
   }
 
   // Delete time slot
-  const handleDeleteSlot = (id: number) => {
+  const handleDeleteSlot = async (id: string) => {
     if (confirm('Are you sure you want to delete this availability slot?')) {
-      setAvailability(availability.filter(slot => slot.id !== id))
+      try {
+        // Delete from database
+        const { error } = await supabase
+          .from('MentorAvailability')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+
+        // Remove from local state
+        setAvailability(availability.filter(slot => slot.id !== id))
+      } catch (err: any) {
+        console.error('Error deleting slot:', err)
+        alert('Failed to delete time slot. Please try again.')
+      }
     }
   }
 

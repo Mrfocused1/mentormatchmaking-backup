@@ -45,6 +45,18 @@ model BlogCategory {
   @@index([slug])
 }
 
+model Collection {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
 model BlogPost {
   id              String        @id @default(cuid())
   authorId        String
@@ -83,6 +95,122 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model ForumCategory {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?
+  icon        String?
+  color       String?
+  ForumPost   ForumPost[]
+
+  @@index([slug])
+}
+
+model ForumPost {
+  id             String         @id @default(cuid())
+  authorId       String
+  categoryId     String
+  title          String
+  content        String
+  isPinned       Boolean        @default(false)
+  isLocked       Boolean        @default(false)
+  views          Int            @default(0)
+  likes          Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  tags           String[]
+  User           User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ForumCategory  ForumCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  ForumReply     ForumReply[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([isPinned])
+}
+
+model ForumReply {
+  id          String    @id @default(cuid())
+  postId      String
+  authorId    String
+  content     String
+  likes       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  User        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ForumPost   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Goal {
+  id          String       @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  category    GoalCategory
+  priority    GoalPriority @default(MEDIUM)
+  deadline    DateTime
+  progress    Int          @default(0)
+  status      GoalStatus   @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  User        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Milestone   Milestone[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([deadline])
+}
+
+model Milestone {
+  id            String    @id @default(cuid())
+  goalId        String
+  text          String
+  completed     Boolean   @default(false)
+  completedDate DateTime?
+  createdAt     DateTime  @default(now())
+  Goal          Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model MentorAvailability {
+  id          String     @id @default(cuid())
+  mentorId    String
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  sessionType String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  User        User       @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  TimeSlot    TimeSlot[]
+
+  @@index([mentorId])
+  @@index([dayOfWeek])
+}
+
+model TimeSlot {
+  id                   String              @id @default(cuid())
+  availabilityId       String
+  date                 DateTime
+  startTime            String
+  endTime              String
+  duration             Int
+  isBooked             Boolean             @default(false)
+  bookedByUserId       String?
+  createdAt            DateTime            @default(now())
+  MentorAvailability   MentorAvailability  @relation(fields: [availabilityId], references: [id], onDelete: Cascade)
+
+  @@index([availabilityId])
+  @@index([date])
+  @@index([isBooked])
 }
 
 model Industry {
@@ -292,12 +420,17 @@ model User {
   Block_Block_blockedIdToUser                      Block[]           @relation("Block_blockedIdToUser")
   Block_Block_blockerIdToUser                      Block[]           @relation("Block_blockerIdToUser")
   BlogPost                                         BlogPost[]
+  Collection                                       Collection[]
   Follow_Follow_followerIdToUser                   Follow[]          @relation("Follow_followerIdToUser")
   Follow_Follow_followingIdToUser                  Follow[]          @relation("Follow_followingIdToUser")
+  ForumPost                                        ForumPost[]
+  ForumReply                                       ForumReply[]
+  Goal                                             Goal[]
   InterestRequest_InterestRequest_fromUserIdToUser InterestRequest[] @relation("InterestRequest_fromUserIdToUser")
   InterestRequest_InterestRequest_toUserIdToUser   InterestRequest[] @relation("InterestRequest_toUserIdToUser")
   Match_Match_user1IdToUser                        Match[]           @relation("Match_user1IdToUser")
   Match_Match_user2IdToUser                        Match[]           @relation("Match_user2IdToUser")
+  MentorAvailability                               MentorAvailability[]
   Message_Message_receiverIdToUser                 Message[]         @relation("Message_receiverIdToUser")
   Message_Message_senderIdToUser                   Message[]         @relation("Message_senderIdToUser")
   Notification                                     Notification[]
@@ -318,6 +451,26 @@ enum AgeVerificationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum GoalCategory {
+  CAREER
+  SKILL
+  PROJECT
+  NETWORKING
+  OTHER
+}
+
+enum GoalPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
 }
 
 enum ExperienceLevel {

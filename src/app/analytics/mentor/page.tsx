@@ -2,7 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -13,6 +14,7 @@ import { StatCard } from '@/components/analytics/stat-card'
 import { ProgressMetric } from '@/components/analytics/progress-metric'
 import { SimpleBarChart } from '@/components/analytics/simple-bar-chart'
 import { MetricComparison } from '@/components/analytics/metric-comparison'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft,
   Users,
@@ -27,69 +29,268 @@ import {
   CheckCircle,
   Target,
   BarChart3,
-  Download
+  Download,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 
-export default function MentorAnalyticsPage() {
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
+interface AnalyticsData {
+  totalSessions: number
+  completedSessions: number
+  upcomingSessions: number
+  cancelledSessions: number
+  averageRating: number
+  totalReviews: number
+  totalMentees: number
+  activeMentees: number
+  profileViews: number
+  connectionRequests: number
+  acceptedRequests: number
+  responseTime: string
+  responseRate: number
+}
 
-  // Mock analytics data - would come from API
-  const analytics = {
-    totalSessions: 156,
-    completedSessions: 142,
-    upcomingSessions: 8,
-    cancelledSessions: 6,
-    averageRating: 4.8,
-    totalReviews: 89,
-    totalMentees: 34,
-    activeMentees: 12,
-    profileViews: 2847,
-    connectionRequests: 45,
-    acceptedRequests: 34,
-    responseTime: '< 2 hours',
-    responseRate: 95
+interface ReviewData {
+  id: string
+  menteeName: string
+  rating: number
+  comment: string | null
+  date: string
+}
+
+export default function MentorAnalyticsPage() {
+  const router = useRouter()
+  const supabase = createClient()
+
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [analytics, setAnalytics] = useState<AnalyticsData>({
+    totalSessions: 0,
+    completedSessions: 0,
+    upcomingSessions: 0,
+    cancelledSessions: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    totalMentees: 0,
+    activeMentees: 0,
+    profileViews: 0,
+    connectionRequests: 0,
+    acceptedRequests: 0,
+    responseTime: '< 24 hours',
+    responseRate: 0
+  })
+
+  const [sessionActivity, setSessionActivity] = useState<Array<{ label: string; value: number; color: string }>>([])
+  const [sessionTypes, setSessionTypes] = useState<Array<{ label: string; value: number; color: string }>>([])
+  const [recentReviews, setRecentReviews] = useState<ReviewData[]>([])
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Calculate date range
+        const now = new Date()
+        const startDate = new Date()
+        if (timeRange === '7d') {
+          startDate.setDate(now.getDate() - 7)
+        } else if (timeRange === '30d') {
+          startDate.setDate(now.getDate() - 30)
+        } else if (timeRange === '90d') {
+          startDate.setDate(now.getDate() - 90)
+        } else {
+          startDate.setFullYear(1970) // all time
+        }
+
+        // Fetch all sessions
+        const { data: sessionsData } = await supabase
+          .from('Session')
+          .select('id, status, scheduledAt, duration, menteeId')
+          .eq('mentorId', user.id)
+          .gte('scheduledAt', startDate.toISOString())
+
+        const sessions = sessionsData || []
+        const totalSessions = sessions.length
+        const completedSessions = sessions.filter(s => s.status === 'COMPLETED').length
+        const upcomingSessions = sessions.filter(s => s.status === 'SCHEDULED').length
+        const cancelledSessions = sessions.filter(s => s.status === 'CANCELLED').length
+
+        // Calculate unique mentees
+        const uniqueMenteeIds = new Set(sessions.map(s => s.menteeId))
+        const totalMentees = uniqueMenteeIds.size
+
+        // Fetch reviews
+        const { data: reviewsData } = await supabase
+          .from('Review')
+          .select(`
+            id, rating, comment, createdAt,
+            User_Review_reviewerIdToUser:reviewerId (name)
+          `)
+          .eq('reviewedId', user.id)
+          .order('createdAt', { ascending: false })
+
+        const reviews = reviewsData || []
+        const avgRating = reviews.length > 0
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : 0
+
+        // Fetch profile views (last 30 days)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(now.getDate() - 30)
+
+        const { data: viewsData } = await supabase
+          .from('ProfileView')
+          .select('id')
+          .eq('viewedId', user.id)
+          .gte('viewedAt', thirtyDaysAgo.toISOString())
+
+        const profileViews = viewsData?.length || 0
+
+        // Fetch connection requests
+        const { data: requestsData } = await supabase
+          .from('InterestRequest')
+          .select('id, status')
+          .eq('toUserId', user.id)
+
+        const requests = requestsData || []
+        const totalRequests = requests.length
+        const acceptedRequests = requests.filter(r => r.status === 'ACCEPTED').length
+        const responseRate = totalRequests > 0 ? Math.round((acceptedRequests / totalRequests) * 100) : 0
+
+        setAnalytics({
+          totalSessions,
+          completedSessions,
+          upcomingSessions,
+          cancelledSessions,
+          averageRating: Number(avgRating.toFixed(1)),
+          totalReviews: reviews.length,
+          totalMentees,
+          activeMentees: uniqueMenteeIds.size, // for now, same as total
+          profileViews,
+          connectionRequests: totalRequests,
+          acceptedRequests,
+          responseTime: '< 24 hours',
+          responseRate
+        })
+
+        // Session activity by week (last 4 weeks)
+        const weeklyActivity: Record<number, number> = {}
+        sessions.forEach(s => {
+          const sessionDate = new Date(s.scheduledAt)
+          const weeksDiff = Math.floor((now.getTime() - sessionDate.getTime()) / (7 * 24 * 60 * 60 * 1000))
+          if (weeksDiff >= 0 && weeksDiff < 4) {
+            weeklyActivity[3 - weeksDiff] = (weeklyActivity[3 - weeksDiff] || 0) + 1
+          }
+        })
+
+        setSessionActivity([
+          { label: 'Week 1', value: weeklyActivity[0] || 0, color: 'bg-primary-accent' },
+          { label: 'Week 2', value: weeklyActivity[1] || 0, color: 'bg-primary-accent' },
+          { label: 'Week 3', value: weeklyActivity[2] || 0, color: 'bg-primary-accent' },
+          { label: 'Week 4', value: weeklyActivity[3] || 0, color: 'bg-primary-accent' }
+        ])
+
+        // Recent reviews (top 3)
+        const transformedReviews: ReviewData[] = reviews.slice(0, 3).map(r => {
+          const reviewer = Array.isArray(r.User_Review_reviewerIdToUser)
+            ? r.User_Review_reviewerIdToUser[0]
+            : r.User_Review_reviewerIdToUser
+
+          const createdDate = new Date(r.createdAt)
+          const daysDiff = Math.floor((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000))
+          let dateStr = ''
+          if (daysDiff === 0) dateStr = 'Today'
+          else if (daysDiff === 1) dateStr = '1 day ago'
+          else if (daysDiff < 7) dateStr = `${daysDiff} days ago'`
+          else if (daysDiff < 14) dateStr = '1 week ago'
+          else if (daysDiff < 30) dateStr = `${Math.floor(daysDiff / 7)} weeks ago`
+          else dateStr = `${Math.floor(daysDiff / 30)} months ago`
+
+          return {
+            id: r.id,
+            menteeName: reviewer?.name || 'Anonymous',
+            rating: r.rating,
+            comment: r.comment,
+            date: dateStr
+          }
+        })
+
+        setRecentReviews(transformedReviews)
+
+        // For session types - we don't have this data in schema, so create placeholder
+        setSessionTypes([
+          { label: 'General', value: totalSessions, color: 'bg-secondary-accent' }
+        ])
+
+      } catch (err) {
+        console.error('Error fetching analytics:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load analytics')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+  }, [timeRange, supabase, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <section className="pt-24 pb-12 sm:pt-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-vibrant-accent mx-auto mb-4 animate-spin" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Loading analytics...
+                </h3>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <Footer />
+      </div>
+    )
   }
 
-  // Session activity over time
-  const sessionActivity = [
-    { label: 'Week 1', value: 8, color: 'bg-primary-accent' },
-    { label: 'Week 2', value: 12, color: 'bg-primary-accent' },
-    { label: 'Week 3', value: 10, color: 'bg-primary-accent' },
-    { label: 'Week 4', value: 15, color: 'bg-primary-accent' }
-  ]
-
-  // Session types breakdown
-  const sessionTypes = [
-    { label: 'Career', value: 45, color: 'bg-secondary-accent' },
-    { label: 'Technical', value: 38, color: 'bg-vibrant-accent' },
-    { label: 'Product', value: 32, color: 'bg-yellow-500' },
-    { label: 'Interview', value: 27, color: 'bg-green-600' }
-  ]
-
-  // Recent reviews
-  const recentReviews = [
-    {
-      id: 1,
-      menteeName: 'Alex Thompson',
-      rating: 5,
-      comment: 'Incredibly helpful session! Sarah provided clear guidance on my career transition.',
-      date: '2 days ago'
-    },
-    {
-      id: 2,
-      menteeName: 'Emily Rodriguez',
-      rating: 5,
-      comment: 'Best mentor on the platform. Always prepared and insightful.',
-      date: '5 days ago'
-    },
-    {
-      id: 3,
-      menteeName: 'Michael Chen',
-      rating: 4,
-      comment: 'Great advice on product strategy. Looking forward to our next session.',
-      date: '1 week ago'
-    }
-  ]
+  if (error) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <section className="pt-24 pb-12 sm:pt-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-black font-montserrat text-primary-dark mb-3">
+                  Error loading analytics
+                </h3>
+                <p className="text-neutral-600 font-montserrat mb-8">{error}</p>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                  className="bg-vibrant-accent text-white hover:bg-vibrant-accent/90"
+                >
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">

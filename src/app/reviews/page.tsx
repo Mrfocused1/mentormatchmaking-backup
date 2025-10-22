@@ -2,7 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ReviewCard, Review } from '@/components/reviews/review-card'
+import { createClient } from '@/lib/supabase/client'
 import {
   Star,
   Filter,
@@ -18,120 +20,24 @@ import {
   Award,
   BarChart3,
   Users,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
-// Mock reviews data
-const mockReviews: Review[] = [
-  {
-    id: '1',
-    reviewerName: 'Emily Rodriguez',
-    reviewerAvatar: null,
-    reviewerRole: 'Product Manager at StartupCo',
-    isAnonymous: false,
-    isVerified: true,
-    overallRating: 5,
-    categoryRatings: {
-      expertise: 5,
-      communication: 5,
-      helpfulness: 4,
-      professionalism: 5,
-    },
-    reviewText:
-      'Absolutely incredible mentor! Sarah provided actionable insights that helped me land my dream job. Her expertise in product design is unmatched, and she took the time to review my portfolio in detail. I highly recommend her to anyone looking to advance their career in design.',
-    sessionType: 'Career Guidance',
-    timestamp: '2 days ago',
-    helpfulCount: 12,
-    unhelpfulCount: 0,
-    userVote: null,
-  },
-  {
-    id: '2',
-    reviewerName: 'Anonymous',
-    reviewerAvatar: null,
-    isAnonymous: true,
-    isVerified: true,
-    overallRating: 4,
-    categoryRatings: {
-      expertise: 5,
-      communication: 4,
-      helpfulness: 4,
-      professionalism: 4,
-    },
-    reviewText:
-      'Great session overall. The mentor was knowledgeable and provided useful feedback on my design portfolio. Would have appreciated more time for Q&A, but overall a valuable experience.',
-    sessionType: 'Portfolio Review',
-    timestamp: '1 week ago',
-    helpfulCount: 8,
-    unhelpfulCount: 1,
-    userVote: null,
-  },
-  {
-    id: '3',
-    reviewerName: 'Michael Chen',
-    reviewerAvatar: null,
-    reviewerRole: 'UX Designer',
-    isAnonymous: false,
-    isVerified: true,
-    overallRating: 5,
-    categoryRatings: {
-      expertise: 5,
-      communication: 5,
-      helpfulness: 5,
-      professionalism: 5,
-    },
-    reviewText:
-      'Sarah is an exceptional mentor. She helped me navigate a complex career transition and provided invaluable guidance on building my personal brand. Her insights on UX design trends were spot-on, and I feel much more confident in my career path now.',
-    sessionType: 'Career Transition',
-    timestamp: '2 weeks ago',
-    helpfulCount: 15,
-    unhelpfulCount: 0,
-    userVote: 'helpful',
-  },
-  {
-    id: '4',
-    reviewerName: 'David Kim',
-    reviewerAvatar: null,
-    reviewerRole: 'Junior Designer',
-    isAnonymous: false,
-    isVerified: true,
-    overallRating: 5,
-    categoryRatings: {
-      expertise: 5,
-      communication: 5,
-      helpfulness: 5,
-      professionalism: 5,
-    },
-    reviewText:
-      'Best mentorship session I\'ve ever had! Sarah\'s feedback on my work was detailed and constructive. She didn\'t just point out issues but also explained the "why" behind design decisions. Will definitely book again!',
-    sessionType: 'Design Critique',
-    timestamp: '3 weeks ago',
-    helpfulCount: 9,
-    unhelpfulCount: 0,
-    userVote: null,
-  },
-  {
-    id: '5',
-    reviewerName: 'Lisa Anderson',
-    reviewerAvatar: null,
-    reviewerRole: 'Career Changer',
-    isAnonymous: false,
-    isVerified: true,
-    overallRating: 4,
-    categoryRatings: {
-      expertise: 5,
-      communication: 4,
-      helpfulness: 4,
-      professionalism: 4,
-    },
-    reviewText:
-      'Very helpful session! Sarah provided great advice on breaking into the design industry. Her portfolio tips were especially valuable. Only minor suggestion would be to allocate more time for practical exercises.',
-    sessionType: 'Career Guidance',
-    timestamp: '1 month ago',
-    helpfulCount: 6,
-    unhelpfulCount: 0,
-    userVote: null,
-  },
-]
+// Helper function to format timestamp
+const formatTimestamp = (createdAt: string): string => {
+  const now = new Date()
+  const created = new Date(createdAt)
+  const diffMs = now.getTime() - created.getTime()
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`
+  return created.toLocaleDateString()
+}
 
 // Calculate review statistics
 const calculateStats = (reviews: Review[]) => {
@@ -158,10 +64,88 @@ const calculateStats = (reviews: Review[]) => {
 }
 
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useState(mockReviews)
+  const router = useRouter()
+  const supabase = createClient()
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filterRating, setFilterRating] = useState<number | 'all'>('all')
   const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'rating'>('recent')
   const [showCategoryRatings, setShowCategoryRatings] = useState(true)
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Fetch reviews where current user is the one being reviewed
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('Review')
+          .select(`
+            id,
+            rating,
+            comment,
+            createdAt,
+            User_Review_reviewerIdToUser:reviewerId (
+              id,
+              name,
+              role,
+              Profile (
+                profilePicture
+              )
+            )
+          `)
+          .eq('reviewedId', user.id)
+          .order('createdAt', { ascending: false })
+
+        if (reviewsError) throw reviewsError
+
+        // Transform data to match Review interface
+        const transformedReviews: Review[] = (reviewsData || []).map(review => {
+          const reviewer = review.User_Review_reviewerIdToUser as any
+          const profile = Array.isArray(reviewer?.Profile) ? reviewer.Profile[0] : reviewer?.Profile
+
+          return {
+            id: review.id,
+            reviewerName: reviewer?.name || 'Anonymous',
+            reviewerAvatar: profile?.profilePicture || null,
+            reviewerRole: reviewer?.role || '',
+            isAnonymous: false,
+            isVerified: true,
+            overallRating: review.rating,
+            categoryRatings: {
+              expertise: review.rating,
+              communication: review.rating,
+              helpfulness: review.rating,
+              professionalism: review.rating,
+            },
+            reviewText: review.comment || 'No comment provided',
+            sessionType: 'Session',
+            timestamp: formatTimestamp(review.createdAt),
+            helpfulCount: 0,
+            unhelpfulCount: 0,
+            userVote: null,
+          }
+        })
+
+        setReviews(transformedReviews)
+      } catch (err) {
+        console.error('Error fetching reviews:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load reviews')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReviews()
+  }, [supabase, router])
 
   // Calculate statistics
   const stats = calculateStats(reviews)
@@ -450,7 +434,33 @@ export default function ReviewsPage() {
               </Card>
 
               {/* Reviews List */}
-              {sortedReviews.length > 0 ? (
+              {loading ? (
+                <Card className="shadow-lg">
+                  <CardContent className="p-12 text-center">
+                    <Loader2 className="h-12 w-12 text-primary-accent mx-auto mb-4 animate-spin" />
+                    <h3 className="text-xl font-bold font-montserrat text-neutral-700 mb-2">
+                      Loading your reviews...
+                    </h3>
+                  </CardContent>
+                </Card>
+              ) : error ? (
+                <Card className="shadow-lg">
+                  <CardContent className="p-12 text-center">
+                    <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold font-montserrat text-neutral-700 mb-2">
+                      Error loading reviews
+                    </h3>
+                    <p className="text-neutral-500 font-montserrat mb-6">{error}</p>
+                    <Button
+                      variant="primary"
+                      onClick={() => window.location.reload()}
+                      className="bg-primary-accent text-primary-dark hover:bg-primary-accent/90"
+                    >
+                      Try Again
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : sortedReviews.length > 0 ? (
                 <div className="space-y-4">
                   {sortedReviews.map(review => (
                     <ReviewCard

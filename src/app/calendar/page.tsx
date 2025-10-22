@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft,
   ChevronLeft,
@@ -25,9 +26,10 @@ import {
   Edit2,
   Trash2,
   Users,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
-// Mock events data
 interface CalendarEvent {
   id: string
   title: string
@@ -44,73 +46,115 @@ interface CalendarEvent {
   status: 'confirmed' | 'pending' | 'cancelled'
 }
 
-const mockEvents: CalendarEvent[] = [
-  {
-    id: '1',
-    title: 'Career Guidance Session',
-    description: 'Discussing career transition strategies',
-    date: '2025-10-15',
-    startTime: '14:00',
-    endTime: '15:00',
-    type: 'session',
-    attendee: {
-      name: 'Sarah Thompson',
-      avatar: null,
-    },
-    location: 'Video Call',
-    status: 'confirmed',
-  },
-  {
-    id: '2',
-    title: 'Portfolio Review',
-    date: '2025-10-18',
-    startTime: '10:00',
-    endTime: '11:00',
-    type: 'session',
-    attendee: {
-      name: 'Michael Chen',
-      avatar: null,
-    },
-    location: 'Video Call',
-    status: 'confirmed',
-  },
-  {
-    id: '3',
-    title: 'Design System Workshop',
-    description: 'Learn advanced component architecture',
-    date: '2025-10-20',
-    startTime: '15:00',
-    endTime: '17:00',
-    type: 'event',
-    location: 'Virtual Event',
-    status: 'confirmed',
-  },
-  {
-    id: '4',
-    title: 'Interview Prep Session',
-    date: '2025-10-22',
-    startTime: '13:00',
-    endTime: '14:00',
-    type: 'session',
-    attendee: {
-      name: 'Emily Rodriguez',
-      avatar: null,
-    },
-    location: 'Video Call',
-    status: 'pending',
-  },
-]
+// Helper to convert Session status to CalendarEvent status
+const mapSessionStatus = (status: string): 'confirmed' | 'pending' | 'cancelled' => {
+  if (status === 'SCHEDULED') return 'confirmed'
+  if (status === 'CANCELLED') return 'cancelled'
+  return 'pending'
+}
 
 type ViewMode = 'month' | 'week'
 
 export default function CalendarPage() {
   const router = useRouter()
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 1)) // October 2025
+  const supabase = createClient()
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<ViewMode>('month')
-  const [events, setEvents] = useState<CalendarEvent[]>(mockEvents)
+  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
+
+  // Fetch sessions for current month/week
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setLoading(true)
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        // Calculate date range for current view
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth()
+        const startOfMonth = new Date(year, month, 1)
+        const endOfMonth = new Date(year, month + 1, 0)
+
+        // Fetch sessions where user is either mentor or mentee
+        const { data: sessionsData, error: sessionsError } = await supabase
+          .from('Session')
+          .select(`
+            id,
+            title,
+            notes,
+            scheduledAt,
+            duration,
+            status,
+            User_Session_mentorIdToUser:mentorId (
+              id,
+              name,
+              Profile (profilePicture)
+            ),
+            User_Session_menteeIdToUser:menteeId (
+              id,
+              name,
+              Profile (profilePicture)
+            )
+          `)
+          .or(`mentorId.eq.${user.id},menteeId.eq.${user.id}`)
+          .gte('scheduledAt', startOfMonth.toISOString())
+          .lte('scheduledAt', endOfMonth.toISOString())
+          .order('scheduledAt')
+
+        if (sessionsError) throw sessionsError
+
+        // Transform sessions to CalendarEvent format
+        const transformedEvents: CalendarEvent[] = (sessionsData || []).map((session: any) => {
+          const scheduledDate = new Date(session.scheduledAt)
+          const mentor = session.User_Session_mentorIdToUser
+          const mentee = session.User_Session_menteeIdToUser
+
+          // Determine who the attendee is (the other person, not current user)
+          const isUserMentor = mentor?.id === user.id
+          const attendee = isUserMentor ? mentee : mentor
+          const attendeeProfile = Array.isArray(attendee?.Profile) ? attendee.Profile[0] : attendee?.Profile
+
+          const endTime = new Date(scheduledDate.getTime() + session.duration * 60000)
+
+          return {
+            id: session.id,
+            title: session.title || 'Mentorship Session',
+            description: session.notes || undefined,
+            date: scheduledDate.toISOString().split('T')[0],
+            startTime: scheduledDate.toTimeString().substring(0, 5),
+            endTime: endTime.toTimeString().substring(0, 5),
+            type: 'session',
+            attendee: {
+              name: attendee?.name || 'Unknown',
+              avatar: attendeeProfile?.profilePicture || null,
+            },
+            location: 'Video Call',
+            status: mapSessionStatus(session.status),
+          }
+        })
+
+        setEvents(transformedEvents)
+      } catch (err) {
+        console.error('Error fetching sessions:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load calendar')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSessions()
+  }, [supabase, router, currentDate, viewMode])
 
   // Navigation
   const previousPeriod = () => {

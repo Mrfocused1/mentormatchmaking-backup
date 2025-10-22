@@ -2,12 +2,14 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft,
   MessageCircle,
@@ -20,164 +22,189 @@ import {
   Eye,
   Clock,
   ChevronRight,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
-// Mock forum categories
-const forumCategories = [
-  {
-    id: 1,
-    name: 'General Discussion',
-    description: 'General topics about mentorship and career development',
-    icon: MessageCircle,
-    topics: 1234,
-    posts: 5678,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-  },
-  {
-    id: 2,
-    name: 'Success Stories',
-    description: 'Share your mentorship success stories and milestones',
-    icon: TrendingUp,
-    topics: 456,
-    posts: 2345,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
-  },
-  {
-    id: 3,
-    name: 'Tips & Advice',
-    description: 'Share and receive mentorship tips and best practices',
-    icon: Users,
-    topics: 789,
-    posts: 3456,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
-  },
-]
+interface CategoryData {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  icon: string | null
+  color: string | null
+  topics: number
+  posts: number
+}
 
-// Mock recent discussions
-const recentDiscussions = [
-  {
-    id: 1,
-    title: 'How to make the most of your first mentorship session?',
-    category: 'Tips & Advice',
-    author: {
-      name: 'Sarah Johnson',
-      avatar: 'SJ',
-      role: 'Mentor',
-    },
-    isPinned: true,
-    replies: 24,
-    views: 456,
-    likes: 18,
-    lastActivity: '2 hours ago',
-    lastUser: 'Mike Chen',
-    excerpt: 'I wanted to share some tips that have helped me and my mentees...',
-  },
-  {
-    id: 2,
-    title: 'Celebrating 6 months of successful mentorship!',
-    category: 'Success Stories',
-    author: {
-      name: 'David Martinez',
-      avatar: 'DM',
-      role: 'Mentee',
-    },
-    isPinned: false,
-    replies: 12,
-    views: 234,
-    likes: 45,
-    lastActivity: '4 hours ago',
-    lastUser: 'Emma Wilson',
-    excerpt: 'Just wanted to share my journey over the past 6 months...',
-  },
-  {
-    id: 3,
-    title: 'Best practices for remote mentorship sessions',
-    category: 'Tips & Advice',
-    author: {
-      name: 'Lisa Anderson',
-      avatar: 'LA',
-      role: 'Mentor',
-    },
-    isPinned: false,
-    replies: 18,
-    views: 389,
-    likes: 22,
-    lastActivity: '5 hours ago',
-    lastUser: 'John Smith',
-    excerpt: 'With many of us working remotely, I thought it would be helpful...',
-  },
-  {
-    id: 4,
-    title: 'How do you handle time zone differences?',
-    category: 'General Discussion',
-    author: {
-      name: 'Carlos Rodriguez',
-      avatar: 'CR',
-      role: 'Mentee',
-    },
-    isPinned: false,
-    replies: 31,
-    views: 567,
-    likes: 15,
-    lastActivity: '6 hours ago',
-    lastUser: 'Anna Lee',
-    excerpt: 'My mentor and I are in very different time zones...',
-  },
-  {
-    id: 5,
-    title: 'Resources for career transition into tech',
-    category: 'Tips & Advice',
-    author: {
-      name: 'Michelle Thompson',
-      avatar: 'MT',
-      role: 'Mentor',
-    },
-    isPinned: false,
-    replies: 44,
-    views: 892,
-    likes: 67,
-    lastActivity: '8 hours ago',
-    lastUser: 'Tom Harris',
-    excerpt: 'I\'ve compiled a list of resources that might help...',
-  },
-  {
-    id: 6,
-    title: 'My journey from mentee to mentor',
-    category: 'Success Stories',
-    author: {
-      name: 'James Wilson',
-      avatar: 'JW',
-      role: 'Mentor',
-    },
-    isPinned: false,
-    replies: 28,
-    views: 645,
-    likes: 89,
-    lastActivity: '1 day ago',
-    lastUser: 'Rachel Green',
-    excerpt: 'Three years ago, I joined this platform as a mentee...',
-  },
-]
+interface DiscussionData {
+  id: string
+  title: string
+  content: string
+  categoryName: string
+  authorName: string
+  authorRole: string
+  isPinned: boolean
+  replies: number
+  views: number
+  likes: number
+  lastActivity: string
+  excerpt: string
+}
 
-// Mock popular tags
-const popularTags = [
-  { name: 'career-advice', count: 234 },
-  { name: 'remote-work', count: 189 },
-  { name: 'tech-careers', count: 156 },
-  { name: 'first-session', count: 145 },
-  { name: 'goal-setting', count: 123 },
-  { name: 'networking', count: 98 },
-]
+interface TagData {
+  name: string
+  count: number
+}
 
 export default function ForumPage() {
+  const router = useRouter()
+  const supabase = createClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'recent' | 'popular' | 'trending'>('recent')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [forumCategories, setForumCategories] = useState<CategoryData[]>([])
+  const [recentDiscussions, setRecentDiscussions] = useState<DiscussionData[]>([])
+  const [popularTags, setPopularTags] = useState<TagData[]>([])
+  const [stats, setStats] = useState({ totalTopics: 0, totalPosts: 0, activeMembers: 0 })
 
   // TODO: Replace with actual authentication check
   const isAuthenticated = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+
+  // Fetch forum data
+  useEffect(() => {
+    const fetchForumData = async () => {
+      try {
+        setLoading(true)
+
+        // Fetch categories
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('ForumCategory')
+          .select('*')
+          .order('name')
+
+        if (categoriesError) throw categoriesError
+
+        // Calculate topics and posts for each category
+        const categoriesWithCounts = await Promise.all(
+          (categoriesData || []).map(async (cat: any) => {
+            const { count: postsCount } = await supabase
+              .from('ForumPost')
+              .select('*', { count: 'exact', head: true })
+              .eq('categoryId', cat.id)
+
+            const { count: repliesCount } = await supabase
+              .from('ForumReply')
+              .select('forumReply.*, forumPost!inner(categoryId)', { count: 'exact', head: true })
+              .eq('forumPost.categoryId', cat.id)
+
+            return {
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description,
+              icon: cat.icon,
+              color: cat.color,
+              topics: postsCount || 0,
+              posts: (postsCount || 0) + (repliesCount || 0)
+            }
+          })
+        )
+
+        setForumCategories(categoriesWithCounts)
+
+        // Fetch recent discussions
+        const { data: postsData, error: postsError } = await supabase
+          .from('ForumPost')
+          .select(`
+            id,
+            title,
+            content,
+            isPinned,
+            views,
+            likes,
+            createdAt,
+            updatedAt,
+            ForumCategory(name),
+            User(name, role)
+          `)
+          .order('createdAt', { ascending: false })
+          .limit(10)
+
+        if (postsError) throw postsError
+
+        // Get reply counts for each post
+        const discussionsWithReplies = await Promise.all(
+          (postsData || []).map(async (post: any) => {
+            const { count: replyCount } = await supabase
+              .from('ForumReply')
+              .select('*', { count: 'exact', head: true })
+              .eq('postId', post.id)
+
+            return {
+              id: post.id,
+              title: post.title,
+              content: post.content,
+              excerpt: post.content.substring(0, 150) + '...',
+              categoryName: post.ForumCategory?.name || 'General',
+              authorName: post.User?.name || 'Anonymous',
+              authorRole: post.User?.role || 'MENTEE',
+              isPinned: post.isPinned,
+              replies: replyCount || 0,
+              views: post.views,
+              likes: post.likes,
+              lastActivity: new Date(post.updatedAt).toLocaleDateString()
+            }
+          })
+        )
+
+        setRecentDiscussions(discussionsWithReplies)
+
+        // Calculate stats
+        const { count: topicsCount } = await supabase
+          .from('ForumPost')
+          .select('*', { count: 'exact', head: true })
+
+        const { count: repliesCount } = await supabase
+          .from('ForumReply')
+          .select('*', { count: 'exact', head: true })
+
+        const { count: usersCount } = await supabase
+          .from('User')
+          .select('*', { count: 'exact', head: true })
+
+        setStats({
+          totalTopics: topicsCount || 0,
+          totalPosts: (topicsCount || 0) + (repliesCount || 0),
+          activeMembers: usersCount || 0
+        })
+
+        // Extract popular tags from posts
+        const allTags: { [key: string]: number } = {}
+        postsData?.forEach((post: any) => {
+          post.tags?.forEach((tag: string) => {
+            allTags[tag] = (allTags[tag] || 0) + 1
+          })
+        })
+
+        const tagsArray = Object.entries(allTags)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 15)
+
+        setPopularTags(tagsArray)
+
+        setLoading(false)
+      } catch (err: any) {
+        console.error('Error fetching forum data:', err)
+        setError(err.message)
+        setLoading(false)
+      }
+    }
+
+    fetchForumData()
+  }, [])
 
   const handleCreatePost = () => {
     if (!isAuthenticated) {
@@ -186,6 +213,38 @@ export default function ForumPage() {
     }
     // TODO: Implement post creation modal/page
     alert('Post creation coming soon!')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary-accent mx-auto mb-4" />
+          <p className="text-neutral-600 font-montserrat">Loading forum...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-8 w-8 text-red-500" />
+              <CardTitle className="text-xl font-bold text-primary-dark">Error Loading Forum</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-neutral-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="primary" className="w-full">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -254,8 +313,8 @@ export default function ForumPage() {
                       className="block p-4 rounded-lg border border-neutral-200 hover:border-primary-accent hover:shadow-md transition-all"
                     >
                       <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-lg ${category.bgColor}`}>
-                          <category.icon className={`h-6 w-6 ${category.color}`} />
+                        <div className={`p-3 rounded-lg bg-primary-accent/10`}>
+                          <MessageCircle className={`h-6 w-6 text-primary-accent`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold font-montserrat text-primary-dark mb-1">
@@ -322,8 +381,8 @@ export default function ForumPage() {
                         {/* Author Avatar */}
                         <Avatar
                           src=""
-                          alt={discussion.author.name}
-                          fallback={discussion.author.avatar}
+                          alt={discussion.authorName}
+                          fallback={discussion.authorName.substring(0, 2).toUpperCase()}
                           size="md"
                         />
 
@@ -344,10 +403,10 @@ export default function ForumPage() {
 
                           <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500 font-montserrat">
                             <Badge variant="outline" size="sm">
-                              {discussion.category}
+                              {discussion.categoryName}
                             </Badge>
                             <span className="flex items-center gap-1">
-                              {discussion.author.name}
+                              {discussion.authorName}
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
@@ -399,7 +458,7 @@ export default function ForumPage() {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-montserrat text-neutral-600">Total Topics</span>
                       <span className="text-lg font-bold font-montserrat text-primary-dark">
-                        2,479
+                        {loading ? '...' : stats.totalTopics.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -407,7 +466,7 @@ export default function ForumPage() {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-montserrat text-neutral-600">Total Posts</span>
                       <span className="text-lg font-bold font-montserrat text-primary-dark">
-                        11,479
+                        {loading ? '...' : stats.totalPosts.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -415,7 +474,7 @@ export default function ForumPage() {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-montserrat text-neutral-600">Active Members</span>
                       <span className="text-lg font-bold font-montserrat text-primary-dark">
-                        5,234
+                        {loading ? '...' : stats.activeMembers.toLocaleString()}
                       </span>
                     </div>
                   </div>

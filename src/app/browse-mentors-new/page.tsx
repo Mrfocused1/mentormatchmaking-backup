@@ -2,7 +2,9 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -20,10 +22,20 @@ import {
   Upload,
   FileText,
   CheckCircle,
-  RotateCcw
+  RotateCcw,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 
 export default function BrowseMentorsNew() {
+  const router = useRouter()
+  const supabase = createClient()
+
+  // Loading and error states
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [mentors, setMentors] = useState<any[]>([])
+
   // Step 1: Filter Selection or Step 2: Results View
   const [currentStep, setCurrentStep] = useState<'filters' | 'results'>('filters')
 
@@ -46,8 +58,91 @@ export default function BrowseMentorsNew() {
   const [interestMessage, setInterestMessage] = useState('')
   const [uploadedCV, setUploadedCV] = useState<File | null>(null)
 
-  // Mock data
-  const mentors = [
+  // Fetch mentors from database
+  useEffect(() => {
+    const fetchMentors = async () => {
+      try {
+        setLoading(true)
+
+        // Fetch all mentors with their profiles
+        const { data: mentorsData, error: mentorsError } = await supabase
+          .from('User')
+          .select(`
+            id,
+            name,
+            role,
+            Profile (
+              profilePicture,
+              bio,
+              workExperience,
+              yearsOfExperience,
+              city,
+              country,
+              status,
+              helpsWith
+            )
+          `)
+          .eq('role', 'MENTOR')
+          .eq('Profile.status', 'ACTIVE')
+          .limit(50)
+
+        if (mentorsError) throw mentorsError
+
+        // Get additional data for each mentor (reviews, etc.)
+        const mentorsWithDetails = await Promise.all(
+          (mentorsData || []).map(async (mentor: any) => {
+            // Get review stats
+            const { data: reviews } = await supabase
+              .from('Review')
+              .select('rating')
+              .eq('reviewedId', mentor.id)
+
+            const avgRating = reviews && reviews.length > 0
+              ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
+              : 0
+
+            // Get mentee count
+            const { count: menteeCount } = await supabase
+              .from('Match')
+              .select('*', { count: 'exact', head: true })
+              .or(`user1Id.eq.${mentor.id},user2Id.eq.${mentor.id}`)
+              .eq('status', 'ACTIVE')
+
+            return {
+              id: mentor.id,
+              name: mentor.name,
+              title: mentor.Profile?.workExperience?.split('\n')[0] || 'Professional',
+              company: 'Company', // TODO: Add company field to Profile
+              location: `${mentor.Profile?.city || ''}, ${mentor.Profile?.country || ''}`.trim() || 'Remote',
+              industry: 'Technology', // TODO: Get from industries relation
+              rating: parseFloat(avgRating.toFixed(1)),
+              reviewCount: reviews?.length || 0,
+              mentees: menteeCount || 0,
+              yearsExperience: mentor.Profile?.yearsOfExperience === 'ENTRY' ? 2 : mentor.Profile?.yearsOfExperience === 'MID' ? 5 : mentor.Profile?.yearsOfExperience === 'SENIOR' ? 10 : 15,
+              expertise: mentor.Profile?.helpsWith?.split(',').map((s: string) => s.trim()) || [],
+              availability: mentor.Profile?.status === 'ACTIVE' ? 'Available' : 'Limited',
+              bio: mentor.Profile?.bio || 'Passionate about mentoring and helping others grow.',
+              avatar: mentor.Profile?.profilePicture,
+              languages: ['English'],
+              industries: ['Technology']
+            }
+          })
+        )
+
+        setMentors(mentorsWithDetails)
+        setLoading(false)
+      } catch (err: any) {
+        console.error('Error fetching mentors:', err)
+        setError(err.message)
+        setLoading(false)
+      }
+    }
+
+    fetchMentors()
+  }, [])
+
+  // OLD MOCK DATA - REMOVED
+  /* const mentors = [
     {
       id: 1,
       name: 'Sarah Chen',
@@ -156,7 +251,8 @@ export default function BrowseMentorsNew() {
       languages: ['English (Native)'],
       industries: ['Technology', 'E-commerce', 'AI/ML'],
     },
-  ]
+  ] */
+  // END OF MOCK DATA - NOW USING SUPABASE
 
   const industries = ['Technology', 'Marketing', 'Finance', 'Design', 'Healthcare', 'Education', 'Consulting']
   const expertiseAreas = [
