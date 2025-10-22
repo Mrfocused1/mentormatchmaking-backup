@@ -72,11 +72,6 @@ export async function GET(request: NextRequest) {
       },
       include: {
         Profile: true,  // Simplified to avoid TypeScript errors
-        reviewsReceived: {
-          select: {
-            rating: true,
-          },
-        },
       },
     })
 
@@ -159,7 +154,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Bonus for highly-rated users
-      const ratings = match.reviewsReceived.map(r => r.rating)
+      const ratings = [] // match.reviewsReceived.map(r => r.rating) - disabled temporarily
       if (ratings.length > 0) {
         const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length
         if (avgRating >= 4.5) {
@@ -189,7 +184,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 20)
       .map(({ user, score, matchReasons }) => {
         // Calculate average rating
-        const ratings = user.reviewsReceived.map(r => r.rating)
+        const ratings = [] // user.reviewsReceived.map(r => r.rating) - disabled temporarily
         const avgRating = ratings.length > 0
           ? ratings.reduce((a, b) => a + b, 0) / ratings.length
           : 0
