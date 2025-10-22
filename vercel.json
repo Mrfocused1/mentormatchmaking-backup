@@ -2,23 +2,13 @@
   "crons": [
     {
       "path": "/api/cron/session-reminders",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/onboarding-reminders",
-      "schedule": "0 10 * * *"
+      "schedule": "0 0 * * *",
+      "comment": "Daily @ midnight - Send 24h session reminders"
     },
     {
       "path": "/api/cron/weekly-summary",
-      "schedule": "0 9 * * 1"
-    },
-    {
-      "path": "/api/cron/reengagement",
-      "schedule": "0 10 * * 0"
-    },
-    {
-      "path": "/api/cron/admin-digest",
-      "schedule": "0 8 * * *"
+      "schedule": "0 9 * * 1",
+      "comment": "Mondays @ 9am - Weekly activity summary"
     }
   ]
 }
