@@ -69,11 +69,18 @@ export default function DashboardPage() {
           .from('User')
           .select('*, Profile(*)')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
         if (profileError) {
           console.error('Profile error:', profileError)
           throw new Error('Failed to fetch profile')
+        }
+
+        // If user doesn't exist in database, redirect to onboarding
+        if (!userProfile) {
+          console.log('User not found in database, redirecting to onboarding')
+          router.push('/onboarding/mentee')
+          return
         }
 
         setUserData(userProfile)
