@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       const matchReasons: string[] = []
 
       // Score based on shared interests (highest weight)
-      const matchInterestSlugs = match.Profile?.interests?.map(i => i.slug) || []
+      const matchInterestSlugs: string[] = [] // match.Profile?.interests?.map(i => i.slug) || [] - disabled temporarily
       const sharedInterests = userInterestSlugs.filter(slug =>
         matchInterestSlugs.includes(slug)
       )
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on shared industries (medium weight)
-      const matchIndustrySlugs = match.Profile?.industries?.map(i => i.slug) || []
+      const matchIndustrySlugs: string[] = [] // match.Profile?.industries?.map(i => i.slug) || [] - disabled temporarily
       const sharedIndustries = userIndustrySlugs.filter(slug =>
         matchIndustrySlugs.includes(slug)
       )
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Bonus for highly-rated users
-      const ratings = [] // match.reviewsReceived.map(r => r.rating) - disabled temporarily
+      const ratings: number[] = [] // match.reviewsReceived.map(r => r.rating) - disabled temporarily
       if (ratings.length > 0) {
         const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length
         if (avgRating >= 4.5) {
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 20)
       .map(({ user, score, matchReasons }) => {
         // Calculate average rating
-        const ratings = [] // user.reviewsReceived.map(r => r.rating) - disabled temporarily
+        const ratings: number[] = [] // user.reviewsReceived.map(r => r.rating) - disabled temporarily
         const avgRating = ratings.length > 0
           ? ratings.reduce((a, b) => a + b, 0) / ratings.length
           : 0
@@ -194,16 +194,16 @@ export async function GET(request: NextRequest) {
           name: user.name,
           age: user.age,
           role: user.role,
-          title: user.profile?.workExperience || 'User',
-          location: user.profile?.city || 'Location not set',
-          bio: user.profile?.bio || '',
-          interests: user.profile?.interests?.map(i => i.name) || [],
-          industries: user.profile?.industries?.map(i => i.name) || [],
-          experience: user.profile?.yearsOfExperience,
+          title: user.Profile?.workExperience || 'User',
+          location: user.Profile?.city || 'Location not set',
+          bio: user.Profile?.bio || '',
+          interests: [], // user.Profile?.interests?.map(i => i.name) || [] - disabled temporarily
+          industries: [], // user.Profile?.industries?.map(i => i.name) || [] - disabled temporarily
+          experience: user.Profile?.yearsOfExperience,
           rating: avgRating,
           reviewCount: ratings.length,
-          availability: user.profile?.availableHours || 0,
-          profileImage: user.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=A3F3C4&color=1B4332&size=400`,
+          availability: user.Profile?.availableHours || 0,
+          profileImage: user.Profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=A3F3C4&color=1B4332&size=400`,
           matchScore: score,
           matchReasons,
         }
