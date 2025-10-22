@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
+import { randomUUID } from 'crypto'
 
 // GET - Fetch all conversations for current user
 export async function GET(request: NextRequest) {
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
     // Create message - temporarily simplified to avoid TypeScript errors
     const message = await prisma.message.create({
       data: {
+        id: randomUUID(),
         senderId: user.id,
         receiverId,
         content,
