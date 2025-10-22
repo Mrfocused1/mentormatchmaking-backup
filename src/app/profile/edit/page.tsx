@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ProfilePhotoUpload } from '@/components/profile/profile-photo-upload'
+import { CVUpload } from '@/components/profile/cv-upload'
 import {
   ArrowLeft,
   Save,
@@ -324,6 +325,32 @@ export default function EditProfilePage() {
                         profile: {
                           ...userData.profile,
                           profilePicture: url,
+                        },
+                      })
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* CV/Resume Upload */}
+            <Card className="shadow-lg">
+              <CardHeader className="border-b border-neutral-200">
+                <CardTitle className="text-lg">CV / Resume</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {userData && (
+                  <CVUpload
+                    currentCVUrl={userData.Profile?.cvUrl}
+                    userId={userData.id}
+                    userName={userData.name || ''}
+                    onUploadSuccess={(url) => {
+                      // Update local state
+                      setUserData({
+                        ...userData,
+                        Profile: {
+                          ...userData.Profile,
+                          cvUrl: url,
                         },
                       })
                     }}
