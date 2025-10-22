@@ -39,7 +39,7 @@ export type EmailType =
 
 // Email sending helper with logging
 async function sendEmail(to: string, subject: string, html: string, emailType: EmailType) {
-  const supabase = createClient()
+  const supabase = await createClient()
   let status: 'SENT' | 'FAILED' = 'FAILED'
   let emailData = null
 
@@ -105,7 +105,8 @@ async function sendEmail(to: string, subject: string, html: string, emailType: E
 
     // Log the exception
     try {
-      await supabase.from('EmailLog').insert({
+      const supabaseForError = await createClient()
+      await supabaseForError.from('EmailLog').insert({
         recipient: to,
         subject,
         type: emailType,
