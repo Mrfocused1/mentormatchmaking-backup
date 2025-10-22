@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +8,7 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies()
     const supabaseUrl = 'https://igkalvcxjpkctfkytity.supabase.co'
     const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw'
+    const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.mEZ5EzdzVtu590hbGqd2mWVI-bPxe97xsBmVgR8jrXE'
 
     const supabase = createServerClient(
       supabaseUrl,
@@ -46,39 +46,57 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch user and profile from database, create if doesn't exist
-    let dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: {
-        profile: {
-          include: {
-            industries: true,
-            interests: true,
-          },
-        },
-      },
-    })
+    // Use Supabase REST API directly to fetch/create user
+    // This bypasses the need for Prisma and direct database connection
+    const headers = {
+      'apikey': serviceRoleKey,
+      'Authorization': `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
 
-    // If user doesn't exist in database, create them
+    // First, try to fetch the user
+    const getUserResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=*,profile:Profile(*)`,
+      { headers }
+    )
+
+    const users = await getUserResponse.json()
+
+    let dbUser = users && users.length > 0 ? users[0] : null
+
+    // If user doesn't exist, create them
     if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
+      const createUserResponse = await fetch(
+        `${supabaseUrl}/rest/v1/User`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            age: user.user_metadata?.age || 18,
+            role: user.user_metadata?.role || 'MENTEE',
+            emailVerified: user.email_confirmed_at ? new Date(user.email_confirmed_at).toISOString() : null,
+          })
+        }
+      )
+
+      if (createUserResponse.ok) {
+        const newUser = await createUserResponse.json()
+        dbUser = Array.isArray(newUser) ? newUser[0] : newUser
+      } else {
+        const errorText = await createUserResponse.text()
+        console.error('Failed to create user:', errorText)
+        // Return minimal user data if creation fails
+        dbUser = {
           id: user.id,
-          email: user.email!,
+          email: user.email,
           name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-          age: user.user_metadata?.age || 18,
           role: user.user_metadata?.role || 'MENTEE',
-          emailVerified: user.email_confirmed_at ? new Date(user.email_confirmed_at) : null,
-        },
-        include: {
-          profile: {
-            include: {
-              industries: true,
-              interests: true,
-            },
-          },
-        },
-      })
+        }
+      }
     }
 
     return NextResponse.json({

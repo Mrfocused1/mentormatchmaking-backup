@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,166 +7,331 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model for authentication
-model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  emailVerified     DateTime?
-  password          String?
-  name              String
-  age               Int
-  role              UserRole  @default(MENTEE)
-  isAdmin           Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+model AgeVerification {
+  id              String                @id
+  userId          String                @unique
+  idType          IdType
+  idImageUrl      String
+  status          AgeVerificationStatus @default(PENDING)
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  rejectionReason String?
+  createdAt       DateTime              @default(now())
+  User            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  profile           Profile?
-  sentRequests      InterestRequest[]  @relation("SentRequests")
-  receivedRequests  InterestRequest[]  @relation("ReceivedRequests")
-  matches1          Match[]            @relation("User1Matches")
-  matches2          Match[]            @relation("User2Matches")
-  sentMessages      Message[]          @relation("SentMessages")
-  receivedMessages  Message[]          @relation("ReceivedMessages")
-  sessions1         Session[]          @relation("Session1")
-  sessions2         Session[]          @relation("Session2")
-  reviewsGiven      Review[]           @relation("ReviewsGiven")
-  reviewsReceived   Review[]           @relation("ReviewsReceived")
-  savedProfiles     SavedProfile[]
-  notifications     Notification[]
-  reports           Report[]           @relation("Reporter")
-  reportsAbout      Report[]           @relation("Reported")
-  blockedUsers      Block[]            @relation("Blocker")
-  blockedBy         Block[]            @relation("Blocked")
-  blogPosts         BlogPost[]
-  ageVerification   AgeVerification?
-  following         Follow[]           @relation("Follower")
-  followers         Follow[]           @relation("Following")
+  @@index([status])
+}
+
+model Block {
+  id                         String   @id
+  blockerId                  String
+  blockedId                  String
+  blockedAt                  DateTime @default(now())
+  User_Block_blockedIdToUser User     @relation("Block_blockedIdToUser", fields: [blockedId], references: [id], onDelete: Cascade)
+  User_Block_blockerIdToUser User     @relation("Block_blockerIdToUser", fields: [blockerId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@index([blockerId])
+}
+
+model BlogCategory {
+  id          String     @id
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  BlogPost    BlogPost[]
+
+  @@index([slug])
+}
+
+model BlogPost {
+  id              String        @id
+  authorId        String
+  title           String
+  slug            String        @unique
+  metaTitle       String?
+  metaDescription String?
+  excerpt         String?
+  content         String
+  featuredImage   String?
+  imageAlt        String?
+  status          PostStatus    @default(DRAFT)
+  publishedAt     DateTime?
+  views           Int           @default(0)
+  seoKeyword      String?
+  tags            String[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  categoryId      String?
+  User            User          @relation(fields: [authorId], references: [id])
+  BlogCategory    BlogCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([publishedAt])
+  @@index([slug])
+  @@index([status])
+}
+
+model Follow {
+  id                            String   @id
+  followerId                    String
+  followingId                   String
+  followedAt                    DateTime @default(now())
+  User_Follow_followerIdToUser  User     @relation("Follow_followerIdToUser", fields: [followerId], references: [id], onDelete: Cascade)
+  User_Follow_followingIdToUser User     @relation("Follow_followingIdToUser", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Industry {
+  id      String    @id
+  name    String    @unique
+  slug    String    @unique
+  Profile Profile[] @relation("ProfileIndustries")
+
+  @@index([slug])
+}
+
+model Interest {
+  id      String    @id
+  name    String    @unique
+  slug    String    @unique
+  Profile Profile[] @relation("ProfileInterests")
+
+  @@index([slug])
+}
+
+model InterestRequest {
+  id                                    String                @id
+  fromUserId                            String
+  toUserId                              String
+  message                               String
+  status                                InterestRequestStatus @default(PENDING)
+  createdAt                             DateTime              @default(now())
+  respondedAt                           DateTime?
+  User_InterestRequest_fromUserIdToUser User                  @relation("InterestRequest_fromUserIdToUser", fields: [fromUserId], references: [id], onDelete: Cascade)
+  User_InterestRequest_toUserIdToUser   User                  @relation("InterestRequest_toUserIdToUser", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+  @@index([status])
+  @@index([toUserId])
+}
+
+model Match {
+  id                       String      @id
+  user1Id                  String
+  user2Id                  String
+  matchedAt                DateTime    @default(now())
+  endedAt                  DateTime?
+  status                   MatchStatus @default(PENDING)
+  endedByUserId            String?
+  acceptedAt               DateTime?
+  initiatedById            String
+  User_Match_user1IdToUser User        @relation("Match_user1IdToUser", fields: [user1Id], references: [id], onDelete: Cascade)
+  User_Match_user2IdToUser User        @relation("Match_user2IdToUser", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+  @@index([initiatedById])
+  @@index([status])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model Message {
+  id                            String   @id
+  senderId                      String
+  receiverId                    String
+  content                       String
+  read                          Boolean  @default(false)
+  createdAt                     DateTime @default(now())
+  User_Message_receiverIdToUser User     @relation("Message_receiverIdToUser", fields: [receiverId], references: [id], onDelete: Cascade)
+  User_Message_senderIdToUser   User     @relation("Message_senderIdToUser", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([senderId, receiverId])
+}
+
+model Notification {
+  id        String           @id
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  User      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId, read])
+}
+
+model Profile {
+  id                   String            @id
+  userId               String            @unique
+  bio                  String?
+  profilePicture       String?
+  cvUrl                String?
+  workExperience       String?
+  yearsOfExperience    ExperienceLevel?
+  currentSituation     String?
+  goals                String?
+  preferredFrequency   MeetingFrequency?
+  availableHours       Int?
+  responseTime         ResponseTime?
+  linkedIn             String?
+  twitter              String?
+  instagram            String?
+  helpsWith            String?
+  lookingFor           String?
+  minMenteeAge         Int?
+  maxMenteeAge         Int?
+  status               ProfileStatus     @default(ACTIVE)
+  isVerified           Boolean           @default(false)
+  completionPercentage Int               @default(0)
+  country              String?
+  city                 String?
+  timezone             String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime
+  User                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Industry             Industry[]        @relation("ProfileIndustries")
+  Interest             Interest[]        @relation("ProfileInterests")
+
+  @@index([status])
+  @@index([userId])
+}
+
+model ProfileView {
+  id        String   @id
+  viewerId  String?
+  viewedId  String
+  viewedAt  DateTime @default(now())
+  ipAddress String?
+
+  @@index([viewedId, viewedAt])
+  @@index([viewerId])
+}
+
+model Report {
+  id                           String       @id
+  reporterId                   String
+  reportedId                   String
+  reason                       ReportReason
+  description                  String?
+  status                       ReportStatus @default(PENDING)
+  resolvedAt                   DateTime?
+  resolvedNote                 String?
+  createdAt                    DateTime     @default(now())
+  User_Report_reportedIdToUser User         @relation("Report_reportedIdToUser", fields: [reportedId], references: [id], onDelete: Cascade)
+  User_Report_reporterIdToUser User         @relation("Report_reporterIdToUser", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model Review {
+  id                           String   @id
+  reviewerId                   String
+  reviewedId                   String
+  rating                       Int
+  comment                      String?
+  createdAt                    DateTime @default(now())
+  User_Review_reviewedIdToUser User     @relation("Review_reviewedIdToUser", fields: [reviewedId], references: [id], onDelete: Cascade)
+  User_Review_reviewerIdToUser User     @relation("Review_reviewerIdToUser", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, reviewedId])
+  @@index([rating])
+  @@index([reviewedId])
+}
+
+model SavedProfile {
+  id          String   @id
+  userId      String
+  savedUserId String
+  savedAt     DateTime @default(now())
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, savedUserId])
+  @@index([userId])
+}
+
+model Session {
+  id                          String        @id
+  mentorId                    String
+  menteeId                    String
+  title                       String?
+  notes                       String?
+  scheduledAt                 DateTime
+  duration                    Int
+  status                      SessionStatus @default(SCHEDULED)
+  createdAt                   DateTime      @default(now())
+  User_Session_menteeIdToUser User          @relation("Session_menteeIdToUser", fields: [menteeId], references: [id], onDelete: Cascade)
+  User_Session_mentorIdToUser User          @relation("Session_mentorIdToUser", fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId, menteeId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model User {
+  id                                               String            @id
+  email                                            String            @unique
+  emailVerified                                    DateTime?
+  password                                         String?
+  name                                             String
+  age                                              Int
+  role                                             UserRole          @default(MENTEE)
+  isAdmin                                          Boolean           @default(false)
+  createdAt                                        DateTime          @default(now())
+  updatedAt                                        DateTime
+  AgeVerification                                  AgeVerification?
+  Block_Block_blockedIdToUser                      Block[]           @relation("Block_blockedIdToUser")
+  Block_Block_blockerIdToUser                      Block[]           @relation("Block_blockerIdToUser")
+  BlogPost                                         BlogPost[]
+  Follow_Follow_followerIdToUser                   Follow[]          @relation("Follow_followerIdToUser")
+  Follow_Follow_followingIdToUser                  Follow[]          @relation("Follow_followingIdToUser")
+  InterestRequest_InterestRequest_fromUserIdToUser InterestRequest[] @relation("InterestRequest_fromUserIdToUser")
+  InterestRequest_InterestRequest_toUserIdToUser   InterestRequest[] @relation("InterestRequest_toUserIdToUser")
+  Match_Match_user1IdToUser                        Match[]           @relation("Match_user1IdToUser")
+  Match_Match_user2IdToUser                        Match[]           @relation("Match_user2IdToUser")
+  Message_Message_receiverIdToUser                 Message[]         @relation("Message_receiverIdToUser")
+  Message_Message_senderIdToUser                   Message[]         @relation("Message_senderIdToUser")
+  Notification                                     Notification[]
+  Profile                                          Profile?
+  Report_Report_reportedIdToUser                   Report[]          @relation("Report_reportedIdToUser")
+  Report_Report_reporterIdToUser                   Report[]          @relation("Report_reporterIdToUser")
+  Review_Review_reviewedIdToUser                   Review[]          @relation("Review_reviewedIdToUser")
+  Review_Review_reviewerIdToUser                   Review[]          @relation("Review_reviewerIdToUser")
+  SavedProfile                                     SavedProfile[]
+  Session_Session_menteeIdToUser                   Session[]         @relation("Session_menteeIdToUser")
+  Session_Session_mentorIdToUser                   Session[]         @relation("Session_mentorIdToUser")
 
   @@index([email])
   @@index([role])
 }
 
-enum UserRole {
-  MENTOR
-  MENTEE
-}
-
-// Extended profile information
-model Profile {
-  id                    String              @id @default(cuid())
-  userId                String              @unique
-  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Profile fields
-  bio                   String?             @db.Text
-  profilePicture        String?
-  cvUrl                 String?
-  workExperience        String?             @db.Text
-  yearsOfExperience     ExperienceLevel?
-  currentSituation      String?
-  goals                 String?             @db.Text
-  preferredFrequency    MeetingFrequency?
-  availableHours        Int?                // Hours per month
-  responseTime          ResponseTime?
-
-  // Social media
-  linkedIn              String?
-  twitter               String?
-  instagram             String?
-
-  // Mentorship preferences
-  helpsWith             String?             @db.Text
-  lookingFor            String?             @db.Text
-  minMenteeAge          Int?
-  maxMenteeAge          Int?
-
-  // Status
-  status                ProfileStatus       @default(ACTIVE)
-  isVerified            Boolean             @default(false)
-  completionPercentage  Int                 @default(0)
-
-  // Location
-  country               String?
-  city                  String?
-  timezone              String?
-
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-
-  // Relations
-  industries            Industry[]          @relation("ProfileIndustries")
-  interests             Interest[]          @relation("ProfileInterests")
-
-  @@index([userId])
-  @@index([status])
+enum AgeVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ExperienceLevel {
-  ENTRY      // 0-3 years
-  MID        // 3-7 years
-  SENIOR     // 7-15 years
-  EXECUTIVE  // 15+ years
+  ENTRY
+  MID
+  SENIOR
+  EXECUTIVE
 }
 
-enum MeetingFrequency {
-  WEEKLY
-  BIWEEKLY
-  MONTHLY
-  FLEXIBLE
-}
-
-enum ResponseTime {
-  WITHIN_24H
-  TWO_THREE_DAYS
-  WEEKLY
-  FLEXIBLE
-}
-
-enum ProfileStatus {
-  ACTIVE
-  NOT_ACCEPTING
-  PAUSED
-  PRIVATE
-}
-
-// Industries
-model Industry {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
-  profiles    Profile[] @relation("ProfileIndustries")
-
-  @@index([slug])
-}
-
-// Interests/Skills
-model Interest {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
-  profiles    Profile[] @relation("ProfileInterests")
-
-  @@index([slug])
-}
-
-// Interest requests between users
-model InterestRequest {
-  id            String              @id @default(cuid())
-  fromUserId    String
-  toUserId      String
-  message       String              @db.Text
-  status        InterestRequestStatus @default(PENDING)
-  createdAt     DateTime            @default(now())
-  respondedAt   DateTime?
-
-  fromUser      User                @relation("SentRequests", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser        User                @relation("ReceivedRequests", fields: [toUserId], references: [id], onDelete: Cascade)
-
-  @@unique([fromUserId, toUserId])
-  @@index([fromUserId])
-  @@index([toUserId])
-  @@index([status])
+enum IdType {
+  DRIVERS_LICENSE
+  PROVISIONAL_LICENSE
+  PASSPORT
+  STUDENT_ID
 }
 
 enum InterestRequestStatus {
@@ -178,134 +340,18 @@ enum InterestRequestStatus {
   DECLINED
 }
 
-// Matches between users
-model Match {
-  id              String      @id @default(cuid())
-  user1Id         String
-  user2Id         String
-  initiatedById   String      // Who sent the connection request
-  matchedAt       DateTime    @default(now())
-  acceptedAt      DateTime?   // When connection was accepted
-  endedAt         DateTime?
-  status          MatchStatus @default(PENDING)
-  endedByUserId   String?
-
-  user1           User        @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2           User        @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
-
-  @@unique([user1Id, user2Id])
-  @@index([user1Id])
-  @@index([user2Id])
-  @@index([status])
-  @@index([initiatedById])
-}
-
 enum MatchStatus {
-  PENDING    // Connection request sent, awaiting acceptance
-  ACTIVE     // Connection accepted, actively matched
-  ENDED      // Match ended by one or both users
-  UNMATCHED  // Users unmatched or declined
+  ACTIVE
+  ENDED
+  UNMATCHED
+  PENDING
 }
 
-// Chat messages
-model Message {
-  id          String    @id @default(cuid())
-  senderId    String
-  receiverId  String
-  content     String    @db.Text
-  read        Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-
-  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  @@index([senderId, receiverId])
-  @@index([createdAt])
-}
-
-// Scheduled sessions
-model Session {
-  id          String        @id @default(cuid())
-  mentorId    String
-  menteeId    String
-  title       String?
-  notes       String?       @db.Text
-  scheduledAt DateTime
-  duration    Int           // in minutes
-  status      SessionStatus @default(SCHEDULED)
-  createdAt   DateTime      @default(now())
-
-  mentor      User          @relation("Session1", fields: [mentorId], references: [id], onDelete: Cascade)
-  mentee      User          @relation("Session2", fields: [menteeId], references: [id], onDelete: Cascade)
-
-  @@index([mentorId, menteeId])
-  @@index([scheduledAt])
-  @@index([status])
-}
-
-enum SessionStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-}
-
-// Reviews
-model Review {
-  id           String    @id @default(cuid())
-  reviewerId   String
-  reviewedId   String
-  rating       Int       // 1-5
-  comment      String?   @db.Text
-  createdAt    DateTime  @default(now())
-
-  reviewer     User      @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
-  reviewed     User      @relation("ReviewsReceived", fields: [reviewedId], references: [id], onDelete: Cascade)
-
-  @@unique([reviewerId, reviewedId])
-  @@index([reviewedId])
-  @@index([rating])
-}
-
-// Saved/Bookmarked profiles
-model SavedProfile {
-  id          String    @id @default(cuid())
-  userId      String
-  savedUserId String
-  savedAt     DateTime  @default(now())
-
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, savedUserId])
-  @@index([userId])
-}
-
-// Profile views tracking
-model ProfileView {
-  id          String    @id @default(cuid())
-  viewerId    String?   // null for anonymous views
-  viewedId    String    // Profile being viewed
-  viewedAt    DateTime  @default(now())
-  ipAddress   String?   // Optional for anonymous tracking
-
-  @@index([viewedId, viewedAt])
-  @@index([viewerId])
-}
-
-// Notifications
-model Notification {
-  id          String            @id @default(cuid())
-  userId      String
-  type        NotificationType
-  title       String
-  message     String
-  data        Json?
-  read        Boolean           @default(false)
-  createdAt   DateTime          @default(now())
-
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, read])
-  @@index([createdAt])
+enum MeetingFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  FLEXIBLE
 }
 
 enum NotificationType {
@@ -320,35 +366,6 @@ enum NotificationType {
   SYSTEM
 }
 
-// Blog posts
-model BlogPost {
-  id              String        @id @default(cuid())
-  authorId        String
-  title           String
-  slug            String        @unique
-  metaTitle       String?
-  metaDescription String?
-  excerpt         String?       @db.Text
-  content         String        @db.Text
-  featuredImage   String?
-  imageAlt        String?
-  status          PostStatus    @default(DRAFT)
-  publishedAt     DateTime?
-  views           Int           @default(0)
-  seoKeyword      String?
-  tags            String[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  author          User          @relation(fields: [authorId], references: [id])
-  category        BlogCategory? @relation(fields: [categoryId], references: [id])
-  categoryId      String?
-
-  @@index([slug])
-  @@index([status])
-  @@index([publishedAt])
-}
-
 enum PostStatus {
   DRAFT
   SCHEDULED
@@ -356,34 +373,11 @@ enum PostStatus {
   ARCHIVED
 }
 
-// Blog categories
-model BlogCategory {
-  id          String      @id @default(cuid())
-  name        String      @unique
-  slug        String      @unique
-  description String?
-  posts       BlogPost[]
-
-  @@index([slug])
-}
-
-// Reports for moderation
-model Report {
-  id            String        @id @default(cuid())
-  reporterId    String
-  reportedId    String
-  reason        ReportReason
-  description   String?       @db.Text
-  status        ReportStatus  @default(PENDING)
-  resolvedAt    DateTime?
-  resolvedNote  String?
-  createdAt     DateTime      @default(now())
-
-  reporter      User          @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  reported      User          @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([createdAt])
+enum ProfileStatus {
+  ACTIVE
+  NOT_ACCEPTING
+  PAUSED
+  PRIVATE
 }
 
 enum ReportReason {
@@ -402,62 +396,20 @@ enum ReportStatus {
   DISMISSED
 }
 
-// Block list
-model Block {
-  id          String    @id @default(cuid())
-  blockerId   String
-  blockedId   String
-  blockedAt   DateTime  @default(now())
-
-  blocker     User      @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
-  blocked     User      @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
-
-  @@unique([blockerId, blockedId])
-  @@index([blockerId])
-  @@index([blockedId])
+enum ResponseTime {
+  WITHIN_24H
+  TWO_THREE_DAYS
+  WEEKLY
+  FLEXIBLE
 }
 
-// Age verification for users under 18
-model AgeVerification {
-  id              String                  @id @default(cuid())
-  userId          String                  @unique
-  idType          IdType
-  idImageUrl      String
-  status          AgeVerificationStatus   @default(PENDING)
-  verifiedAt      DateTime?
-  verifiedBy      String?
-  rejectionReason String?
-  createdAt       DateTime                @default(now())
-
-  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([status])
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
 }
 
-enum IdType {
-  DRIVERS_LICENSE
-  PROVISIONAL_LICENSE
-  PASSPORT
-  STUDENT_ID
-}
-
-enum AgeVerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-// Follow system (social media style)
-model Follow {
-  id          String    @id @default(cuid())
-  followerId  String    // User who is following
-  followingId String    // User being followed (typically a mentor)
-  followedAt  DateTime  @default(now())
-
-  follower    User      @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User      @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
-
-  @@unique([followerId, followingId])
-  @@index([followerId])
-  @@index([followingId])
+enum UserRole {
+  MENTOR
+  MENTEE
 }
