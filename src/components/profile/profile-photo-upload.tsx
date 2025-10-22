@@ -72,19 +72,17 @@ export function ProfilePhotoUpload({
         .from('profile-photos')
         .getPublicUrl(filePath)
 
-      // Update user profile in database
-      const response = await fetch('/api/profile/me', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Update user profile in database with direct Supabase query
+      const { error: updateError } = await supabase
+        .from('Profile')
+        .update({
           profilePicture: publicUrl,
-        }),
-      })
+        })
+        .eq('userId', userId)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update profile')
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        throw new Error('Failed to update profile')
       }
 
       setUploadSuccess(true)
@@ -116,19 +114,17 @@ export function ProfilePhotoUpload({
     try {
       setUploading(true)
 
-      // Update profile to remove photo
-      const response = await fetch('/api/profile/me', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Update profile to remove photo with direct Supabase query
+      const { error: updateError } = await supabase
+        .from('Profile')
+        .update({
           profilePicture: null,
-        }),
-      })
+        })
+        .eq('userId', userId)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update profile')
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        throw new Error('Failed to update profile')
       }
 
       setPreviewUrl(null)
