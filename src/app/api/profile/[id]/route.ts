@@ -8,41 +8,11 @@ export async function GET(
   try {
     const { id } = await params
 
-    // Fetch user and profile from database
+    // Fetch user and profile from database - temporarily simplified
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        profile: {
-          include: {
-            industries: true,
-            interests: true,
-          },
-        },
-        reviewsReceived: {
-          include: {
-            reviewer: {
-              select: {
-                id: true,
-                name: true,
-                profile: {
-                  select: {
-                    profilePicture: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10, // Get latest 10 reviews
-        },
-        matches1: {
-          where: { status: 'ACTIVE' },
-        },
-        matches2: {
-          where: { status: 'ACTIVE' },
-        },
+        Profile: true,
       },
     })
 
@@ -53,14 +23,7 @@ export async function GET(
       )
     }
 
-    // Calculate stats
-    const totalMatches = user.matches1.length + user.matches2.length
-    const ratings = user.reviewsReceived.map((r) => r.rating)
-    const avgRating = ratings.length > 0
-      ? ratings.reduce((a, b) => a + b, 0) / ratings.length
-      : 0
-
-    // Transform data for frontend
+    // Transform data for frontend - temporarily simplified
     const profileData = {
       id: user.id,
       name: user.name,
@@ -69,40 +32,30 @@ export async function GET(
       email: user.email,
       createdAt: user.createdAt,
       profile: {
-        bio: user.profile?.bio,
-        workExperience: user.profile?.workExperience,
-        city: user.profile?.city,
-        timezone: user.profile?.timezone,
-        profilePicture: user.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=A3F3C4&color=1B4332&size=400`,
-        yearsOfExperience: user.profile?.yearsOfExperience,
-        availableHours: user.profile?.availableHours,
-        preferredFrequency: user.profile?.preferredFrequency,
-        responseTime: user.profile?.responseTime,
-        linkedIn: user.profile?.linkedIn,
-        twitter: user.profile?.twitter,
-        instagram: user.profile?.instagram,
-        helpsWith: user.profile?.helpsWith,
-        lookingFor: user.profile?.lookingFor,
-        goals: user.profile?.goals,
-        industries: user.profile?.industries?.map((i) => ({ id: i.id, name: i.name, slug: i.slug })) || [],
-        interests: user.profile?.interests?.map((i) => ({ id: i.id, name: i.name, slug: i.slug })) || [],
+        bio: user.Profile?.bio,
+        workExperience: user.Profile?.workExperience,
+        city: user.Profile?.city,
+        timezone: user.Profile?.timezone,
+        profilePicture: user.Profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=A3F3C4&color=1B4332&size=400`,
+        yearsOfExperience: user.Profile?.yearsOfExperience,
+        availableHours: user.Profile?.availableHours,
+        preferredFrequency: user.Profile?.preferredFrequency,
+        responseTime: user.Profile?.responseTime,
+        linkedIn: user.Profile?.linkedIn,
+        twitter: user.Profile?.twitter,
+        instagram: user.Profile?.instagram,
+        helpsWith: user.Profile?.helpsWith,
+        lookingFor: user.Profile?.lookingFor,
+        goals: user.Profile?.goals,
+        industries: [], // Temporarily disabled
+        interests: [], // Temporarily disabled
       },
       stats: {
-        rating: avgRating,
-        reviewCount: ratings.length,
-        totalMatches,
+        rating: 0,
+        reviewCount: 0,
+        totalMatches: 0,
       },
-      reviews: user.reviewsReceived.map((review) => ({
-        id: review.id,
-        rating: review.rating,
-        comment: review.comment,
-        createdAt: review.createdAt,
-        reviewer: {
-          id: review.reviewer.id,
-          name: review.reviewer.name,
-          avatar: review.reviewer.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer.name)}&background=A3F3C4&color=1B4332&size=400`,
-        },
-      })),
+      reviews: [], // Temporarily disabled
     }
 
     return NextResponse.json({
