@@ -66,12 +66,12 @@ export async function GET(request: NextRequest) {
         NOT: {
           id: user.id, // Exclude current user
         },
-        profile: {
+        Profile: {
           isNot: null, // Only users with completed profiles
         },
       },
       include: {
-        profile: {
+        Profile: {
           include: {
             interests: true,
             industries: true,
