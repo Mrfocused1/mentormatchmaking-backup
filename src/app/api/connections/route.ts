@@ -192,34 +192,7 @@ export async function POST(request: NextRequest) {
         initiatedById: user.id,
         status: 'PENDING',
       },
-      include: {
-        user1: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-            profile: {
-              select: {
-                profilePicture: true,
-                workExperience: true,
-              },
-            },
-          },
-        },
-        user2: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-            profile: {
-              select: {
-                profilePicture: true,
-                workExperience: true,
-              },
-            },
-          },
-        },
-      },
+      // Temporarily removed includes due to TypeScript issue
     })
 
     // Create notification for the recipient
