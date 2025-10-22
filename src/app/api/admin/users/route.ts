@@ -87,11 +87,14 @@ export async function GET(request: Request) {
           ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
           : 0
 
+        const profile = Array.isArray(user.Profile) ? user.Profile[0] : user.Profile
+
         return {
           ...user,
           sessionsCount,
           rating: avgRating,
-          status: user.Profile?.status || 'ACTIVE'
+          status: profile?.status || 'ACTIVE',
+          Profile: profile
         }
       })
     )
