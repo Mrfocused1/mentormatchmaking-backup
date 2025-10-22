@@ -350,6 +350,10 @@ export async function POST(request: NextRequest) {
       linkedIn: linkedinUrl || null,
       twitter: twitterUrl || null,
       instagram: instagramUrl || null,
+      status: 'ACTIVE', // Required field
+      isVerified: false, // Required field
+      completionPercentage: 85, // Required field - set to 85% since onboarding is done
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
 
