@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
-        profile: {
+        Profile: {
           include: {
             interests: true,
             industries: true,
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    if (!currentUser || !currentUser.profile) {
+    if (!currentUser || !currentUser.Profile) {
       return NextResponse.json(
         { error: 'Profile not found. Please complete your profile first.' },
         { status: 404 }
@@ -91,8 +91,8 @@ export async function GET(request: NextRequest) {
     })
 
     // Calculate match scores
-    const userInterestSlugs = currentUser.profile.interests.map(i => i.slug)
-    const userIndustrySlugs = currentUser.profile.industries.map(i => i.slug)
+    const userInterestSlugs = currentUser.Profile.interests.map(i => i.slug)
+    const userIndustrySlugs = currentUser.Profile.industries.map(i => i.slug)
 
     interface ScoredMatch {
       user: typeof potentialMatches[0]
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
       const matchReasons: string[] = []
 
       // Score based on shared interests (highest weight)
-      const matchInterestSlugs = match.profile?.interests?.map(i => i.slug) || []
+      const matchInterestSlugs = match.Profile?.interests?.map(i => i.slug) || []
       const sharedInterests = userInterestSlugs.filter(slug =>
         matchInterestSlugs.includes(slug)
       )
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on shared industries (medium weight)
-      const matchIndustrySlugs = match.profile?.industries?.map(i => i.slug) || []
+      const matchIndustrySlugs = match.Profile?.industries?.map(i => i.slug) || []
       const sharedIndustries = userIndustrySlugs.filter(slug =>
         matchIndustrySlugs.includes(slug)
       )
@@ -127,21 +127,21 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on experience level compatibility
-      if (currentUser.profile?.yearsOfExperience && match.profile?.yearsOfExperience) {
+      if (currentUser.Profile?.yearsOfExperience && match.Profile?.yearsOfExperience) {
         // For mentors: prefer mentees with less experience
         // For mentees: prefer mentors with more experience
         if (currentUser.role === 'MENTOR') {
           const experienceLevels = ['ENTRY', 'MID', 'SENIOR', 'EXECUTIVE']
-          const userLevel = experienceLevels.indexOf(currentUser.profile.yearsOfExperience)
-          const matchLevel = experienceLevels.indexOf(match.profile.yearsOfExperience)
+          const userLevel = experienceLevels.indexOf(currentUser.Profile.yearsOfExperience)
+          const matchLevel = experienceLevels.indexOf(match.Profile.yearsOfExperience)
           if (matchLevel < userLevel) {
             score += 10
             matchReasons.push('Experience level match')
           }
         } else {
           const experienceLevels = ['ENTRY', 'MID', 'SENIOR', 'EXECUTIVE']
-          const userLevel = experienceLevels.indexOf(currentUser.profile.yearsOfExperience)
-          const matchLevel = experienceLevels.indexOf(match.profile.yearsOfExperience)
+          const userLevel = experienceLevels.indexOf(currentUser.Profile.yearsOfExperience)
+          const matchLevel = experienceLevels.indexOf(match.Profile.yearsOfExperience)
           if (matchLevel > userLevel) {
             score += 10
             matchReasons.push('Experience level match')
@@ -150,9 +150,9 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on availability (if both have specified)
-      if (currentUser.profile?.availableHours && match.profile?.availableHours) {
+      if (currentUser.Profile?.availableHours && match.Profile?.availableHours) {
         // Similar availability is good
-        const hoursDiff = Math.abs(currentUser.profile.availableHours - match.profile.availableHours)
+        const hoursDiff = Math.abs(currentUser.Profile.availableHours - match.Profile.availableHours)
         if (hoursDiff <= 5) {
           score += 8
           matchReasons.push('Similar availability')
@@ -160,8 +160,8 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on meeting frequency compatibility
-      if (currentUser.profile?.preferredFrequency && match.profile?.preferredFrequency) {
-        if (currentUser.profile.preferredFrequency === match.profile.preferredFrequency) {
+      if (currentUser.Profile?.preferredFrequency && match.Profile?.preferredFrequency) {
+        if (currentUser.Profile.preferredFrequency === match.Profile.preferredFrequency) {
           score += 5
           matchReasons.push('Same meeting frequency preference')
         }
@@ -178,8 +178,8 @@ export async function GET(request: NextRequest) {
       }
 
       // Bonus for users in same city
-      if (currentUser.profile?.city && match.profile?.city) {
-        if (currentUser.profile.city.toLowerCase() === match.profile.city.toLowerCase()) {
+      if (currentUser.Profile?.city && match.Profile?.city) {
+        if (currentUser.Profile.city.toLowerCase() === match.Profile.city.toLowerCase()) {
           score += 10
           matchReasons.push('Same city')
         }
