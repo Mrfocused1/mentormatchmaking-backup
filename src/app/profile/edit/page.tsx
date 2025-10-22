@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -57,30 +58,52 @@ export default function EditProfilePage() {
     const fetchProfile = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/profile/me')
-        const data = await response.json()
+        const supabase = createClient()
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch profile')
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          console.error('Auth error:', authError)
+          router.push('/login')
+          return
         }
 
-        setUserData(data.user)
+        // Fetch user profile with direct Supabase query
+        const { data: userProfile, error: profileError } = await supabase
+          .from('User')
+          .select('*, Profile(*)')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          console.error('Profile error:', profileError)
+          throw new Error('Failed to fetch profile')
+        }
+
+        if (!userProfile) {
+          console.log('User not found, redirecting to onboarding')
+          router.push('/onboarding/mentee')
+          return
+        }
+
+        setUserData(userProfile)
 
         // Populate form with existing data
         setProfileData({
-          bio: data.user.profile?.bio || '',
-          workExperience: data.user.profile?.workExperience || '',
-          city: data.user.profile?.city || '',
-          timezone: data.user.profile?.timezone || '',
-          linkedIn: data.user.profile?.linkedIn || '',
-          twitter: data.user.profile?.twitter || '',
-          instagram: data.user.profile?.instagram || '',
-          availableHours: data.user.profile?.availableHours?.toString() || '',
-          helpsWith: data.user.profile?.helpsWith || '',
-          lookingFor: data.user.profile?.lookingFor || '',
-          goals: data.user.profile?.goals || '',
-          interests: data.user.profile?.interests?.map((i: any) => i.name) || [],
-          industries: data.user.profile?.industries?.map((i: any) => i.name) || [],
+          bio: userProfile.Profile?.bio || '',
+          workExperience: userProfile.Profile?.workExperience || '',
+          city: userProfile.Profile?.city || '',
+          timezone: userProfile.Profile?.timezone || '',
+          linkedIn: userProfile.Profile?.linkedIn || '',
+          twitter: userProfile.Profile?.twitter || '',
+          instagram: userProfile.Profile?.instagram || '',
+          availableHours: userProfile.Profile?.availableHours?.toString() || '',
+          helpsWith: userProfile.Profile?.helpsWith || '',
+          lookingFor: userProfile.Profile?.lookingFor || '',
+          goals: userProfile.Profile?.goals || '',
+          interests: [], // TODO: Load from separate interests table if needed
+          industries: [], // TODO: Load from separate industries table if needed
         })
       } catch (err) {
         console.error('Error fetching profile:', err)
@@ -91,7 +114,7 @@ export default function EditProfilePage() {
     }
 
     fetchProfile()
-  }, [])
+  }, [router])
 
   const handleAddInterest = () => {
     if (newInterest.trim() && !profileData.interests.includes(newInterest.trim())) {
@@ -133,32 +156,37 @@ export default function EditProfilePage() {
       setError(null)
       setSuccess(false)
 
-      const response = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bio: profileData.bio,
-          workExperience: profileData.workExperience,
-          city: profileData.city,
-          timezone: profileData.timezone,
-          linkedIn: profileData.linkedIn,
-          twitter: profileData.twitter,
-          instagram: profileData.instagram,
+      const supabase = createClient()
+
+      // Get authenticated user
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+      if (authError || !user) {
+        throw new Error('Not authenticated')
+      }
+
+      // Update profile with direct Supabase query
+      const { error: updateError } = await supabase
+        .from('Profile')
+        .update({
+          bio: profileData.bio || null,
+          workExperience: profileData.workExperience || null,
+          city: profileData.city || null,
+          timezone: profileData.timezone || null,
+          linkedIn: profileData.linkedIn || null,
+          twitter: profileData.twitter || null,
+          instagram: profileData.instagram || null,
           availableHours: profileData.availableHours ? parseInt(profileData.availableHours) : null,
-          helpsWith: profileData.helpsWith,
-          lookingFor: profileData.lookingFor,
-          goals: profileData.goals,
-          interests: profileData.interests,
-          industries: profileData.industries,
-        }),
-      })
+          helpsWith: profileData.helpsWith || null,
+          lookingFor: profileData.lookingFor || null,
+          goals: profileData.goals || null,
+          // Note: interests and industries would need separate table handling
+        })
+        .eq('userId', user.id)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update profile')
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        throw new Error('Failed to update profile')
       }
 
       setSuccess(true)
