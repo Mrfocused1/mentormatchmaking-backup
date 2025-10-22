@@ -100,7 +100,9 @@ export async function PATCH(
       },
     })
 
-    // Get current user's name for notification
+    // Notification creation temporarily commented out due to TypeScript issue
+    // Will be fixed after resolving database connection
+    /*
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: { name: true },
@@ -116,6 +118,7 @@ export async function PATCH(
           : `${currentUser?.name || 'Someone'} declined your connection request`,
       },
     })
+    */
 
     return NextResponse.json({
       success: true,
