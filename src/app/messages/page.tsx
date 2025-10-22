@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
@@ -28,127 +30,10 @@ import {
   AlertCircle
 } from 'lucide-react'
 
-// Removed mock data - using real API
-
-// Mock conversations data (will be replaced by API data)
-const conversationsMock = [
-  {
-    id: 1,
-    user: {
-      name: 'Michael Chen',
-      role: 'mentee',
-      title: 'Aspiring UX Designer',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.8,
-    },
-    lastMessage: 'Thank you so much for the advice on portfolio building! I\'ve started implementing your suggestions.',
-    timestamp: '2 min ago',
-    unread: 3,
-    isOnline: true,
-  },
-  {
-    id: 2,
-    user: {
-      name: 'Emily Rodriguez',
-      role: 'mentor',
-      title: 'Product Manager at Amazon',
-      avatar: 'https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.9,
-    },
-    lastMessage: 'I\'d love to schedule our next session. Are you available next Tuesday?',
-    timestamp: '1 hour ago',
-    unread: 1,
-    isOnline: false,
-  },
-  {
-    id: 3,
-    user: {
-      name: 'David Kim',
-      role: 'mentee',
-      title: 'Career Changer',
-      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.7,
-    },
-    lastMessage: 'Perfect! I\'ll prepare some questions for our call tomorrow.',
-    timestamp: '3 hours ago',
-    unread: 0,
-    isOnline: false,
-  },
-  {
-    id: 4,
-    user: {
-      name: 'Sarah Thompson',
-      role: 'mentee',
-      title: 'Recent Graduate',
-      avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.6,
-    },
-    lastMessage: 'Your insights on networking were incredibly helpful!',
-    timestamp: 'Yesterday',
-    unread: 0,
-    isOnline: false,
-  },
-  {
-    id: 5,
-    user: {
-      name: 'James Wilson',
-      role: 'mentor',
-      title: 'Senior Data Scientist',
-      avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 5.0,
-    },
-    lastMessage: 'Looking forward to our first session!',
-    timestamp: '2 days ago',
-    unread: 0,
-    isOnline: true,
-  },
-]
-
-// Mock messages for selected conversation
-const mockMessages = [
-  {
-    id: 1,
-    senderId: 2,
-    senderName: 'Michael Chen',
-    content: 'Hi! Thanks for accepting my request to connect. I\'m really excited to learn from you.',
-    timestamp: '10:30 AM',
-    isRead: true,
-  },
-  {
-    id: 2,
-    senderId: 1,
-    senderName: 'You',
-    content: 'Welcome, Michael! I\'m happy to help you on your journey. What are your main goals right now?',
-    timestamp: '10:35 AM',
-    isRead: true,
-  },
-  {
-    id: 3,
-    senderId: 2,
-    senderName: 'Michael Chen',
-    content: 'I\'m transitioning into UX design and want to build a strong portfolio. I have some design projects but I\'m not sure how to present them effectively.',
-    timestamp: '10:40 AM',
-    isRead: true,
-  },
-  {
-    id: 4,
-    senderId: 1,
-    senderName: 'You',
-    content: 'That\'s a great focus! Portfolio presentation is crucial. I recommend starting with 3-5 of your best projects and creating detailed case studies for each. Show your process, not just the final designs.',
-    timestamp: '10:45 AM',
-    isRead: true,
-  },
-  {
-    id: 5,
-    senderId: 2,
-    senderName: 'Michael Chen',
-    content: 'Thank you so much for the advice on portfolio building! I\'ve started implementing your suggestions.',
-    timestamp: '11:02 AM',
-    isRead: true,
-  },
-]
+// All mock data removed - using real Supabase data
 
 export default function MessagesPage() {
+  const router = useRouter()
   const [conversations, setConversations] = useState<any[]>([])
   const [selectedConversation, setSelectedConversation] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
@@ -166,16 +51,70 @@ export default function MessagesPage() {
     const fetchConversations = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/messages')
-        const data = await response.json()
+        const supabase = createClient()
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch conversations')
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          console.error('Auth error:', authError)
+          router.push('/login')
+          return
         }
 
-        setConversations(data.conversations)
-        if (data.conversations.length > 0 && !selectedConversation) {
-          setSelectedConversation(data.conversations[0])
+        // Fetch all messages where user is sender or receiver
+        // Group by conversation partner to create conversation list
+        const { data: allMessages, error: messagesError } = await supabase
+          .from('Message')
+          .select('*')
+          .or(`senderId.eq.${user.id},receiverId.eq.${user.id}`)
+          .order('createdAt', { ascending: false })
+
+        if (messagesError) {
+          console.error('Messages error:', messagesError)
+          throw new Error('Failed to fetch messages')
+        }
+
+        // Group messages by conversation partner
+        const conversationsMap = new Map()
+
+        for (const message of allMessages || []) {
+          const partnerId = message.senderId === user.id ? message.receiverId : message.senderId
+
+          if (!conversationsMap.has(partnerId)) {
+            // Fetch partner user details
+            const { data: partnerUser } = await supabase
+              .from('User')
+              .select('*, Profile(*)')
+              .eq('id', partnerId)
+              .maybeSingle()
+
+            if (partnerUser) {
+              conversationsMap.set(partnerId, {
+                id: partnerId,
+                userId: partnerId,
+                user: {
+                  name: partnerUser.name || 'Unknown User',
+                  title: partnerUser.Profile?.workExperience || 'User',
+                  avatar: partnerUser.Profile?.profilePicture,
+                  rating: 4.8, // TODO: Calculate from reviews
+                },
+                lastMessage: message.content,
+                timestamp: new Date(message.createdAt).toLocaleDateString(),
+                unread: message.receiverId === user.id && !message.isRead ? 1 : 0,
+                unreadCount: message.receiverId === user.id && !message.isRead ? 1 : 0,
+                isOnline: false, // TODO: Implement online status
+                userName: partnerUser.name,
+              })
+            }
+          }
+        }
+
+        const conversationsList = Array.from(conversationsMap.values())
+        setConversations(conversationsList)
+
+        if (conversationsList.length > 0 && !selectedConversation) {
+          setSelectedConversation(conversationsList[0])
         }
       } catch (err) {
         console.error('Error fetching conversations:', err)
@@ -186,7 +125,7 @@ export default function MessagesPage() {
     }
 
     fetchConversations()
-  }, [])
+  }, [router])
 
   // Fetch messages when conversation is selected
   useEffect(() => {
@@ -195,14 +134,48 @@ export default function MessagesPage() {
     const fetchMessages = async () => {
       try {
         setMessagesLoading(true)
-        const response = await fetch(`/api/messages/${selectedConversation.userId}`)
-        const data = await response.json()
+        const supabase = createClient()
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch messages')
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          return
         }
 
-        setMessages(data.messages)
+        // Fetch messages between current user and selected conversation partner
+        const { data: conversationMessages, error: messagesError } = await supabase
+          .from('Message')
+          .select('*')
+          .or(`and(senderId.eq.${user.id},receiverId.eq.${selectedConversation.userId}),and(senderId.eq.${selectedConversation.userId},receiverId.eq.${user.id})`)
+          .order('createdAt', { ascending: true })
+
+        if (messagesError) {
+          console.error('Messages error:', messagesError)
+          throw new Error('Failed to fetch messages')
+        }
+
+        // Transform messages for display
+        const formattedMessages = (conversationMessages || []).map(msg => ({
+          id: msg.id,
+          senderId: msg.senderId,
+          senderName: msg.senderId === user.id ? 'You' : selectedConversation.user.name,
+          content: msg.content,
+          timestamp: new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          isRead: msg.isRead,
+        }))
+
+        setMessages(formattedMessages)
+
+        // Mark messages as read
+        if (conversationMessages && conversationMessages.length > 0) {
+          await supabase
+            .from('Message')
+            .update({ isRead: true })
+            .eq('receiverId', user.id)
+            .eq('senderId', selectedConversation.userId)
+            .eq('isRead', false)
+        }
       } catch (err) {
         console.error('Error fetching messages:', err)
         setError(err instanceof Error ? err.message : 'Failed to load messages')
@@ -227,33 +200,57 @@ export default function MessagesPage() {
     if (messageText.trim() && selectedConversation) {
       try {
         setSending(true)
-        const response = await fetch('/api/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        const supabase = createClient()
+
+        // Get authenticated user
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          throw new Error('You must be logged in to send messages')
+        }
+
+        // Insert message into database
+        const { data: newMessage, error: insertError } = await supabase
+          .from('Message')
+          .insert({
+            senderId: user.id,
             receiverId: selectedConversation.userId,
-            content: messageText,
-          }),
-        })
+            content: messageText.trim(),
+            isRead: false,
+          })
+          .select()
+          .single()
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to send message')
+        if (insertError) {
+          console.error('Insert error:', insertError)
+          throw new Error('Failed to send message')
         }
 
         // Add message to local state
-        setMessages([...messages, data.message])
+        const formattedMessage = {
+          id: newMessage.id,
+          senderId: newMessage.senderId,
+          senderName: 'You',
+          content: newMessage.content,
+          timestamp: new Date(newMessage.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          isRead: newMessage.isRead,
+        }
+
+        setMessages([...messages, formattedMessage])
         setMessageText('')
 
-        // Refresh conversations to update last message
-        const convResponse = await fetch('/api/messages')
-        const convData = await convResponse.json()
-        if (convResponse.ok) {
-          setConversations(convData.conversations)
-        }
+        // Update conversations list to show the new message as last message
+        setConversations(prevConversations =>
+          prevConversations.map(conv =>
+            conv.userId === selectedConversation.userId
+              ? {
+                  ...conv,
+                  lastMessage: newMessage.content,
+                  timestamp: new Date(newMessage.createdAt).toLocaleDateString(),
+                }
+              : conv
+          )
+        )
       } catch (err) {
         console.error('Error sending message:', err)
         alert(err instanceof Error ? err.message : 'Failed to send message')
@@ -492,7 +489,16 @@ export default function MessagesPage() {
 
                     {/* Messages Area */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50">
-                      {mockMessages.map((message) => (
+                      {messagesLoading ? (
+                        <div className="flex items-center justify-center h-full">
+                          <Loader2 className="h-8 w-8 text-primary-accent animate-spin" />
+                        </div>
+                      ) : messages.length === 0 ? (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-neutral-500 font-montserrat">No messages yet. Start the conversation!</p>
+                        </div>
+                      ) : (
+                        messages.map((message) => (
                         <div
                           key={message.id}
                           className={`flex ${message.senderName === 'You' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in- duration-300`}
@@ -521,7 +527,7 @@ export default function MessagesPage() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      )))}
                     </div>
 
                     {/* Message Input */}
