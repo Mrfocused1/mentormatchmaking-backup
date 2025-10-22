@@ -15,8 +15,8 @@ import ConnectionRequestEmail from './templates/connection-request'
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Default from email
-const FROM_EMAIL = process.env.EMAIL_FROM || 'support@look4mentors.com'
+// Default from email - Format: "Name <email@domain.com>"
+const FROM_EMAIL = `Look 4 Mentors <${process.env.EMAIL_FROM || 'support@look4mentors.com'}>`
 
 // Email sending helper
 async function sendEmail(to: string, subject: string, html: string) {
