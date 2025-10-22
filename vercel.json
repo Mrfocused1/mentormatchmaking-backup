@@ -2,13 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/session-reminders",
-      "schedule": "0 0 * * *",
-      "comment": "Daily @ midnight - Send 24h session reminders"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/weekly-summary",
-      "schedule": "0 9 * * 1",
-      "comment": "Mondays @ 9am - Weekly activity summary"
+      "schedule": "0 9 * * 1"
     }
   ]
 }
