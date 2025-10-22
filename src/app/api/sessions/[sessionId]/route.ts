@@ -63,10 +63,6 @@ export async function PATCH(
         ...(title && { title }),
         ...(notes !== undefined && { notes }),
       },
-      include: {
-        mentor: { select: { id: true, name: true } },
-        mentee: { select: { id: true, name: true } },
-      },
     })
 
     return NextResponse.json({ success: true, session: updatedSession })

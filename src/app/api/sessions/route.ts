@@ -55,31 +55,6 @@ export async function GET(request: NextRequest) {
 
     const sessions = await prisma.session.findMany({
       where,
-      include: {
-        mentor: {
-          select: {
-            id: true,
-            name: true,
-            profile: {
-              select: {
-                profilePicture: true,
-                workExperience: true,
-              },
-            },
-          },
-        },
-        mentee: {
-          select: {
-            id: true,
-            name: true,
-            profile: {
-              select: {
-                profilePicture: true,
-              },
-            },
-          },
-        },
-      },
       orderBy: {
         scheduledAt: 'asc',
       },
@@ -154,20 +129,12 @@ export async function POST(request: NextRequest) {
         duration: duration || 60,
         status: 'SCHEDULED',
       },
-      include: {
-        mentor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        mentee: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+    })
+
+    // Get current user info for notification
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { name: true },
     })
 
     // Create notification for the other user
@@ -177,7 +144,7 @@ export async function POST(request: NextRequest) {
         userId: otherUserId,
         type: 'SESSION_CONFIRMED',
         title: 'New Session Scheduled',
-        message: `${user.id === mentorId ? session.mentor.name : session.mentee.name} scheduled a session with you`,
+        message: `${currentUser?.name || 'Someone'} scheduled a session with you`,
       },
     })
 

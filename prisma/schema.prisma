@@ -8,7 +8,7 @@ datasource db {
 }
 
 model AgeVerification {
-  id              String                @id
+  id              String                @id @default(cuid())
   userId          String                @unique
   idType          IdType
   idImageUrl      String
@@ -23,7 +23,7 @@ model AgeVerification {
 }
 
 model Block {
-  id                         String   @id
+  id                         String   @id @default(cuid())
   blockerId                  String
   blockedId                  String
   blockedAt                  DateTime @default(now())
@@ -36,7 +36,7 @@ model Block {
 }
 
 model BlogCategory {
-  id          String     @id
+  id          String     @id @default(cuid())
   name        String     @unique
   slug        String     @unique
   description String?
@@ -46,7 +46,7 @@ model BlogCategory {
 }
 
 model BlogPost {
-  id              String        @id
+  id              String        @id @default(cuid())
   authorId        String
   title           String
   slug            String        @unique
@@ -62,7 +62,7 @@ model BlogPost {
   seoKeyword      String?
   tags            String[]
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime      @updatedAt
   categoryId      String?
   User            User          @relation(fields: [authorId], references: [id])
   BlogCategory    BlogCategory? @relation(fields: [categoryId], references: [id])
@@ -73,7 +73,7 @@ model BlogPost {
 }
 
 model Follow {
-  id                            String   @id
+  id                            String   @id @default(cuid())
   followerId                    String
   followingId                   String
   followedAt                    DateTime @default(now())
@@ -86,7 +86,7 @@ model Follow {
 }
 
 model Industry {
-  id      String    @id
+  id      String    @id @default(cuid())
   name    String    @unique
   slug    String    @unique
   Profile Profile[] @relation("ProfileIndustries")
@@ -95,7 +95,7 @@ model Industry {
 }
 
 model Interest {
-  id      String    @id
+  id      String    @id @default(cuid())
   name    String    @unique
   slug    String    @unique
   Profile Profile[] @relation("ProfileInterests")
@@ -104,7 +104,7 @@ model Interest {
 }
 
 model InterestRequest {
-  id                                    String                @id
+  id                                    String                @id @default(cuid())
   fromUserId                            String
   toUserId                              String
   message                               String
@@ -121,7 +121,7 @@ model InterestRequest {
 }
 
 model Match {
-  id                       String      @id
+  id                       String      @id @default(cuid())
   user1Id                  String
   user2Id                  String
   matchedAt                DateTime    @default(now())
@@ -141,7 +141,7 @@ model Match {
 }
 
 model Message {
-  id                            String   @id
+  id                            String   @id @default(cuid())
   senderId                      String
   receiverId                    String
   content                       String
@@ -155,7 +155,7 @@ model Message {
 }
 
 model Notification {
-  id        String           @id
+  id        String           @id @default(cuid())
   userId    String
   type      NotificationType
   title     String
@@ -170,7 +170,7 @@ model Notification {
 }
 
 model Profile {
-  id                   String            @id
+  id                   String            @id @default(cuid())
   userId               String            @unique
   bio                  String?
   profilePicture       String?
@@ -196,7 +196,7 @@ model Profile {
   city                 String?
   timezone             String?
   createdAt            DateTime          @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime          @updatedAt
   User                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   Industry             Industry[]        @relation("ProfileIndustries")
   Interest             Interest[]        @relation("ProfileInterests")
@@ -206,7 +206,7 @@ model Profile {
 }
 
 model ProfileView {
-  id        String   @id
+  id        String   @id @default(cuid())
   viewerId  String?
   viewedId  String
   viewedAt  DateTime @default(now())
@@ -217,7 +217,7 @@ model ProfileView {
 }
 
 model Report {
-  id                           String       @id
+  id                           String       @id @default(cuid())
   reporterId                   String
   reportedId                   String
   reason                       ReportReason
@@ -234,7 +234,7 @@ model Report {
 }
 
 model Review {
-  id                           String   @id
+  id                           String   @id @default(cuid())
   reviewerId                   String
   reviewedId                   String
   rating                       Int
@@ -249,7 +249,7 @@ model Review {
 }
 
 model SavedProfile {
-  id          String   @id
+  id          String   @id @default(cuid())
   userId      String
   savedUserId String
   savedAt     DateTime @default(now())
@@ -260,7 +260,7 @@ model SavedProfile {
 }
 
 model Session {
-  id                          String        @id
+  id                          String        @id @default(cuid())
   mentorId                    String
   menteeId                    String
   title                       String?
@@ -278,7 +278,7 @@ model Session {
 }
 
 model User {
-  id                                               String            @id
+  id                                               String            @id @default(cuid())
   email                                            String            @unique
   emailVerified                                    DateTime?
   password                                         String?
@@ -287,7 +287,7 @@ model User {
   role                                             UserRole          @default(MENTEE)
   isAdmin                                          Boolean           @default(false)
   createdAt                                        DateTime          @default(now())
-  updatedAt                                        DateTime
+  updatedAt                                        DateTime          @updatedAt
   AgeVerification                                  AgeVerification?
   Block_Block_blockedIdToUser                      Block[]           @relation("Block_blockedIdToUser")
   Block_Block_blockerIdToUser                      Block[]           @relation("Block_blockerIdToUser")

@@ -76,15 +76,12 @@ export async function POST(request: NextRequest) {
         rating,
         comment: comment || '',
       },
-      include: {
-        reviewer: {
-          select: {
-            id: true,
-            name: true,
-            profile: { select: { profilePicture: true } },
-          },
-        },
-      },
+    })
+
+    // Get reviewer info for notification
+    const reviewer = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { name: true },
     })
 
     // Create notification
@@ -93,7 +90,7 @@ export async function POST(request: NextRequest) {
         userId: reviewedId,
         type: 'REVIEW_RECEIVED',
         title: 'New Review',
-        message: `${review.reviewer.name} left you a ${rating}-star review`,
+        message: `${reviewer?.name || 'Someone'} left you a ${rating}-star review`,
       },
     })
 
