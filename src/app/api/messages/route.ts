@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
-import { randomUUID } from 'crypto'
 
 // GET - Fetch all conversations for current user
 export async function GET(request: NextRequest) {
@@ -42,19 +40,27 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.gMT6Me3K7RQxoFN87w2nNPJKOWV1n3c_Nu5Wpo0Yj1Q'
+
     // Fetch all messages where user is sender or receiver
-    // Temporarily simplified to avoid TypeScript errors
-    const messages = await prisma.message.findMany({
-      where: {
-        OR: [
-          { senderId: user.id },
-          { receiverId: user.id },
-        ],
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    const messagesResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Message?or=(senderId.eq.${user.id},receiverId.eq.${user.id})&order=createdAt.desc`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (!messagesResponse.ok) {
+      throw new Error(`Failed to fetch messages: ${messagesResponse.statusText}`)
+    }
+
+    const messages = await messagesResponse.json()
 
     // Return simplified response temporarily
     const conversations: any[] = []
@@ -62,6 +68,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       conversations,
+      messages,
     })
   } catch (error) {
     console.error('Error fetching messages:', error)
@@ -120,19 +127,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create message - temporarily simplified to avoid TypeScript errors
-    const message = await prisma.message.create({
-      data: {
-        id: randomUUID(),
-        senderId: user.id,
-        receiverId,
-        content,
-      },
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.gMT6Me3K7RQxoFN87w2nNPJKOWV1n3c_Nu5Wpo0Yj1Q'
+
+    // Create message using Supabase REST API
+    const messageResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Message`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify({
+          senderId: user.id,
+          receiverId,
+          content,
+        }),
+      }
+    )
+
+    if (!messageResponse.ok) {
+      throw new Error(`Failed to send message: ${messageResponse.statusText}`)
+    }
+
+    const message = await messageResponse.json()
 
     return NextResponse.json({
       success: true,
-      message,
+      message: Array.isArray(message) ? message[0] : message,
     })
   } catch (error) {
     console.error('Error sending message:', error)

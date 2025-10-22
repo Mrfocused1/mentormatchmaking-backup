@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 
 // GET - Fetch user's notifications
 export async function GET(request: NextRequest) {
@@ -35,20 +34,47 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const notifications = await prisma.notification.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.gMT6Me3K7RQxoFN87w2nNPJKOWV1n3c_Nu5Wpo0Yj1Q'
 
-    const unreadCount = await prisma.notification.count({
-      where: { userId: user.id, read: false },
-    })
+    // Fetch notifications
+    const notificationsResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Notification?userId=eq.${user.id}&order=createdAt.desc&limit=50`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (!notificationsResponse.ok) {
+      throw new Error(`Failed to fetch notifications: ${notificationsResponse.statusText}`)
+    }
+
+    const notifications = await notificationsResponse.json()
+
+    // Count unread notifications
+    const unreadResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Notification?userId=eq.${user.id}&read=eq.false&select=count`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'count=exact',
+        },
+      }
+    )
+
+    const unreadCount = unreadResponse.headers.get('content-range')?.split('/')[1] || '0'
 
     return NextResponse.json({
       success: true,
       notifications,
-      unreadCount,
+      unreadCount: parseInt(unreadCount),
     })
   } catch (error) {
     console.error('Error fetching notifications:', error)
@@ -91,20 +117,32 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.gMT6Me3K7RQxoFN87w2nNPJKOWV1n3c_Nu5Wpo0Yj1Q'
+
+    let updateUrl = `${supabaseUrl}/rest/v1/Notification?userId=eq.${user.id}`
+
     if (notificationIds && notificationIds.length > 0) {
-      await prisma.notification.updateMany({
-        where: {
-          id: { in: notificationIds },
-          userId: user.id,
-        },
-        data: { read: true },
-      })
+      // Mark specific notifications as read
+      updateUrl += `&id=in.(${notificationIds.join(',')})`
     } else {
-      // Mark all as read
-      await prisma.notification.updateMany({
-        where: { userId: user.id, read: false },
-        data: { read: true },
-      })
+      // Mark all unread as read
+      updateUrl += `&read=eq.false`
+    }
+
+    const updateResponse = await fetch(updateUrl, {
+      method: 'PATCH',
+      headers: {
+        'apikey': supabaseServiceKey,
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ read: true }),
+    })
+
+    if (!updateResponse.ok) {
+      throw new Error(`Failed to update notifications: ${updateResponse.statusText}`)
     }
 
     return NextResponse.json({ success: true })

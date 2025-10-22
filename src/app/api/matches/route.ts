@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 
 // GET - Get recommended matches for current user
 export async function GET(request: NextRequest) {
@@ -41,15 +40,56 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user's profile
-    const currentUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: {
-        Profile: true,
-      },
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.gMT6Me3K7RQxoFN87w2nNPJKOWV1n3c_Nu5Wpo0Yj1Q'
 
-    if (!currentUser || !currentUser.Profile) {
+    // Get current user
+    const userResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=*`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (!userResponse.ok) {
+      throw new Error(`Failed to fetch user: ${userResponse.statusText}`)
+    }
+
+    const users = await userResponse.json()
+    const currentUser = users[0]
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Get current user's profile
+    const profileResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Profile?userId=eq.${user.id}&select=*`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (!profileResponse.ok) {
+      throw new Error(`Failed to fetch profile: ${profileResponse.statusText}`)
+    }
+
+    const profiles = await profileResponse.json()
+    const currentProfile = profiles[0]
+
+    if (!currentProfile) {
       return NextResponse.json(
         { error: 'Profile not found. Please complete your profile first.' },
         { status: 404 }
@@ -59,34 +99,62 @@ export async function GET(request: NextRequest) {
     // Determine which role to search for (opposite of current user)
     const searchRole = currentUser.role === 'MENTOR' ? 'MENTEE' : 'MENTOR'
 
-    // Fetch all potential matches (users with opposite role and completed profiles)
-    const potentialMatches = await prisma.user.findMany({
-      where: {
-        role: searchRole,
-        NOT: {
-          id: user.id, // Exclude current user
+    // Fetch all potential matches (users with opposite role)
+    const matchesResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?role=eq.${searchRole}&id=neq.${user.id}&select=*`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
         },
-        Profile: {
-          isNot: null, // Only users with completed profiles
+      }
+    )
+
+    if (!matchesResponse.ok) {
+      throw new Error(`Failed to fetch matches: ${matchesResponse.statusText}`)
+    }
+
+    const potentialMatches = await matchesResponse.json()
+
+    // Fetch profiles for all potential matches
+    const matchProfilesResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Profile?userId=in.(${potentialMatches.map((m: any) => m.id).join(',')})&select=*`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
         },
-      },
-      include: {
-        Profile: true,  // Simplified to avoid TypeScript errors
-      },
-    })
+      }
+    )
+
+    if (!matchProfilesResponse.ok) {
+      throw new Error(`Failed to fetch match profiles: ${matchProfilesResponse.statusText}`)
+    }
+
+    const matchProfiles = await matchProfilesResponse.json()
+
+    // Combine users with their profiles
+    const matchesWithProfiles = potentialMatches
+      .map((match: any) => {
+        const profile = matchProfiles.find((p: any) => p.userId === match.id)
+        return profile ? { ...match, Profile: profile } : null
+      })
+      .filter((m: any) => m !== null)
 
     // Calculate match scores
     // Temporarily set to empty arrays since includes are disabled
-    const userInterestSlugs: string[] = []  // currentUser.Profile.interests.map(i => i.slug)
-    const userIndustrySlugs: string[] = []  // currentUser.Profile.industries.map(i => i.slug)
+    const userInterestSlugs: string[] = []  // currentProfile.interests.map(i => i.slug)
+    const userIndustrySlugs: string[] = []  // currentProfile.industries.map(i => i.slug)
 
     interface ScoredMatch {
-      user: typeof potentialMatches[0]
+      user: any
       score: number
       matchReasons: string[]
     }
 
-    const scoredMatches: ScoredMatch[] = potentialMatches.map((match) => {
+    const scoredMatches: ScoredMatch[] = matchesWithProfiles.map((match: any) => {
       let score = 0
       const matchReasons: string[] = []
 
@@ -113,12 +181,12 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on experience level compatibility
-      if (currentUser.Profile?.yearsOfExperience && match.Profile?.yearsOfExperience) {
+      if (currentProfile?.yearsOfExperience && match.Profile?.yearsOfExperience) {
         // For mentors: prefer mentees with less experience
         // For mentees: prefer mentors with more experience
         if (currentUser.role === 'MENTOR') {
           const experienceLevels = ['ENTRY', 'MID', 'SENIOR', 'EXECUTIVE']
-          const userLevel = experienceLevels.indexOf(currentUser.Profile.yearsOfExperience)
+          const userLevel = experienceLevels.indexOf(currentProfile.yearsOfExperience)
           const matchLevel = experienceLevels.indexOf(match.Profile.yearsOfExperience)
           if (matchLevel < userLevel) {
             score += 10
@@ -126,7 +194,7 @@ export async function GET(request: NextRequest) {
           }
         } else {
           const experienceLevels = ['ENTRY', 'MID', 'SENIOR', 'EXECUTIVE']
-          const userLevel = experienceLevels.indexOf(currentUser.Profile.yearsOfExperience)
+          const userLevel = experienceLevels.indexOf(currentProfile.yearsOfExperience)
           const matchLevel = experienceLevels.indexOf(match.Profile.yearsOfExperience)
           if (matchLevel > userLevel) {
             score += 10
@@ -136,9 +204,9 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on availability (if both have specified)
-      if (currentUser.Profile?.availableHours && match.Profile?.availableHours) {
+      if (currentProfile?.availableHours && match.Profile?.availableHours) {
         // Similar availability is good
-        const hoursDiff = Math.abs(currentUser.Profile.availableHours - match.Profile.availableHours)
+        const hoursDiff = Math.abs(currentProfile.availableHours - match.Profile.availableHours)
         if (hoursDiff <= 5) {
           score += 8
           matchReasons.push('Similar availability')
@@ -146,8 +214,8 @@ export async function GET(request: NextRequest) {
       }
 
       // Score based on meeting frequency compatibility
-      if (currentUser.Profile?.preferredFrequency && match.Profile?.preferredFrequency) {
-        if (currentUser.Profile.preferredFrequency === match.Profile.preferredFrequency) {
+      if (currentProfile?.preferredFrequency && match.Profile?.preferredFrequency) {
+        if (currentProfile.preferredFrequency === match.Profile.preferredFrequency) {
           score += 5
           matchReasons.push('Same meeting frequency preference')
         }
@@ -164,8 +232,8 @@ export async function GET(request: NextRequest) {
       }
 
       // Bonus for users in same city
-      if (currentUser.Profile?.city && match.Profile?.city) {
-        if (currentUser.Profile.city.toLowerCase() === match.Profile.city.toLowerCase()) {
+      if (currentProfile?.city && match.Profile?.city) {
+        if (currentProfile.city.toLowerCase() === match.Profile.city.toLowerCase()) {
           score += 10
           matchReasons.push('Same city')
         }
