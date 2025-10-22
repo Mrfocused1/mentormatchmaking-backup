@@ -99,16 +99,8 @@ export async function PATCH(
         acceptedAt: action === 'accept' ? new Date() : null,
       },
       include: {
-        user1: {
-          include: {
-            profile: true,
-          },
-        },
-        user2: {
-          include: {
-            profile: true,
-          },
-        },
+        user1: true,
+        user2: true,
       },
     })
 
