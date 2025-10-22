@@ -6,9 +6,9 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Check if Supabase environment variables are available
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // Use hardcoded values temporarily for Vercel deployment
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.SZ5U3GG8vE8nyVQY5NclVPzp8A7I8JAX8vdF-SpOdVo'
 
   if (!supabaseUrl || !supabaseAnonKey) {
     // During build time or when env vars are missing, just return the response
