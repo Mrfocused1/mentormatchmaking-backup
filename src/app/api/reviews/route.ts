@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 
 // POST - Submit a review
 export async function POST(request: NextRequest) {
@@ -25,8 +24,8 @@ export async function POST(request: NextRequest) {
 
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -52,47 +51,85 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if already reviewed
-    const existing = await prisma.review.findUnique({
-      where: {
-        reviewerId_reviewedId: {
-          reviewerId: user.id,
-          reviewedId,
-        },
-      },
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
 
-    if (existing) {
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
+
+    // Check if already reviewed
+    const existingResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Review?reviewerId=eq.${user.id}&reviewedId=eq.${reviewedId}`,
+      { headers }
+    )
+
+    if (!existingResponse.ok) {
+      throw new Error(`Failed to check existing review: ${existingResponse.statusText}`)
+    }
+
+    const existingReviews = await existingResponse.json()
+
+    if (existingReviews && existingReviews.length > 0) {
       return NextResponse.json(
         { error: 'You have already reviewed this user' },
         { status: 400 }
       )
     }
 
-    const review = await prisma.review.create({
-      data: {
-        reviewerId: user.id,
-        reviewedId,
-        rating,
-        comment: comment || '',
-      },
-    })
+    // Create review
+    const createReviewResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Review`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          reviewerId: user.id,
+          reviewedId,
+          rating,
+          comment: comment || '',
+        })
+      }
+    )
+
+    if (!createReviewResponse.ok) {
+      throw new Error(`Failed to create review: ${createReviewResponse.statusText}`)
+    }
+
+    const reviews = await createReviewResponse.json()
+    const review = Array.isArray(reviews) ? reviews[0] : reviews
 
     // Get reviewer info for notification
-    const reviewer = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { name: true },
-    })
+    const reviewerResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=name`,
+      { headers }
+    )
+
+    if (!reviewerResponse.ok) {
+      throw new Error(`Failed to fetch reviewer: ${reviewerResponse.statusText}`)
+    }
+
+    const reviewers = await reviewerResponse.json()
+    const reviewer = reviewers[0]
 
     // Create notification
-    await prisma.notification.create({
-      data: {
-        userId: reviewedId,
-        type: 'REVIEW_RECEIVED',
-        title: 'New Review',
-        message: `${reviewer?.name || 'Someone'} left you a ${rating}-star review`,
-      },
-    })
+    await fetch(
+      `${supabaseUrl}/rest/v1/Notification`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userId: reviewedId,
+          type: 'REVIEW_RECEIVED',
+          title: 'New Review',
+          message: `${reviewer?.name || 'Someone'} left you a ${rating}-star review`,
+        })
+      }
+    )
 
     return NextResponse.json({ success: true, review })
   } catch (error) {

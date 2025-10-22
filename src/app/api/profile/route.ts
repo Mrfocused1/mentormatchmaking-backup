@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 import { UserRole, ExperienceLevel, MeetingFrequency } from '@prisma/client'
 import { randomUUID } from 'crypto'
 
@@ -30,8 +29,8 @@ export async function PUT(request: NextRequest) {
     // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -62,77 +61,55 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
+
+    // Build update data object with only defined values
+    const updateData: any = {
+      updatedAt: new Date().toISOString()
+    }
+
+    if (bio !== undefined) updateData.bio = bio
+    if (workExperience !== undefined) updateData.workExperience = workExperience
+    if (city !== undefined) updateData.city = city
+    if (timezone !== undefined) updateData.timezone = timezone
+    if (linkedIn !== undefined) updateData.linkedIn = linkedIn
+    if (twitter !== undefined) updateData.twitter = twitter
+    if (instagram !== undefined) updateData.instagram = instagram
+    if (availableHours !== undefined) updateData.availableHours = availableHours
+    if (preferredFrequency !== undefined) updateData.preferredFrequency = preferredFrequency
+    if (responseTime !== undefined) updateData.responseTime = responseTime
+    if (helpsWith !== undefined) updateData.helpsWith = helpsWith
+    if (lookingFor !== undefined) updateData.lookingFor = lookingFor
+    if (goals !== undefined) updateData.goals = goals
+
     // Update profile
-    const updatedProfile = await prisma.profile.update({
-      where: { userId: user.id },
-      data: {
-        bio: bio || undefined,
-        workExperience: workExperience || undefined,
-        city: city || undefined,
-        timezone: timezone || undefined,
-        linkedIn: linkedIn || undefined,
-        twitter: twitter || undefined,
-        instagram: instagram || undefined,
-        availableHours: availableHours || undefined,
-        preferredFrequency: preferredFrequency || undefined,
-        responseTime: responseTime || undefined,
-        helpsWith: helpsWith || undefined,
-        lookingFor: lookingFor || undefined,
-        goals: goals || undefined,
-      },
-      // Temporarily removed includes to avoid TypeScript errors
-    })
-
-    // Temporarily disabled to avoid TypeScript errors
-    /*
-    // Update interests if provided
-    if (interests && Array.isArray(interests)) {
-      // Logic temporarily disabled
-    }
-
-    // Update industries if provided
-    if (industries && Array.isArray(industries)) {
-      // Logic temporarily disabled
-    }
-    */
-
-    /*
-    // Update industries if provided
-    if (industries && Array.isArray(industries)) {
-      // Remove all existing industries
-      await prisma.profile.update({
-        where: { id: updatedProfile.id },
-        data: {
-          industries: {
-            set: [],
-          },
-        },
-      })
-
-      // Add new industries
-      for (const industryName of industries) {
-        const slug = industryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-
-        await prisma.industry.upsert({
-          where: { slug },
-          update: {},
-          create: {
-            name: industryName,
-            slug,
-          },
-        })
-
-        await prisma.profile.update({
-          where: { id: updatedProfile.id },
-          data: {
-            industries: {
-              connect: { slug },
-            },
-          },
-        })
+    const updateResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Profile?userId=eq.${user.id}`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(updateData)
       }
+    )
+
+    if (!updateResponse.ok) {
+      throw new Error(`Failed to update profile: ${updateResponse.statusText}`)
     }
-    */
+
+    const updatedProfiles = await updateResponse.json()
+    const updatedProfile = Array.isArray(updatedProfiles) ? updatedProfiles[0] : updatedProfiles
+
+    // Temporarily disabled interests and industries handling
+    // These would require separate junction table management
 
     return NextResponse.json({
       success: true,
@@ -188,8 +165,8 @@ export async function POST(request: NextRequest) {
     // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -254,25 +231,81 @@ export async function POST(request: NextRequest) {
       return match ? parseInt(match[2]) : null
     }
 
-    // Create or update User record in Prisma (sync from Supabase auth)
-    const dbUser = await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email: user.email!,
-        name: `${firstName} ${lastName}`.trim(),
-        age: age || 25, // Default age if not provided
-        role: role === 'mentor' ? UserRole.MENTOR : UserRole.MENTEE,
-        updatedAt: new Date(),
-      },
-      create: {
-        id: user.id,
-        email: user.email!,
-        name: `${firstName} ${lastName}`.trim(),
-        age: age || 25, // Default age if not provided
-        role: role === 'mentor' ? UserRole.MENTOR : UserRole.MENTEE,
-        updatedAt: new Date(),
-      },
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
+
+    // Create or update User record (sync from Supabase auth)
+    const userUpdateData = {
+      id: user.id,
+      email: user.email!,
+      name: `${firstName} ${lastName}`.trim(),
+      age: age || 25,
+      role: role === 'mentor' ? UserRole.MENTOR : UserRole.MENTEE,
+      updatedAt: new Date().toISOString(),
+    }
+
+    // Check if user exists
+    const getUserResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}`,
+      { headers }
+    )
+
+    if (!getUserResponse.ok) {
+      throw new Error(`Failed to check user: ${getUserResponse.statusText}`)
+    }
+
+    const existingUsers = await getUserResponse.json()
+    let dbUser
+
+    if (existingUsers && existingUsers.length > 0) {
+      // Update existing user
+      const updateUserResponse = await fetch(
+        `${supabaseUrl}/rest/v1/User?id=eq.${user.id}`,
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({
+            email: user.email!,
+            name: `${firstName} ${lastName}`.trim(),
+            age: age || 25,
+            role: role === 'mentor' ? UserRole.MENTOR : UserRole.MENTEE,
+            updatedAt: new Date().toISOString(),
+          })
+        }
+      )
+
+      if (!updateUserResponse.ok) {
+        throw new Error(`Failed to update user: ${updateUserResponse.statusText}`)
+      }
+
+      const updatedUsers = await updateUserResponse.json()
+      dbUser = Array.isArray(updatedUsers) ? updatedUsers[0] : updatedUsers
+    } else {
+      // Create new user
+      const createUserResponse = await fetch(
+        `${supabaseUrl}/rest/v1/User`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(userUpdateData)
+        }
+      )
+
+      if (!createUserResponse.ok) {
+        throw new Error(`Failed to create user: ${createUserResponse.statusText}`)
+      }
+
+      const newUsers = await createUserResponse.json()
+      dbUser = Array.isArray(newUsers) ? newUsers[0] : newUsers
+    }
 
     // Map mentor years of experience to enum
     const mapMentorExperience = (years: string): ExperienceLevel | null => {
@@ -296,91 +329,47 @@ export async function POST(request: NextRequest) {
       : mapExperienceLevel(experienceLevel)
 
     // Create Profile record with onboarding data
-    const profile = await prisma.profile.create({
-      data: {
-        id: randomUUID(),
-        userId: dbUser.id,
-        bio: specificGoals || null,
-        goals: careerGoals && careerGoals.length > 0
-          ? careerGoals.join(', ')
-          : null,
-        workExperience: workExperienceText,
-        yearsOfExperience: experienceEnum,
-        currentSituation: currentStatus || employmentType || null,
-        preferredFrequency: mapMeetingFrequency(preferredMeetingFormat),
-        availableHours: parseHours(hoursPerMonth),
-        lookingFor: mentorPreferences || null,
-        helpsWith: mentorshipAreas && mentorshipAreas.length > 0
-          ? mentorshipAreas.join(', ')
-          : null,
-        city: location || null,
-        timezone: timezone || null,
-        linkedIn: linkedinUrl || null,
-        twitter: twitterUrl || null,
-        instagram: instagramUrl || null,
-        updatedAt: new Date(),
-      },
-    })
+    const profileData = {
+      id: randomUUID(),
+      userId: dbUser.id,
+      bio: specificGoals || null,
+      goals: careerGoals && careerGoals.length > 0
+        ? careerGoals.join(', ')
+        : null,
+      workExperience: workExperienceText,
+      yearsOfExperience: experienceEnum,
+      currentSituation: currentStatus || employmentType || null,
+      preferredFrequency: mapMeetingFrequency(preferredMeetingFormat),
+      availableHours: parseHours(hoursPerMonth),
+      lookingFor: mentorPreferences || null,
+      helpsWith: mentorshipAreas && mentorshipAreas.length > 0
+        ? mentorshipAreas.join(', ')
+        : null,
+      city: location || null,
+      timezone: timezone || null,
+      linkedIn: linkedinUrl || null,
+      twitter: twitterUrl || null,
+      instagram: instagramUrl || null,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const createProfileResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Profile`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(profileData)
+      }
+    )
+
+    if (!createProfileResponse.ok) {
+      throw new Error(`Failed to create profile: ${createProfileResponse.statusText}`)
+    }
+
+    const profiles = await createProfileResponse.json()
+    const profile = Array.isArray(profiles) ? profiles[0] : profiles
 
     // Temporarily disabled industries and interests handling to avoid TypeScript errors
-    /*
-    // Handle industries (create if doesn't exist, then connect)
-    if (industry) {
-      const slug = industry.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-
-      await prisma.industry.upsert({
-        where: { slug },
-        update: {},
-        create: {
-          name: industry,
-          slug,
-        },
-      })
-
-      await prisma.profile.update({
-        where: { id: profile.id },
-        data: {
-          Industry: {
-            connect: { slug },
-          },
-        },
-      })
-    }
-
-    // Handle interests (mentee: areasOfInterest, mentor: expertise + mentorshipAreas)
-    const interestsToAdd = [
-      ...(areasOfInterest || []),
-      ...(expertise || []),
-      ...(mentorshipAreas || []),
-    ]
-
-    if (interestsToAdd.length > 0) {
-      // Remove duplicates
-      const uniqueInterests = Array.from(new Set(interestsToAdd))
-
-      for (const interest of uniqueInterests) {
-        const slug = interest.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-
-        await prisma.interest.upsert({
-          where: { slug },
-          update: {},
-          create: {
-            name: interest,
-            slug,
-          },
-        })
-
-        await prisma.profile.update({
-          where: { id: profile.id },
-          data: {
-            Interest: {
-              connect: { slug },
-            },
-          },
-        })
-      }
-    }
-    */
 
     return NextResponse.json({
       success: true,

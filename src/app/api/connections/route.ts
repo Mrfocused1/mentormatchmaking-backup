@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 
 // GET - Fetch all connection requests (sent and received)
 export async function GET(request: NextRequest) {
@@ -9,8 +8,8 @@ export async function GET(request: NextRequest) {
     // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -44,38 +43,72 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') // 'sent', 'received', or 'all'
 
-    // Build where clause based on type
-    let where: any = {
-      OR: [
-        { user1Id: user.id },
-        { user2Id: user.id },
-      ],
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
     }
 
+    let connections: any[] = []
+
     if (type === 'sent') {
-      where = { initiatedById: user.id, status: 'PENDING' }
+      // Fetch only sent connection requests
+      const response = await fetch(
+        `${supabaseUrl}/rest/v1/Match?initiatedById=eq.${user.id}&status=eq.PENDING&order=matchedAt.desc`,
+        { headers }
+      )
+      if (response.ok) {
+        connections = await response.json()
+      }
     } else if (type === 'received') {
-      where = {
-        initiatedById: { not: user.id },
-        OR: [
-          { user1Id: user.id },
-          { user2Id: user.id },
-        ],
-        status: 'PENDING',
+      // Fetch only received connection requests (not initiated by user, but involving user)
+      const response1 = await fetch(
+        `${supabaseUrl}/rest/v1/Match?user1Id=eq.${user.id}&status=eq.PENDING&order=matchedAt.desc`,
+        { headers }
+      )
+      const response2 = await fetch(
+        `${supabaseUrl}/rest/v1/Match?user2Id=eq.${user.id}&status=eq.PENDING&order=matchedAt.desc`,
+        { headers }
+      )
+
+      if (response1.ok && response2.ok) {
+        const connections1 = await response1.json()
+        const connections2 = await response2.json()
+        connections = [...connections1, ...connections2].filter(
+          (conn: any) => conn.initiatedById !== user.id
+        )
+      }
+    } else {
+      // Fetch all connections (sent and received)
+      const response1 = await fetch(
+        `${supabaseUrl}/rest/v1/Match?user1Id=eq.${user.id}&order=matchedAt.desc`,
+        { headers }
+      )
+      const response2 = await fetch(
+        `${supabaseUrl}/rest/v1/Match?user2Id=eq.${user.id}&order=matchedAt.desc`,
+        { headers }
+      )
+
+      if (response1.ok && response2.ok) {
+        const connections1 = await response1.json()
+        const connections2 = await response2.json()
+        // Combine and deduplicate
+        const allConnections = [...connections1, ...connections2]
+        const uniqueIds = new Set()
+        connections = allConnections.filter((conn: any) => {
+          if (uniqueIds.has(conn.id)) return false
+          uniqueIds.add(conn.id)
+          return true
+        })
       }
     }
 
-    // Fetch connection requests
-    const connections = await prisma.match.findMany({
-      where,
-      // Temporarily removed includes due to TypeScript issue
-      orderBy: {
-        matchedAt: 'desc',
-      },
-    })
-
-    // Return raw connections for now (transformation temporarily disabled)
-    const transformedConnections = connections.map((conn) => {
+    // Transform connections
+    const transformedConnections = connections.map((conn: any) => {
       return {
         id: conn.id,
         user1Id: conn.user1Id,
@@ -117,8 +150,8 @@ export async function POST(request: NextRequest) {
     // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -157,27 +190,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if connection already exists (in either direction)
-    const existingConnection = await prisma.match.findFirst({
-      where: {
-        OR: [
-          { user1Id: user.id, user2Id: userId },
-          { user1Id: userId, user2Id: user.id },
-        ],
-      },
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
 
-    if (existingConnection) {
-      if (existingConnection.status === 'PENDING') {
-        return NextResponse.json(
-          { error: 'Connection request already sent' },
-          { status: 400 }
-        )
-      } else if (existingConnection.status === 'ACTIVE') {
-        return NextResponse.json(
-          { error: 'You are already connected with this user' },
-          { status: 400 }
-        )
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
+
+    // Check if connection already exists (in either direction)
+    const response1 = await fetch(
+      `${supabaseUrl}/rest/v1/Match?user1Id=eq.${user.id}&user2Id=eq.${userId}`,
+      { headers }
+    )
+    const response2 = await fetch(
+      `${supabaseUrl}/rest/v1/Match?user1Id=eq.${userId}&user2Id=eq.${user.id}`,
+      { headers }
+    )
+
+    if (response1.ok && response2.ok) {
+      const matches1 = await response1.json()
+      const matches2 = await response2.json()
+      const existingConnection = matches1.length > 0 ? matches1[0] : matches2.length > 0 ? matches2[0] : null
+
+      if (existingConnection) {
+        if (existingConnection.status === 'PENDING') {
+          return NextResponse.json(
+            { error: 'Connection request already sent' },
+            { status: 400 }
+          )
+        } else if (existingConnection.status === 'ACTIVE') {
+          return NextResponse.json(
+            { error: 'You are already connected with this user' },
+            { status: 400 }
+          )
+        }
       }
     }
 
@@ -185,40 +235,56 @@ export async function POST(request: NextRequest) {
     // user1Id is always the smaller ID (for consistency with unique constraint)
     const [user1Id, user2Id] = [user.id, userId].sort()
 
-    // Temporarily return mock data due to TypeScript issues
-    // Will be fixed after resolving database connection
-    const connection = {
-      id: 'temp-id',
-      user1Id,
-      user2Id,
-      initiatedById: user.id,
-      status: 'PENDING',
-      matchedAt: new Date(),
+    const createResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Match`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user1Id,
+          user2Id,
+          initiatedById: user.id,
+          status: 'PENDING',
+        })
+      }
+    )
+
+    if (!createResponse.ok) {
+      throw new Error(`Failed to create connection: ${createResponse.statusText}`)
     }
-    /*
-    const connection = await prisma.match.create({
-      data: {
-        user1Id,
-        user2Id,
-        initiatedById: user.id,
-        status: 'PENDING',
-      },
-    })
-    */
+
+    const connections = await createResponse.json()
+    const connection = Array.isArray(connections) ? connections[0] : connections
+
+    // Get current user's name for notification
+    const userResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=name`,
+      { headers }
+    )
+
+    let userName = 'Someone'
+    if (userResponse.ok) {
+      const users = await userResponse.json()
+      if (users && users.length > 0) {
+        userName = users[0].name
+      }
+    }
 
     // Create notification for the recipient
-    // Temporarily commented out due to Prisma issues
-    /*
     const recipientId = user.id === user1Id ? user2Id : user1Id
-    await prisma.notification.create({
-      data: {
-        userId: recipientId,
-        type: 'INTEREST_REQUEST',
-        title: 'New Connection Request',
-        message: `${connection.user1Id === user.id ? connection.user1.name : connection.user2.name} sent you a connection request`,
-      },
-    })
-    */
+    await fetch(
+      `${supabaseUrl}/rest/v1/Notification`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userId: recipientId,
+          type: 'INTEREST_REQUEST',
+          title: 'New Connection Request',
+          message: `${userName} sent you a connection request`,
+        })
+      }
+    )
 
     return NextResponse.json({
       success: true,

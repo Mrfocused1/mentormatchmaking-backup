@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { prisma } from '@/lib/prisma'
 
 // PATCH - Accept or decline a connection request
 export async function PATCH(
@@ -23,8 +22,8 @@ export async function PATCH(
     // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -55,10 +54,29 @@ export async function PATCH(
       )
     }
 
-    // Fetch the connection (without relations for type checking)
-    const connection = await prisma.match.findUnique({
-      where: { id: connectionId },
-    })
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
+
+    // Fetch the connection
+    const connectionResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Match?id=eq.${connectionId}`,
+      { headers }
+    )
+
+    if (!connectionResponse.ok) {
+      throw new Error(`Failed to fetch connection: ${connectionResponse.statusText}`)
+    }
+
+    const connections = await connectionResponse.json()
+    const connection = connections && connections.length > 0 ? connections[0] : null
 
     if (!connection) {
       return NextResponse.json(
@@ -92,33 +110,59 @@ export async function PATCH(
     }
 
     // Update connection status
-    const updatedConnection = await prisma.match.update({
-      where: { id: connectionId },
-      data: {
-        status: action === 'accept' ? 'ACTIVE' : 'UNMATCHED',
-        acceptedAt: action === 'accept' ? new Date() : null,
-      },
-    })
+    const updateData: any = {
+      status: action === 'accept' ? 'ACTIVE' : 'UNMATCHED',
+    }
+    if (action === 'accept') {
+      updateData.acceptedAt = new Date().toISOString()
+    }
 
-    // Notification creation temporarily commented out due to TypeScript issue
-    // Will be fixed after resolving database connection
-    /*
-    const currentUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { name: true },
-    })
+    const updateResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Match?id=eq.${connectionId}`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(updateData)
+      }
+    )
 
-    await prisma.notification.create({
-      data: {
-        userId: connection.initiatedById,
-        type: action === 'accept' ? 'MATCH' : 'MESSAGE',
-        title: action === 'accept' ? 'Connection Accepted!' : 'Connection Declined',
-        message: action === 'accept'
-          ? `${currentUser?.name || 'Someone'} accepted your connection request`
-          : `${currentUser?.name || 'Someone'} declined your connection request`,
-      },
-    })
-    */
+    if (!updateResponse.ok) {
+      throw new Error(`Failed to update connection: ${updateResponse.statusText}`)
+    }
+
+    const updatedConnections = await updateResponse.json()
+    const updatedConnection = Array.isArray(updatedConnections) ? updatedConnections[0] : updatedConnections
+
+    // Get current user info for notification
+    const currentUserResponse = await fetch(
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=name`,
+      { headers }
+    )
+
+    let currentUserName = 'Someone'
+    if (currentUserResponse.ok) {
+      const users = await currentUserResponse.json()
+      if (users && users.length > 0) {
+        currentUserName = users[0].name
+      }
+    }
+
+    // Create notification
+    await fetch(
+      `${supabaseUrl}/rest/v1/Notification`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userId: connection.initiatedById,
+          type: action === 'accept' ? 'MATCH' : 'MESSAGE',
+          title: action === 'accept' ? 'Connection Accepted!' : 'Connection Declined',
+          message: action === 'accept'
+            ? `${currentUserName} accepted your connection request`
+            : `${currentUserName} declined your connection request`,
+        })
+      }
+    )
 
     return NextResponse.json({
       success: true,
@@ -145,8 +189,8 @@ export async function DELETE(
     // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
       {
         cookies: {
           getAll() {
@@ -177,10 +221,28 @@ export async function DELETE(
       )
     }
 
+    // Use Supabase REST API instead of Prisma
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+    }
+
     // Fetch the connection
-    const connection = await prisma.match.findUnique({
-      where: { id: connectionId },
-    })
+    const connectionResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Match?id=eq.${connectionId}`,
+      { headers }
+    )
+
+    if (!connectionResponse.ok) {
+      throw new Error(`Failed to fetch connection: ${connectionResponse.statusText}`)
+    }
+
+    const connections = await connectionResponse.json()
+    const connection = connections && connections.length > 0 ? connections[0] : null
 
     if (!connection) {
       return NextResponse.json(
@@ -206,9 +268,17 @@ export async function DELETE(
     }
 
     // Delete the connection request
-    await prisma.match.delete({
-      where: { id: connectionId },
-    })
+    const deleteResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Match?id=eq.${connectionId}`,
+      {
+        method: 'DELETE',
+        headers
+      }
+    )
+
+    if (!deleteResponse.ok) {
+      throw new Error(`Failed to delete connection: ${deleteResponse.statusText}`)
+    }
 
     return NextResponse.json({
       success: true,

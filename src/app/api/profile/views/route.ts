@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { prisma } from '@/lib/prisma'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 /**
  * GET /api/profile/views
@@ -23,50 +23,53 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate date filter based on period
-    let dateFilter: Date | undefined
+    let dateFilter: string | undefined
     const now = new Date()
 
     if (period === '7d') {
-      dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
     } else if (period === '30d') {
-      dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
     } else if (period === '90d') {
-      dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+      dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString()
     }
 
-    // Get view count
-    const viewCount = await prisma.profileView.count({
-      where: {
-        viewedId: userId,
-        ...(dateFilter && {
-          viewedAt: {
-            gte: dateFilter,
-          },
-        }),
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
+    // Build query with optional date filter
+    let viewCountQuery = `${supabaseUrl}/rest/v1/ProfileView?viewedId=eq.${userId}&select=*`
+    if (dateFilter) {
+      viewCountQuery += `&viewedAt=gte.${dateFilter}`
+    }
+
+    // Get all views
+    const viewsResponse = await fetch(viewCountQuery, {
+      headers: {
+        'apikey': supabaseServiceKey,
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
       },
     })
 
-    // Get unique viewer count
-    const uniqueViewers = await prisma.profileView.findMany({
-      where: {
-        viewedId: userId,
-        viewerId: { not: null },
-        ...(dateFilter && {
-          viewedAt: {
-            gte: dateFilter,
-          },
-        }),
-      },
-      select: {
-        viewerId: true,
-      },
-      distinct: ['viewerId'],
-    })
+    if (!viewsResponse.ok) {
+      throw new Error('Failed to fetch profile views')
+    }
+
+    const views = await viewsResponse.json()
+    const viewCount = views.length
+
+    // Get unique viewers (filter out nulls and count distinct viewerIds)
+    const uniqueViewerIds = new Set(
+      views
+        .filter((view: any) => view.viewerId !== null)
+        .map((view: any) => view.viewerId)
+    )
 
     return NextResponse.json({
       success: true,
       viewCount,
-      uniqueViewers: uniqueViewers.length,
+      uniqueViewers: uniqueViewerIds.size,
       period,
     })
   } catch (error) {
@@ -86,8 +89,29 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NDk0MDcsImV4cCI6MjA3NjUyNTQwN30.Ctcj8YgaDCS-pvOy9gJUxE4BqpS5GiohdqoJpD7KEIw',
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {
+              // The `setAll` method was called from a Server Component.
+            }
+          },
+        },
+      }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     const body = await request.json()
     const { viewedId } = body
@@ -99,7 +123,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const viewerId = session?.user?.id
+    const viewerId = user?.id
 
     // Don't track if user is viewing their own profile
     if (viewerId && viewerId === viewedId) {
@@ -109,61 +133,111 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://igkalvcxjpkctfkytity.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlna2FsdmN4anBrY3Rma3l0aXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDk0OTQwNywiZXhwIjoyMDc2NTI1NDA3fQ.6ggmm6yihrBzziAGMiNZi_t2nTh6aI_lPqLm51Xdxng'
+
     // Check if this user has viewed this profile in the last 24 hours
     // to prevent duplicate counting
     if (viewerId) {
-      const recentView = await prisma.profileView.findFirst({
-        where: {
-          viewerId,
-          viewedId,
-          viewedAt: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-          },
-        },
-      })
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-      if (recentView) {
-        return NextResponse.json({
-          success: true,
-          message: 'View already tracked in last 24 hours',
-        })
+      const recentViewResponse = await fetch(
+        `${supabaseUrl}/rest/v1/ProfileView?viewerId=eq.${viewerId}&viewedId=eq.${viewedId}&viewedAt=gte.${twentyFourHoursAgo}&limit=1`,
+        {
+          headers: {
+            'apikey': supabaseServiceKey,
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (recentViewResponse.ok) {
+        const recentViews = await recentViewResponse.json()
+        if (recentViews && recentViews.length > 0) {
+          return NextResponse.json({
+            success: true,
+            message: 'View already tracked in last 24 hours',
+          })
+        }
       }
     }
 
     // Track the view
-    const profileView = await prisma.profileView.create({
-      data: {
-        viewerId: viewerId || null,
-        viewedId,
-        ipAddress: request.headers.get('x-forwarded-for') || null,
-      },
-    })
+    const profileViewResponse = await fetch(
+      `${supabaseUrl}/rest/v1/ProfileView`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify({
+          viewerId: viewerId || null,
+          viewedId,
+          ipAddress: request.headers.get('x-forwarded-for') || null,
+        }),
+      }
+    )
+
+    if (!profileViewResponse.ok) {
+      throw new Error('Failed to track profile view')
+    }
+
+    const profileView = await profileViewResponse.json()
 
     // Optionally create a notification for the profile owner
     // Only notify if it's an authenticated user viewing
     if (viewerId && viewerId !== viewedId) {
-      const viewer = await prisma.user.findUnique({
-        where: { id: viewerId },
-        select: { name: true },
-      })
-
-      await prisma.notification.create({
-        data: {
-          userId: viewedId,
-          type: 'PROFILE_VIEW',
-          title: 'Profile View',
-          message: `${viewer?.name || 'Someone'} viewed your profile`,
-          data: {
-            viewerId,
-            viewerName: viewer?.name,
+      // Get viewer name
+      const viewerResponse = await fetch(
+        `${supabaseUrl}/rest/v1/User?id=eq.${viewerId}&select=name`,
+        {
+          headers: {
+            'apikey': supabaseServiceKey,
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
           },
-        },
-      })
+        }
+      )
+
+      let viewerName = 'Someone'
+      if (viewerResponse.ok) {
+        const viewers = await viewerResponse.json()
+        if (viewers && viewers.length > 0) {
+          viewerName = viewers[0].name || 'Someone'
+        }
+      }
+
+      // Create notification
+      await fetch(
+        `${supabaseUrl}/rest/v1/Notification`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseServiceKey,
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: viewedId,
+            type: 'PROFILE_VIEW',
+            title: 'Profile View',
+            message: `${viewerName} viewed your profile`,
+            data: {
+              viewerId,
+              viewerName,
+            },
+          }),
+        }
+      )
     }
 
     return NextResponse.json({
       success: true,
-      view: profileView,
+      view: profileView[0] || profileView,
     })
   } catch (error) {
     console.error('Error tracking profile view:', error)
