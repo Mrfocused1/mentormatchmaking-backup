@@ -57,12 +57,15 @@ export async function GET(request: NextRequest) {
 
     // First, try to fetch the user
     const getUserResponse = await fetch(
-      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=*,profile:Profile(*)`,
+      `${supabaseUrl}/rest/v1/User?id=eq.${user.id}&select=*`,
       { headers }
     )
 
-    const users = await getUserResponse.json()
+    if (!getUserResponse.ok) {
+      throw new Error(`Failed to fetch user: ${getUserResponse.statusText}`)
+    }
 
+    const users = await getUserResponse.json()
     let dbUser = users && users.length > 0 ? users[0] : null
 
     // If user doesn't exist, create them
@@ -89,14 +92,26 @@ export async function GET(request: NextRequest) {
       } else {
         const errorText = await createUserResponse.text()
         console.error('Failed to create user:', errorText)
-        // Return minimal user data if creation fails
-        dbUser = {
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-          role: user.user_metadata?.role || 'MENTEE',
-        }
+        throw new Error('Failed to create user in database')
       }
+    }
+
+    // Fetch user's profile separately
+    const getProfileResponse = await fetch(
+      `${supabaseUrl}/rest/v1/Profile?userId=eq.${user.id}&select=*`,
+      { headers }
+    )
+
+    if (!getProfileResponse.ok) {
+      throw new Error(`Failed to fetch profile: ${getProfileResponse.statusText}`)
+    }
+
+    const profiles = await getProfileResponse.json()
+    const profile = profiles && profiles.length > 0 ? profiles[0] : null
+
+    // Attach profile to user object
+    if (profile) {
+      dbUser.Profile = profile
     }
 
     return NextResponse.json({
