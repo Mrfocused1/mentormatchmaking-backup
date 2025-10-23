@@ -13,8 +13,15 @@ import SessionReminderEmail from './templates/session-reminder'
 import SessionConfirmedEmail from './templates/session-confirmed'
 import ConnectionRequestEmail from './templates/connection-request'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy-load Resend client to avoid build-time errors if API key is not set
+let resend: Resend | null = null
+
+function getResendClient(): Resend {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend!
+}
 
 // Default from email - Format: "Name <email@domain.com>"
 const FROM_EMAIL = `Look 4 Mentors <${process.env.EMAIL_FROM || 'support@look4mentors.com'}>`
@@ -61,7 +68,8 @@ async function sendEmail(to: string, subject: string, html: string, emailType: E
       return { success: false, error: 'RESEND_API_KEY not configured' }
     }
 
-    const { data, error } = await resend.emails.send({
+    const client = getResendClient()
+    const { data, error } = await client.emails.send({
       from: FROM_EMAIL,
       to,
       subject,
