@@ -38,15 +38,54 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch('/api/admin/stats')
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch('/api/admin/stats', {
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setStats(data)
         } else {
-          console.error('Failed to fetch stats')
+          console.error('Failed to fetch stats:', response.status)
+          // Set default empty stats
+          setStats({
+            totalUsers: 0,
+            newUsersThisWeek: 0,
+            totalMentors: 0,
+            totalMentees: 0,
+            activeSessions: 0,
+            completedSessions: 0,
+            upcomingSessions: 0,
+            totalMessages: 0,
+            pendingReports: 0,
+            openTickets: 0,
+            emailsSentToday: 0,
+            emailsSentThisWeek: 0
+          })
         }
       } catch (error) {
         console.error('Error fetching stats:', error)
+        // Set default empty stats on error
+        setStats({
+          totalUsers: 0,
+          newUsersThisWeek: 0,
+          totalMentors: 0,
+          totalMentees: 0,
+          activeSessions: 0,
+          completedSessions: 0,
+          upcomingSessions: 0,
+          totalMessages: 0,
+          pendingReports: 0,
+          openTickets: 0,
+          emailsSentToday: 0,
+          emailsSentThisWeek: 0
+        })
       } finally {
         setLoading(false)
       }
