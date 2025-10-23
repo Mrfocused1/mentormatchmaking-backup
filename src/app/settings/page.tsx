@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -36,6 +36,46 @@ export default function SettingsPage() {
   const supabase = createClient()
   const [activeSection, setActiveSection] = useState('account')
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+
+        if (!authUser) {
+          router.push('/login')
+          return
+        }
+
+        // Fetch user data from database
+        const { data: userData, error } = await supabase
+          .from('User')
+          .select('*, Profile(*)')
+          .eq('id', authUser.id)
+          .single()
+
+        if (error) {
+          console.error('Error fetching user:', error)
+        } else {
+          setUser({
+            name: userData.name || 'User',
+            email: userData.email,
+            role: userData.role.toLowerCase(),
+            phone: userData.Profile?.phoneNumber || '',
+            location: userData.Profile?.location || '',
+          })
+        }
+      } catch (error) {
+        console.error('Error loading user:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUser()
+  }, [router, supabase])
 
   const handleSignOut = async () => {
     try {
@@ -49,13 +89,16 @@ export default function SettingsPage() {
     }
   }
 
-  // Mock user data
-  const user = {
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    role: 'mentor',
-    phone: '+44 20 1234 5678',
-    location: 'London, UK',
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-accent"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
   }
 
   // Notification settings
