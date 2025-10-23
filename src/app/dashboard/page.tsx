@@ -47,6 +47,8 @@ export default function DashboardPage() {
   const [sessions, setSessions] = useState<any[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
   const [profileViews, setProfileViews] = useState(0)
+  const [averageRating, setAverageRating] = useState<number>(0)
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0)
 
   // Fetch all dashboard data using direct Supabase queries
   useEffect(() => {
@@ -136,6 +138,29 @@ export default function DashboardPage() {
           setProfileViews(count)
         }
 
+        // Fetch reviews and calculate average rating
+        const { data: userReviews, error: reviewsError } = await supabase
+          .from('Review')
+          .select('rating')
+          .eq('revieweeId', user.id)
+
+        if (!reviewsError && userReviews && userReviews.length > 0) {
+          const totalRating = userReviews.reduce((sum, review) => sum + (review.rating || 0), 0)
+          const avgRating = totalRating / userReviews.length
+          setAverageRating(Math.round(avgRating * 10) / 10) // Round to 1 decimal place
+        }
+
+        // Fetch unread message count
+        const { count: unreadCount, error: messagesError } = await supabase
+          .from('Message')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiverId', user.id)
+          .eq('read', false)
+
+        if (!messagesError && unreadCount !== null) {
+          setUnreadMessageCount(unreadCount)
+        }
+
       } catch (err) {
         console.error('Error fetching dashboard data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load dashboard')
@@ -188,9 +213,9 @@ export default function DashboardPage() {
     company: userData.profile?.city || 'Not specified',
     avatar: userData.profile?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=A3F3C4&color=1B4332&size=400`,
     joinDate: new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-    rating: 4.9, // TODO: Calculate from reviews
-    totalMentees: 0, // TODO: Count from matches
-    completedSessions: 0, // TODO: Count from sessions
+    rating: averageRating || 0,
+    totalMentees: matches.filter(m => m.status === 'ACTIVE').length,
+    completedSessions: sessions.filter(s => s.status === 'COMPLETED').length,
     // Profile completeness fields
     hasAvatar: !!userData.profile?.profilePicture,
     hasBio: !!userData.profile?.bio,
@@ -224,7 +249,7 @@ export default function DashboardPage() {
   const analytics = {
     newInterests: matches.filter(m => m.status === 'PENDING').length,
     totalMatches: matches.filter(m => m.status === 'ACTIVE').length,
-    unreadMessages: matches.reduce((sum, match) => sum + (match.unreadMessages || 0), 0),
+    unreadMessages: unreadMessageCount,
     profileViews: profileViews,
     upcomingSessions: sessions.filter(s => s.status === 'SCHEDULED' && new Date(s.scheduledAt) > new Date()).length,
     completedSessions: sessions.filter(s => s.status === 'COMPLETED').length,

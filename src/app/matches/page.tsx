@@ -44,6 +44,7 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [unreadMessagesBySender, setUnreadMessagesBySender] = useState<Record<string, number>>({})
 
   // Fetch matches from Supabase
   useEffect(() => {
@@ -104,6 +105,22 @@ export default function MatchesPage() {
           throw new Error('Failed to fetch user data')
         }
 
+        // Fetch unread messages for each conversation
+        const { data: unreadMessages } = await supabase
+          .from('Message')
+          .select('senderId')
+          .eq('receiverId', user.id)
+          .eq('read', false)
+
+        // Group unread messages by sender
+        const unreadBySender: Record<string, number> = {}
+        if (unreadMessages) {
+          unreadMessages.forEach((msg) => {
+            unreadBySender[msg.senderId] = (unreadBySender[msg.senderId] || 0) + 1
+          })
+        }
+        setUnreadMessagesBySender(unreadBySender)
+
         // Combine match data with user data
         const enrichedMatches = matchesData.map(match => {
           const matchedUserId = match.user1Id === user.id ? match.user2Id : match.user1Id
@@ -126,7 +143,7 @@ export default function MatchesPage() {
             status: match.status,
             lastMessage: '', // Will need to fetch from messages if needed
             lastMessageTime: '', // Will need to fetch from messages if needed
-            unreadMessages: 0, // Will need to fetch from messages if needed
+            unreadMessages: unreadBySender[matchedUserId] || 0,
           }
         })
 

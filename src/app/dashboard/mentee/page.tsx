@@ -46,6 +46,7 @@ export default function MenteeDashboardPage() {
   const [sessions, setSessions] = useState<any[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
   const [followingCount, setFollowingCount] = useState(0)
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0)
 
   // Fetch dashboard data
   useEffect(() => {
@@ -129,6 +130,17 @@ export default function MenteeDashboardPage() {
 
         if (count !== null) {
           setFollowingCount(count)
+        }
+
+        // Fetch unread message count
+        const { count: unreadCount, error: messagesError } = await supabase
+          .from('Message')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiverId', user.id)
+          .eq('read', false)
+
+        if (!messagesError && unreadCount !== null) {
+          setUnreadMessageCount(unreadCount)
         }
 
       } catch (err) {
@@ -223,7 +235,7 @@ export default function MenteeDashboardPage() {
   const analytics = {
     newInterests: unreadNotifications,
     totalMatches: matches.length,
-    unreadMessages: 0,  // TODO: Calculate from messages
+    unreadMessages: unreadMessageCount,
     followingCount: followingCount,
     upcomingSessions: upcomingSessions,
     completedSessions: user.completedSessions,
