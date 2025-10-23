@@ -41,26 +41,41 @@ export default function UsersAdminPage() {
           status: filterStatus
         })
 
-        const response = await fetch(`/api/admin/users?${params}`)
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch(`/api/admin/users?${params}`, {
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setUsers(data.users)
           setTotal(data.total)
         } else {
           console.error('Failed to fetch users')
+          // Set empty users array on error
+          setUsers([])
+          setTotal(0)
         }
       } catch (error) {
         console.error('Error fetching users:', error)
+        // Set empty users array on timeout/error
+        setUsers([])
+        setTotal(0)
       } finally {
         setLoading(false)
       }
     }
 
-    const timeoutId = setTimeout(() => {
+    const debounceId = setTimeout(() => {
       fetchUsers()
     }, 300) // Debounce search
 
-    return () => clearTimeout(timeoutId)
+    return () => clearTimeout(debounceId)
   }, [searchTerm, filterRole, filterStatus, page])
 
   if (loading && users.length === 0) {

@@ -22,15 +22,28 @@ export default function AnalyticsAdminPage() {
   useEffect(() => {
     async function fetchAnalytics() {
       try {
-        const response = await fetch('/api/admin/analytics')
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch('/api/admin/analytics', {
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setAnalytics(data)
         } else {
           console.error('Failed to fetch analytics')
+          // Set null analytics on error
+          setAnalytics(null)
         }
       } catch (error) {
         console.error('Error fetching analytics:', error)
+        // Set null analytics on timeout/error
+        setAnalytics(null)
       } finally {
         setLoading(false)
       }

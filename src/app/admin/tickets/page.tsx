@@ -40,16 +40,31 @@ export default function TicketsAdminPage() {
           priority: filterPriority
         })
 
-        const response = await fetch(`/api/admin/tickets?${params}`)
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch(`/api/admin/tickets?${params}`, {
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setTickets(data.tickets)
           setTotal(data.total)
         } else {
           console.error('Failed to fetch tickets')
+          // Set empty tickets array on error
+          setTickets([])
+          setTotal(0)
         }
       } catch (error) {
         console.error('Error fetching tickets:', error)
+        // Set empty tickets array on timeout/error
+        setTickets([])
+        setTotal(0)
       } finally {
         setLoading(false)
       }

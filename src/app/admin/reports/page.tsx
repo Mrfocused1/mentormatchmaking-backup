@@ -42,16 +42,31 @@ export default function ReportsAdminPage() {
           status: filterStatus
         })
 
-        const response = await fetch(`/api/admin/reports?${params}`)
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch(`/api/admin/reports?${params}`, {
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setReports(data.reports)
           setTotal(data.total)
         } else {
           console.error('Failed to fetch reports')
+          // Set empty reports array on error
+          setReports([])
+          setTotal(0)
         }
       } catch (error) {
         console.error('Error fetching reports:', error)
+        // Set empty reports array on timeout/error
+        setReports([])
+        setTotal(0)
       } finally {
         setLoading(false)
       }

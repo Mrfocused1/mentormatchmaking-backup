@@ -47,16 +47,31 @@ export default function SessionsAdminPage() {
           status: filterStatus
         })
 
-        const response = await fetch(`/api/admin/sessions?${params}`)
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch(`/api/admin/sessions?${params}`, {
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setSessions(data.sessions)
           setTotal(data.total)
         } else {
           console.error('Failed to fetch sessions')
+          // Set empty sessions array on error
+          setSessions([])
+          setTotal(0)
         }
       } catch (error) {
         console.error('Error fetching sessions:', error)
+        // Set empty sessions array on timeout/error
+        setSessions([])
+        setTotal(0)
       } finally {
         setLoading(false)
       }

@@ -37,26 +37,41 @@ export default function EmailLogsAdminPage() {
           status: filterStatus
         })
 
-        const response = await fetch(`/api/admin/email-logs?${params}`)
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const fetchTimeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch(`/api/admin/email-logs?${params}`, {
+          signal: controller.signal
+        })
+
+        clearTimeout(fetchTimeoutId)
+
         if (response.ok) {
           const data = await response.json()
           setEmailLogs(data.emailLogs)
           setTotal(data.total)
         } else {
           console.error('Failed to fetch email logs')
+          // Set empty email logs array on error
+          setEmailLogs([])
+          setTotal(0)
         }
       } catch (error) {
         console.error('Error fetching email logs:', error)
+        // Set empty email logs array on timeout/error
+        setEmailLogs([])
+        setTotal(0)
       } finally {
         setLoading(false)
       }
     }
 
-    const timeoutId = setTimeout(() => {
+    const debounceId = setTimeout(() => {
       fetchEmailLogs()
     }, 300)
 
-    return () => clearTimeout(timeoutId)
+    return () => clearTimeout(debounceId)
   }, [searchTerm, filterType, filterStatus, page])
 
   if (loading && emailLogs.length === 0) {
