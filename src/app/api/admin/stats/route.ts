@@ -22,10 +22,11 @@ export async function GET() {
     }
 
     // Helper function to safely get count with fallback
-    const safeCount = async (query: Promise<any>) => {
+    const safeCount = async (query: any) => {
       try {
-        const result = await query
-        return result.count || 0
+        const { count, error } = await query
+        if (error) throw error
+        return count || 0
       } catch (error) {
         console.error('Query failed:', error)
         return 0
